@@ -179,37 +179,30 @@ def build_system_prompt(topic: str) -> str:
     Người trưởng thành từng trải (27 - 35 tuổi), đối mặt gánh nặng cơm áo gạo tiền,
     đời thực, trần trụi nhưng điềm tĩnh, tuyệt đối không giáo điều sáo rỗng.
     """
-    return f"""Bạn là một người trưởng thành từng trải (khoảng 27 - 35 tuổi), đã đi qua đủ va vấp, thất bại và đang hàng ngày đối mặt với gánh nặng "cơm áo gạo tiền".
+    return f"""Bạn là một người từng trải (khoảng 27 - 35 tuổi), đã đi qua đủ thăng trầm, thất bại và thấu hiểu áp lực cơm áo gạo tiền ở đời thực.
 
-Nhiệm vụ: Hãy viết 1 bộ nội dung cho chủ đề: "{topic}" để làm video TikTok tâm trạng sâu lắng.
+Nhiệm vụ: Hãy sáng tác 1 câu quote MỚI HOÀN TOÀN, ĐỘC BẢN cho chủ đề: "{topic}" để làm video ngắn TikTok tâm trạng sâu lắng.
 
-TIÊU CHÍ VÀ TINH THẦN CỐT LÕI BẮT BUỘC:
-1. Tinh thần cốt lõi:
-   - Đời thực, trần trụi nhưng điềm tĩnh; KHÔNG than vãn ủ rũ, tuyệt đối KHÔNG rao giảng đạo lý sáo rỗng hay hô hào khẩu hiệu ("hãy cố lên", "thành công sẽ đến", "tương lai tươi sáng").
-   - Thể hiện sự bất lực ngầm trước áp lực mưu sinh, tiền bạc, nhưng thái độ là chấp nhận, nuốt ngược vào trong và tự mình bước tiếp.
-   - Giọng văn như một người ngồi lặng lẽ hút điếu thuốc hoặc ngắm mưa sau giờ làm, tự nói với chính mình.
+TIÊU CHÍ VÀ NGUYÊN TẮC BẮT BUỘC:
+1. Đa dạng hóa góc nhìn & ý tưởng:
+   - TUYỆT ĐỐI KHÔNG lặp lại các motif sáo mòn như "Mở mắt ra là...", "Trưởng thành là khi...", "Ví tiền không cho phép...".
+   - Hãy khai thác nhiều khía cạnh sâu sắc: sự im lặng sau giờ tan tầm, cảm giác một mình đứng đợi đèn đỏ trong mưa, lúc tài khoản còn vài trăm nghìn mà người nhà gọi điện hỏi thăm, bài học tự tôn khi ngã đau, sự kiên nhẫn khi tay trắng làm lại từ đầu.
+2. Tinh thần cốt lõi:
+   - Đời thực, trần trụi nhưng điềm tĩnh; KHÔNG than vãn ủ rũ, tuyệt đối KHÔNG rao giảng đạo lý sáo rỗng hay hô hào khẩu hiệu ("hãy cố lên", "thành công sẽ đến").
+   - Thể hiện sự từng trải: chấp nhận thực tế, nuốt vất vả vào trong lòng và lặng lẽ bước tiếp.
+3. Quy chuẩn câu chữ trong "quote":
+   - CỰC KỲ GÃY GỌN: độ dài từ 15 đến 28 từ tiếng Việt (tối đa 2-3 vế câu) để người xem đọc trọn vẹn trong 5-7 giây.
+   - Nhịp điệu trầm, câu chữ chắc nịch, giàu sức nặng chiêm nghiệm.
 
-2. Quy chuẩn câu chữ trong trường "quote":
-   - Độ dài: CỰC NGẮN, từ 15 đến 28 từ (tối đa 2 đến 3 vế câu) để người xem đọc kịp trong 5 - 7 giây.
-   - Nhịp điệu: Trầm, gãy gọn, có sức nặng, mang tính chiêm nghiệm cao.
-   - Nội dung xoay quanh: Cơm áo gạo tiền, áp lực mở mắt ra là hóa đơn, ngã đau tự lau vết thương rồi đi làm tiếp, bớt nói lại vì không ai gánh thay mình.
-
-3. Các trường khác:
-   - pexels_keywords: Mảng 2-3 từ khóa tiếng Anh miêu tả cảnh nền trầm tối, cô đơn, mưa đêm (vd: ["dark rainy street aesthetic", "lonely night subway", "dark rainy car window"]).
-   - caption: Đoạn caption ngắn 1-2 câu tiếng Việt trần trụi, sâu sắc cho bài đăng TikTok.
-   - hashtags: Mảng hashtag gồm #tamtrang, #chill, #phattrienbanthan, #truongthanh, #comaogaotien.
-
-BẮT BUỘC TRẢ VỀ JSON THUẦN (raw JSON), KHÔNG THÊM BẤT KỲ LỜI DẪN NÀO:
-{{
-  "quote": "Trưởng thành là khi mở mắt ra chỉ thấy hóa đơn. Muốn mệt mỏi buông xuôi, nhưng ví tiền không cho phép.",
-  "pexels_keywords": ["dark rainy street aesthetic", "rainy car window night", "dark quiet subway"],
-  "caption": "Mỗi sáng thức dậy là một trận chiến không tiếng súng. Nuốt mệt mỏi vào trong rồi bước tiếp. 🌧️",
-  "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#truongthanh", "#comaogaotien"]
-}}
+BẮT BUỘC TRẢ VỀ JSON THUẦN (raw JSON không kèm markdown hay lời dẫn ngoài), gồm các khóa:
+- "quote": <Nội dung câu quote mới do bạn tự sáng tác bằng tiếng Việt, từ 15 đến 28 từ>
+- "pexels_keywords": [<mảng 2-3 từ khóa tiếng Anh miêu tả cảnh nền moody, rain, dark, night, contemplative, cinematic>]
+- "caption": <1-2 câu tiếng Việt trần trụi, sâu sắc để đăng kèm video>
+- "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#truongthanh", "#comaogaotien"]
 """
 
 
-def call_gemini(prompt: str, model_name: str = "gemini-3.5-flash-lite", api_key: Optional[str] = None) -> str:
+def call_gemini(prompt: str, model_name: str = "gemini-3.8-flash", api_key: Optional[str] = None) -> str:
     """Gọi Google Gemini API sử dụng thư viện google-genai, có cơ chế fallback model tự động."""
     key = api_key or os.getenv("GEMINI_API_KEY")
     if not key or key == "your_gemini_api_key_here":
@@ -226,7 +219,7 @@ def call_gemini(prompt: str, model_name: str = "gemini-3.5-flash-lite", api_key:
     from google import genai
     client = genai.Client(api_key=key)
 
-    candidate_models = [model_name, "gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-flash-latest"]
+    candidate_models = [model_name, "gemini-3.8-flash", "gemini-3.5-flash-lite"]
     # Loại bỏ model trùng lặp nhưng giữ thứ tự ưu tiên
     seen = set()
     models_to_try = [m for m in candidate_models if not (m in seen or seen.add(m))]
@@ -234,7 +227,7 @@ def call_gemini(prompt: str, model_name: str = "gemini-3.5-flash-lite", api_key:
     from google.genai import types
     config_call = types.GenerateContentConfig(
         response_mime_type="application/json",
-        temperature=0.9,
+        temperature=1.0,
     )
 
     last_error = None
@@ -348,6 +341,7 @@ def generate_quote(
             quote_id = save_quote(parsed, topic=topic, custom_path=custom_db_path)
             parsed["topic"] = topic
             parsed["quote_id"] = quote_id
+            parsed["is_ai_generated"] = True
             return parsed
 
         except ValueError as ve:
@@ -377,4 +371,5 @@ def get_fallback_quote(topic: str, custom_db_path: Optional[str | Path] = None) 
     quote_id = save_quote(chosen, topic=topic, custom_path=custom_db_path)
     chosen["topic"] = topic
     chosen["quote_id"] = quote_id
+    chosen["is_ai_generated"] = False
     return chosen

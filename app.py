@@ -217,7 +217,10 @@ with tab_maker:
                             st.session_state.current_quote_text = ai_res["quote"]
                             if ai_res.get("pexels_keywords"):
                                 st.session_state.current_keywords = ai_res["pexels_keywords"]
-                            st.toast("Đã dùng AI sinh câu quote mới thành công!", icon="✨")
+                            if ai_res.get("is_ai_generated", True):
+                                st.toast("Đã dùng Gemini 3.8 Flash sáng tạo quote mới thành công!", icon="✨")
+                            else:
+                                st.warning("⚠️ Không thể kết nối AI hoặc phát hiện trùng lặp nhiều lần. Đã lấy câu ngẫu nhiên từ kho mẫu dự phòng.")
                             st.rerun()
                         except Exception as e:
                             st.error(f"Lỗi khi gọi AI: {e}")
