@@ -1,0 +1,33 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Environment Variables & Secrets
+.env
+*.env
+
+# SQLite Data & Cache
+data/*.db
+data/cache/*
+!data/cache/.gitkeep
+
+# Output videos & Temp files
+temp/
+output/*.mp4
+output/cho_dang/*
+!output/cho_dang/.gitkeep
+output/da_dang/*
+!output/da_dang/.gitkeep
+
+# OS generated
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
