@@ -274,8 +274,8 @@ with tab_maker:
         # -------------------------------------------------------------
         st.subheader("2. Chọn Nguồn Ảnh Nền (Photo Khổ Dọc 9:16)")
 
-        tab_pexels, tab_pixabay, tab_upload_local = st.tabs([
-            "📸 Tải Ảnh Từ Pexels (Đề Xuất)",
+        tab_unsplash, tab_pixabay, tab_upload_local = st.tabs([
+            "📸 Tải Ảnh Từ Unsplash (Đề Xuất)",
             "🌐 Tải Ảnh Từ Pixabay",
             "📤 Tải Ảnh Từ Máy Tính",
         ])
@@ -283,52 +283,63 @@ with tab_maker:
         # Gợi ý từ khóa chung cho cả 2 tab
         suggested_kw_list = suggest_keywords_from_quote(st.session_state.current_quote_text)
 
-        with tab_pexels:
-            st.markdown("💡 **Từ khóa gợi ý theo câu quote (Pexels có kho ảnh nghệ thuật rất đẹp):**")
-            cols_chips_pex = st.columns(min(len(suggested_kw_list), 4))
+        with tab_unsplash:
+            st.markdown("💡 **Từ khóa gợi ý theo câu quote (Unsplash có ảnh nghệ thuật, màu film rất đẹp):**")
+            cols_chips_uns = st.columns(min(len(suggested_kw_list), 4))
             for i, kw_item in enumerate(suggested_kw_list[:4]):
-                with cols_chips_pex[i]:
-                    if st.button(f"👉 {kw_item}", key=f"chip_kw_pex_{i}", use_container_width=True):
+                with cols_chips_uns[i]:
+                    if st.button(f"👉 {kw_item}", key=f"chip_kw_uns_{i}", use_container_width=True):
                         st.session_state.current_keywords = [kw_item]
                         st.rerun()
 
             st.write("")
-            col_kw_pex, col_btn_pex_rnd = st.columns([2, 1])
-            with col_kw_pex:
-                default_kw_pex = suggested_kw_list[0] if suggested_kw_list else "dark street rain"
+            col_kw_uns, col_btn_uns_rnd = st.columns([2, 1])
+            with col_kw_uns:
+                default_kw_uns = suggested_kw_list[0] if suggested_kw_list else "night street rain"
                 if st.session_state.current_keywords:
-                    default_kw_pex = st.session_state.current_keywords[0]
+                    default_kw_uns = st.session_state.current_keywords[0]
 
-                kw_input_pex = st.text_input(
-                    "Từ khóa tìm ảnh dọc trên Pexels:",
-                    value=default_kw_pex,
-                    key="pex_kw_input",
+                kw_input_uns = st.text_input(
+                    "Từ khóa tìm ảnh dọc trên Unsplash:",
+                    value=default_kw_uns,
+                    key="uns_kw_input",
                     help="Tìm ảnh nghệ thuật, màu film trầm tối, khổ dọc portrait 1080x1920.",
                 )
-            with col_btn_pex_rnd:
+            with col_btn_uns_rnd:
                 st.write("")
                 st.write("")
-                btn_rnd_kw_pex = st.button("🎲 Đổi Gợi Ý Khác", key="btn_rnd_pex", use_container_width=True)
-                if btn_rnd_kw_pex:
+                btn_rnd_kw_uns = st.button("🎲 Đổi Gợi Ý Khác", key="btn_rnd_uns", use_container_width=True)
+                if btn_rnd_kw_uns:
                     new_kw = random.choice(DEFAULT_DARK_KEYWORDS)
                     st.session_state.current_keywords = [new_kw]
                     st.rerun()
 
-            btn_fetch_pexels = st.button("📥 Tìm & Tải Ảnh Pexels Này", type="primary", use_container_width=True)
-            if btn_fetch_pexels:
-                with st.spinner("Đang tìm và tải ảnh nghệ thuật dọc chuẩn 1080x1920 từ Pexels..."):
+            # Ô nhập Unsplash Access Key tùy chọn
+            with st.expander("🔑 Cấu hình Unsplash Access Key (Tùy chọn - Miễn phí tại unsplash.com/developers)", expanded=False):
+                st.info("Nếu chưa có Unsplash Key, hệ thống sẽ tự động dùng ảnh Pixabay chất lượng cao thay thế để app không bị gián đoạn.")
+                uns_key_input = st.text_input(
+                    "Unsplash Access Key:",
+                    value=os.getenv("UNSPLASH_ACCESS_KEY", ""),
+                    type="password",
+                    help="Lấy miễn phí trong 30s tại: https://unsplash.com/developers",
+                )
+
+            btn_fetch_unsplash = st.button("📥 Tìm & Tải Ảnh Unsplash Này", type="primary", use_container_width=True)
+            if btn_fetch_unsplash:
+                with st.spinner("Đang tìm và tải ảnh nghệ thuật dọc chuẩn 1080x1920 từ Unsplash..."):
                     try:
-                        from modules.pexels_api import fetch_pexels_photo
-                        fetched_img = fetch_pexels_photo(
-                            query=kw_input_pex,
+                        from modules.unsplash_fetcher import fetch_unsplash_photo
+                        fetched_img = fetch_unsplash_photo(
+                            query=kw_input_uns,
+                            access_key=uns_key_input if uns_key_input else None,
                             output_path=Path("temp/background.jpg"),
                         )
                         st.session_state.current_bg_image = str(fetched_img)
                         st.session_state.rendered_18s_video = None
-                        st.toast("Đã tải ảnh Pexels 1080x1920 thành công!", icon="📸")
+                        st.toast("Đã chuẩn bị ảnh nền 1080x1920 thành công!", icon="📸")
                         st.rerun()
                     except Exception as e:
-                        st.error(f"Lỗi khi tải ảnh từ Pexels: {e}")
+                        st.error(f"Lỗi khi tải ảnh từ Unsplash: {e}")
 
         with tab_pixabay:
             st.markdown("💡 **Từ khóa gợi ý khớp nhất với câu quote hiện tại:**")
