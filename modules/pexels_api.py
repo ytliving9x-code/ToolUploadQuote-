@@ -551,3 +551,88 @@ def get_footage(
         "height": height,
         "keyword": matched_kw,
     }
+
+
+# ==============================================================================
+# PEXELS PHOTO SEARCH & DOWNLOAD (HÌNH NỀN 1080x1920 DỌC CHO VIDEO TIKTOK)
+# ==============================================================================
+PEXELS_PHOTO_SEARCH_URL = "https://api.pexels.com/v1/search"
+
+
+def fetch_pexels_photo(
+    query: str,
+    api_key: Optional[str] = None,
+    output_path: Optional[Path] = None,
+    target_size: Tuple[int, int] = (1080, 1920),
+) -> Path:
+    """
+    Tìm kiếm và tải 1 ảnh chất lượng cao khổ dọc (portrait) từ Pexels.
+    Tự động crop chuẩn 1080x1920 bằng hàm resize_and_crop_to_tiktok.
+    Nếu chưa có key hoặc lỗi, tự động fallback sang Pixabay hoặc ảnh AI.
+    """
+    out_file = Path(output_path) if output_path else Path("temp/background.jpg")
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+
+    key = api_key or os.getenv("PEXELS_API_KEY", "")
+    if not key:
+        try:
+            import streamlit as st
+            if "PEXELS_API_KEY" in st.secrets:
+                key = st.secrets["PEXELS_API_KEY"]
+        except Exception:
+            pass
+
+    clean_query = query.strip() if query else "dark aesthetic moody"
+
+    if not key:
+        logger.warning("Chưa cấu hình PEXELS_API_KEY, fallback sang Pixabay...")
+        from modules.pixabay_fetcher import fetch_pixabay_image
+        return fetch_pixabay_image(query=clean_query, output_path=out_file)
+
+    headers = {
+        "Authorization": key,
+        "User-Agent": "TikTokQuoteGenerator/1.0",
+    }
+    params = {
+        "query": clean_query,
+        "orientation": "portrait",
+        "per_page": 25,
+    }
+
+    try:
+        logger.info(f"Đang tìm ảnh Pexels với từ khóa: '{clean_query}'...")
+        resp = requests.get(PEXELS_PHOTO_SEARCH_URL, headers=headers, params=params, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        photos = data.get("photos", [])
+
+        if not photos:
+            # Thử lại với từ khóa rộng hơn
+            params["query"] = "dark street night"
+            resp_fallback = requests.get(PEXELS_PHOTO_SEARCH_URL, headers=headers, params=params, timeout=15)
+            if resp_fallback.status_code == 200:
+                photos = resp_fallback.json().get("photos", [])
+
+        if photos:
+            import random
+            selected_photo = random.choice(photos)
+            src_dict = selected_photo.get("src", {})
+            img_url = src_dict.get("large2x") or src_dict.get("original") or src_dict.get("large")
+
+            if img_url:
+                logger.info(f"Đang tải ảnh Pexels ID={selected_photo.get('id')} từ: {img_url[:60]}...")
+                img_resp = requests.get(img_url, timeout=20)
+                img_resp.raise_for_status()
+                with open(out_file, "wb") as f_out:
+                    f_out.write(img_resp.content)
+
+                from modules.pixabay_fetcher import resize_and_crop_to_tiktok
+                return resize_and_crop_to_tiktok(out_file, target_size=target_size)
+
+        raise ValueError(f"Không tìm thấy ảnh phù hợp trên Pexels cho '{clean_query}'.")
+
+    except Exception as e:
+        logger.warning(f"Lỗi khi tìm ảnh Pexels: {e}. Đang fallback sang Pixabay...")
+        from modules.pixabay_fetcher import fetch_pixabay_image
+        return fetch_pixabay_image(query=clean_query, output_path=out_file)
+

@@ -274,12 +274,63 @@ with tab_maker:
         # -------------------------------------------------------------
         st.subheader("2. Chọn Nguồn Ảnh Nền (Photo Khổ Dọc 9:16)")
 
-        tab_pixabay, tab_upload_local = st.tabs(["🌐 Tải Ảnh Từ Pixabay", "📤 Tải Ảnh Từ Máy Tính"])
+        tab_pexels, tab_pixabay, tab_upload_local = st.tabs([
+            "📸 Tải Ảnh Từ Pexels (Đề Xuất)",
+            "🌐 Tải Ảnh Từ Pixabay",
+            "📤 Tải Ảnh Từ Máy Tính",
+        ])
+
+        # Gợi ý từ khóa chung cho cả 2 tab
+        suggested_kw_list = suggest_keywords_from_quote(st.session_state.current_quote_text)
+
+        with tab_pexels:
+            st.markdown("💡 **Từ khóa gợi ý theo câu quote (Pexels có kho ảnh nghệ thuật rất đẹp):**")
+            cols_chips_pex = st.columns(min(len(suggested_kw_list), 4))
+            for i, kw_item in enumerate(suggested_kw_list[:4]):
+                with cols_chips_pex[i]:
+                    if st.button(f"👉 {kw_item}", key=f"chip_kw_pex_{i}", use_container_width=True):
+                        st.session_state.current_keywords = [kw_item]
+                        st.rerun()
+
+            st.write("")
+            col_kw_pex, col_btn_pex_rnd = st.columns([2, 1])
+            with col_kw_pex:
+                default_kw_pex = suggested_kw_list[0] if suggested_kw_list else "dark street rain"
+                if st.session_state.current_keywords:
+                    default_kw_pex = st.session_state.current_keywords[0]
+
+                kw_input_pex = st.text_input(
+                    "Từ khóa tìm ảnh dọc trên Pexels:",
+                    value=default_kw_pex,
+                    key="pex_kw_input",
+                    help="Tìm ảnh nghệ thuật, màu film trầm tối, khổ dọc portrait 1080x1920.",
+                )
+            with col_btn_pex_rnd:
+                st.write("")
+                st.write("")
+                btn_rnd_kw_pex = st.button("🎲 Đổi Gợi Ý Khác", key="btn_rnd_pex", use_container_width=True)
+                if btn_rnd_kw_pex:
+                    new_kw = random.choice(DEFAULT_DARK_KEYWORDS)
+                    st.session_state.current_keywords = [new_kw]
+                    st.rerun()
+
+            btn_fetch_pexels = st.button("📥 Tìm & Tải Ảnh Pexels Này", type="primary", use_container_width=True)
+            if btn_fetch_pexels:
+                with st.spinner("Đang tìm và tải ảnh nghệ thuật dọc chuẩn 1080x1920 từ Pexels..."):
+                    try:
+                        from modules.pexels_api import fetch_pexels_photo
+                        fetched_img = fetch_pexels_photo(
+                            query=kw_input_pex,
+                            output_path=Path("temp/background.jpg"),
+                        )
+                        st.session_state.current_bg_image = str(fetched_img)
+                        st.session_state.rendered_18s_video = None
+                        st.toast("Đã tải ảnh Pexels 1080x1920 thành công!", icon="📸")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Lỗi khi tải ảnh từ Pexels: {e}")
 
         with tab_pixabay:
-            # Tự động phân tích câu quote hiện tại để gợi ý các từ khóa hợp nhất
-            suggested_kw_list = suggest_keywords_from_quote(st.session_state.current_quote_text)
-
             st.markdown("💡 **Từ khóa gợi ý khớp nhất với câu quote hiện tại:**")
             cols_chips = st.columns(min(len(suggested_kw_list), 4))
             for i, kw_item in enumerate(suggested_kw_list[:4]):
@@ -298,12 +349,13 @@ with tab_maker:
                 kw_input = st.text_input(
                     "Từ khóa tìm ảnh dọc trên Pixabay:",
                     value=default_kw,
+                    key="pix_kw_input",
                     help="Bạn có thể bấm vào các từ khóa gợi ý ở trên hoặc tự gõ theo ý muốn.",
                 )
             with col_btn_pix:
                 st.write("")
                 st.write("")
-                btn_rnd_kw = st.button("🎲 Đổi Gợi Ý Khác", use_container_width=True)
+                btn_rnd_kw = st.button("🎲 Đổi Gợi Ý Khác", key="btn_rnd_pix", use_container_width=True)
                 if btn_rnd_kw:
                     new_kw = random.choice(DEFAULT_DARK_KEYWORDS)
                     st.session_state.current_keywords = [new_kw]
