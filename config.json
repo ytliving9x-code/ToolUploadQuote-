@@ -4,10 +4,11 @@
   "gemini_model": "gemini-3.8-flash",
   "openai_model": "gpt-4o-mini",
   "topics": [
-    "nỗ lực",
-    "tiền bạc",
     "điềm tĩnh",
-    "chữa lành"
+    "tiền bạc",
+    "nỗ lực",
+    "chữa lành",
+    "văn phòng"
   ],
   "default_topic": "điềm tĩnh",
   "video": {

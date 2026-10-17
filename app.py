@@ -203,9 +203,9 @@ with tab_maker:
             with col_ai_top:
                 ai_topic = st.selectbox(
                     "Chọn chủ đề muốn AI viết:",
-                    options=["điềm tĩnh", "tiền bạc", "nỗ lực", "chữa lành"],
+                    options=["điềm tĩnh", "tiền bạc", "nỗ lực", "chữa lành", "văn phòng"],
                     index=0,
-                    help="AI sẽ nhập vai người 27-35 tuổi, lăn lộn cơm áo gạo tiền, câu chữ trần trụi gãy gọn 15-28 từ.",
+                    help="AI sẽ nhập vai người 27-35 tuổi, lăn lộn cơm áo gạo tiền, câu chữ trần trụi gãy gọn 15-26 từ.",
                 )
             with col_ai_btn:
                 st.write("")

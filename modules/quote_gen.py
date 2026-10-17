@@ -120,6 +120,26 @@ FALLBACK_QUOTES: Dict[str, List[Dict[str, Any]]] = {
             "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#chapnhan", "#yeuthuong"],
         },
     ],
+    "văn phòng": [
+        {
+            "quote": "Đi làm để đổi sức lấy lương, đừng mang cảm xúc đặt lên bàn họp. Hết giờ thì xách cặp về, ai tốt ai xấu kệ họ.",
+            "pexels_keywords": ["working late laptop rainy", "aesthetic office night dark", "empty subway station night"],
+            "caption": "Chốn công sở, nói ít làm nhiều, bảo vệ nồi cơm của mình trước.",
+            "hashtags": ["#congso", "#vanphong", "#doithuc", "#comaogaotien", "#kinhnghiem"],
+        },
+        {
+            "quote": "Đồng nghiệp chỉ là người ngồi chung phòng máy lạnh, không phải tri kỷ. Đừng dại dột đem ruột gan ra kể.",
+            "pexels_keywords": ["dark office building night", "rain street reflections", "night city drive lights"],
+            "caption": "Giữ khoảng cách an toàn là cách sống khôn ngoan nhất chốn văn phòng.",
+            "hashtags": ["#congso", "#vanphong", "#doithuc", "#bandoi", "#kinhnghiemsong"],
+        },
+        {
+            "quote": "Chẳng có công việc nào nhẹ nhàng cả. Nuốt ấm ức vào trong, làm tròn trách nhiệm rồi cuối tháng nhận lương.",
+            "pexels_keywords": ["office night work dark", "rain window moody", "city lights night blurred"],
+            "caption": "Áp lực nào rồi cũng qua, tài khoản ting ting là mọi mệt mỏi tan biến.",
+            "hashtags": ["#congso", "#vanphong", "#lamcong", "#kiemtien", "#truongthanh"],
+        },
+    ],
 }
 
 
@@ -198,12 +218,13 @@ CÁC NGUYÊN TẮC BẮT BUỘC ĐỂ KHÔNG GIỐNG AI:
    - Điềm tĩnh: "Bị chèn ép thì nuốt cục tức xuống bụng. Ở đời này, nổi nóng là bản năng, cắn răng nín nhịn mà cày cuốc mới là bản lĩnh."
    - Nỗ lực: "Chẳng ai rảnh hỏi bạn mệt không, người ta chỉ nhìn xem bạn có tiền mang về không. Đau thì tự xoa, sáng mai vẫn phải dắt xe ra đường."
    - Chữa lành: "Chữa lành cái gì tầm này. Đêm về tắm nước nóng, ngủ một giấc không mộng mị, sáng mai tài khoản báo có lương là đời tự khắc bình yên."
+   - Văn phòng: "Đến công ty để bán sức lao động kiếm tiền, không phải để tìm bạn thân. Bớt nhiều chuyện, làm xong việc rồi xách cặp về."
 
 BẮT BUỘC TRẢ VỀ JSON THUẦN (raw JSON, không kèm bất kỳ giải thích nào):
 - "quote": <Câu tự nói với chính mình bằng tiếng Việt, từ 15 đến 26 từ, thô, thật, không văn hoa>
-- "pexels_keywords": [<mảng 2-3 từ tiếng Anh cảnh đường phố đêm, mưa, cô đơn, tối>]
+- "pexels_keywords": [<mảng 2-3 từ tiếng Anh cảnh văn phòng đêm tối, laptop mưa đêm, subway tan sở moody>]
 - "caption": <1 câu ngắn gọn, trần trụi cho bài đăng TikTok>
-- "hashtags": ["#tamtrang", "#doithuc", "#phattrienbanthan", "#truongthanh", "#kinhnghiemsong"]
+- "hashtags": ["#tamtrang", "#congso", "#vanphong", "#doithuc", "#comaogaotien"]
 """
 
 

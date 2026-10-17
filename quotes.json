@@ -106,5 +106,17 @@
     "category": "sự điềm đạm bắt buộc",
     "quote": "Học cách chấp nhận những điều không như ý. Không than thở, không oán trách, bình thản sống tiếp phần đời của mình.",
     "keywords": ["gentle rain ripples dark", "cozy dark room candle", "night city misty street"]
+  },
+  {
+    "id": 19,
+    "category": "áp lực văn phòng",
+    "quote": "Đến công ty để bán sức kiếm tiền, không phải để tìm bạn thân. Bớt nhiều chuyện, làm xong việc rồi xách cặp về.",
+    "keywords": ["working late laptop rainy", "aesthetic office night dark", "dark subway station"]
+  },
+  {
+    "id": 20,
+    "category": "áp lực văn phòng",
+    "quote": "Đồng nghiệp chỉ là người ngồi chung phòng máy lạnh. Đừng dại dột đem ruột gan ra kể để rồi tự chuốc lấy phiền toái.",
+    "keywords": ["office night work dark", "city lights night blurred", "rainy car window night"]
   }
 ]
