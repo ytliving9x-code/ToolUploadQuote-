@@ -63,30 +63,6 @@ def resize_and_crop_to_tiktok(image_path: Path, target_size=(1080, 1920)) -> Pat
         img.save(image_path, format="JPEG", quality=95)
 
     return image_path
-
-
-def fetch_pixabay_image(
-    query: str,
-    api_key: Optional[str] = None,
-    output_path: Path | str = Path("temp/background.jpg"),
-    colors: Optional[str] = "black",
-    orientation: str = "vertical",
-    default_prefix: str = "background sad",
-) -> Path:
-    """
-    Tìm kiếm và tải 1 ảnh tĩnh dọc từ Pixabay API với bộ filter tối ưu cho video Quote tâm trạng.
-    
-    Args:
-        query: Từ khóa tìm kiếm bổ sung (vd: "night street", "rain window").
-        api_key: Pixabay API key (nếu None sẽ lấy từ .env hoặc config.json).
-        output_path: Nơi lưu file ảnh tải về (mặc định temp/background.jpg).
-        colors: Lọc tông màu ảnh ("black", "grayscale", "blue", ... hoặc None/all).
-        orientation: "vertical" (khổ dọc 9:16) hoặc "horizontal", "all".
-        default_prefix: Tiền tố tìm kiếm mặc định (ví dụ: "background sad").
-    
-    Returns:
-        Path dẫn tới file ảnh đã được crop chuẩn 1080x1920.
-    """
 def get_pixabay_api_key(api_key: Optional[str] = None) -> str:
     """Lấy API Key Pixabay từ tham số, .env, Streamlit secrets hoặc config.json."""
     key = api_key or os.getenv("PIXABAY_API_KEY")

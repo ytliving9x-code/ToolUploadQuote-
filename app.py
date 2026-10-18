@@ -16,8 +16,12 @@ from typing import Any, Dict, List, Optional
 import streamlit as st
 from dotenv import get_key, load_dotenv, set_key
 
-# Import các modules chức năng
-from modules.pixabay_fetcher import DEFAULT_DARK_KEYWORDS, fetch_pixabay_image
+from modules.pixabay_fetcher import (
+    DEFAULT_DARK_KEYWORDS,
+    fetch_pixabay_image,
+    search_pixabay_images,
+    download_and_crop_pixabay_image,
+)
 from modules.quote_manager import (
     get_all_categories,
     get_random_quote,
