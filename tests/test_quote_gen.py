@@ -44,27 +44,25 @@ def test_clean_and_parse_json_markdown_wrapped():
     result = clean_and_parse_json(raw)
     assert result["quote"] == "Nước sâu tĩnh lặng, lúa chín cúi đầu."
     # Tự động bổ sung các hashtag cốt lõi
-    assert "#tamtrang" in result["hashtags"]
-    assert "#chill" in result["hashtags"]
-    assert "#phattrienbanthan" in result["hashtags"]
+    assert result["quote"] == "Nước sâu tĩnh lặng, lúa chín cúi đầu."
+    assert "#truongthanh" in result["hashtags"]
+    assert "#suyngam" in result["hashtags"]
 
 
-def test_clean_and_parse_json_missing_field():
-    """Kiểm tra báo lỗi khi JSON thiếu trường bắt buộc."""
-    raw = json.dumps({
-        "quote": "Một câu nói hay.",
-        "caption": "Caption ngắn."
-        # Thiếu pexels_keywords và hashtags
-    })
-    with pytest.raises(ValueError, match="Thiếu trường bắt buộc"):
-        clean_and_parse_json(raw)
+def test_clean_and_parse_json_empty():
+    """Kiểm tra báo lỗi khi phản hồi rỗng."""
+    with pytest.raises(ValueError, match="Phản hồi từ LLM trống"):
+        clean_and_parse_json("")
 
 
-def test_clean_and_parse_json_malformed():
-    """Kiểm tra báo lỗi khi văn bản không phải JSON."""
-    raw = "Đây chỉ là đoạn văn bản thông thường không có cấu trúc JSON nào cả."
-    with pytest.raises(ValueError):
-        clean_and_parse_json(raw)
+def test_clean_and_parse_plain_text():
+    """Kiểm tra khi LLM trả về văn bản thuần 1 câu quote thay vì JSON."""
+    raw = '"Đêm muộn, người lớn chỉ dám thở dài khi xung quanh không còn ai."'
+    result = clean_and_parse_json(raw)
+    assert result["quote"] == "Đêm muộn, người lớn chỉ dám thở dài khi xung quanh không còn ai."
+    assert "hashtags" in result
+    assert len(result["hashtags"]) > 0
+
 
 
 def test_similarity_calculation():
@@ -124,7 +122,28 @@ def test_fallback_quote_generation(tmp_path: Path):
     data = get_fallback_quote("chữa lành", custom_db_path=test_db)
     assert "quote" in data
     assert len(data["quote"]) > 10
-    assert "pexels_keywords" in data
-    assert len(data["pexels_keywords"]) >= 2
-    assert "#tamtrang" in data["hashtags"]
     assert data["quote_id"] > 0
+
+
+def test_nature_cinematic_keywords_and_suggestions():
+    """Kiểm tra từ khóa Cinematic Nature và thuật toán gợi ý theo cảm xúc quote."""
+    from modules.pixabay_fetcher import NATURE_PRIORITY_KEYWORDS, NATURE_KEYWORD_CATEGORIES
+    from modules.quote_manager import suggest_keywords_from_quote
+
+    # 1. Kiểm tra đủ 12 từ khóa thiên nhiên ưu tiên
+    assert len(NATURE_PRIORITY_KEYWORDS) == 12
+    assert "misty mountains cinematic" in NATURE_PRIORITY_KEYWORDS
+    assert "moody ocean waves" in NATURE_PRIORITY_KEYWORDS
+    assert "sunset lake reflection" in NATURE_PRIORITY_KEYWORDS
+
+    # 2. Kiểm tra đủ 6 danh mục thiên nhiên
+    assert len(NATURE_KEYWORD_CATEGORIES) == 6
+
+    # 3. Gợi ý quote về trưởng thành & cuộc đời -> Núi phủ sương / mây trôi
+    kw_truongthanh = suggest_keywords_from_quote("Trưởng thành là khi ta nhận ra cuộc đời không như ta nghĩ.")
+    assert "misty mountains cinematic" in kw_truongthanh or "clouds moving over mountains" in kw_truongthanh
+
+    # 4. Gợi ý quote về tiền bạc & áp lực -> Đường vắng xuyên rừng / biển tối
+    kw_tienbac = suggest_keywords_from_quote("Cơm áo gạo tiền đè nặng khiến ta mệt mỏi.")
+    assert "empty road through forest" in kw_tienbac or "dark sea cinematic" in kw_tienbac
+

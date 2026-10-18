@@ -333,16 +333,37 @@ with tab_maker:
                         st.session_state["pix_kw_input"] = kw_item
                         st.rerun()
 
-            # Hộp chọn nhanh 10 từ khóa chuẩn Cinematic ưu tiên nhất
-            with st.expander("🎬 Kho 10 Từ Khóa Cinematic Đẹp Nhất (Đồng bộ phong cách kênh)", expanded=True):
-                from modules.pixabay_fetcher import TOP_PRIORITY_CINEMATIC_KEYWORDS, CINEMATIC_KEYWORD_CATEGORIES
-                col_c1, col_c2 = st.columns([1.5, 1])
+            # Hộp chọn nhanh từ khóa chuẩn Cinematic (Đô thị & Thiên nhiên)
+            with st.expander("🎬 Kho Từ Khóa Cinematic Đẹp Nhất (Đô Thị & Thiên Nhiên Trầm Lắng)", expanded=True):
+                from modules.pixabay_fetcher import (
+                    TOP_PRIORITY_CINEMATIC_KEYWORDS,
+                    NATURE_PRIORITY_KEYWORDS,
+                    URBAN_KEYWORD_CATEGORIES,
+                    NATURE_KEYWORD_CATEGORIES,
+                    ALL_PRIORITY_KEYWORDS,
+                )
+
+                style_mode = st.radio(
+                    "Chọn phong cách video nền:",
+                    options=["🌲 Thiên Nhiên Trầm Lắng (Cinematic Nature)", "🏙️ Đô Thị & Nội Tâm (Cinematic Solitude)"],
+                    horizontal=True,
+                    index=0,
+                )
+
+                if "Thiên Nhiên" in style_mode:
+                    active_priority_kws = NATURE_PRIORITY_KEYWORDS
+                    active_categories = NATURE_KEYWORD_CATEGORIES
+                else:
+                    active_priority_kws = TOP_PRIORITY_CINEMATIC_KEYWORDS
+                    active_categories = URBAN_KEYWORD_CATEGORIES
+
+                col_c1, col_c2 = st.columns([1.4, 1.2])
                 with col_c1:
                     chosen_top_kw = st.selectbox(
-                        "Chọn nhanh từ khóa chuẩn Cinematic:",
-                        options=["-- Chọn từ khóa có sẵn --"] + TOP_PRIORITY_CINEMATIC_KEYWORDS,
+                        "Chọn nhanh từ khóa tiêu biểu:",
+                        options=["-- Chọn từ khóa có sẵn --"] + active_priority_kws,
                         index=0,
-                        help="10 từ khóa được chọn lọc kỹ lưỡng để tạo video nền trầm, cô độc, đời thường chuẩn TikTok.",
+                        help="Các từ khóa tiếng Anh chuẩn Cinematic được tối ưu cho Pixabay.",
                     )
                     if chosen_top_kw != "-- Chọn từ khóa có sẵn --":
                         if st.session_state.get("pix_kw_input") != chosen_top_kw:
@@ -350,25 +371,25 @@ with tab_maker:
                             st.rerun()
                 with col_c2:
                     concept_choice = st.selectbox(
-                        "Xem theo nhóm chủ đề:",
-                        options=list(CINEMATIC_KEYWORD_CATEGORIES.keys()),
+                        "Xem theo nhóm cảm xúc / cảnh:",
+                        options=list(active_categories.keys()),
                         index=0,
                     )
 
                 # Hiển thị các chip từ khóa thuộc concept được chọn
-                concept_kws = CINEMATIC_KEYWORD_CATEGORIES.get(concept_choice, [])
+                concept_kws = active_categories.get(concept_choice, [])
                 if concept_kws:
-                    c_cols = st.columns(len(concept_kws))
+                    c_cols = st.columns(min(len(concept_kws), 4))
                     for c_idx, c_kw in enumerate(concept_kws):
-                        with c_cols[c_idx]:
-                            if st.button(f"🏷️ {c_kw}", key=f"c_kw_chip_{c_idx}", use_container_width=True):
+                        with c_cols[c_idx % 4]:
+                            if st.button(f"🏷️ {c_kw}", key=f"c_kw_chip_{style_mode[:3]}_{c_idx}", use_container_width=True):
                                 st.session_state["pix_kw_input"] = c_kw
                                 st.rerun()
 
             st.write("")
             col_kw, col_btn_pix = st.columns([2, 1])
             with col_kw:
-                default_kw = suggested_kw_list[0] if suggested_kw_list else "lonely man walking at night"
+                default_kw = suggested_kw_list[0] if suggested_kw_list else "misty mountains cinematic"
                 if st.session_state.current_keywords:
                     default_kw = st.session_state.current_keywords[0]
                 if "pix_kw_input" not in st.session_state:
@@ -384,8 +405,8 @@ with tab_maker:
                 st.write("")
                 btn_rnd_kw = st.button("🎲 Đổi Gợi Ý Khác", key="btn_rnd_pix", use_container_width=True)
                 if btn_rnd_kw:
-                    from modules.pixabay_fetcher import TOP_PRIORITY_CINEMATIC_KEYWORDS
-                    new_kw = random.choice(TOP_PRIORITY_CINEMATIC_KEYWORDS)
+                    from modules.pixabay_fetcher import ALL_PRIORITY_KEYWORDS
+                    new_kw = random.choice(ALL_PRIORITY_KEYWORDS)
                     st.session_state.current_keywords = [new_kw]
                     st.session_state["pix_kw_input"] = new_kw
                     st.rerun()

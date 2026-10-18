@@ -81,27 +81,45 @@ def suggest_keywords_from_quote(quote_text: str) -> List[str]:
     q_lower = quote_text.lower()
     suggested = []
 
+    # Tiền bạc, áp lực -> Kết hợp đô thị & thiên nhiên u ám / đường vắng
     if any(k in q_lower for k in ["tiền", "kiếm sống", "hóa đơn", "cơm áo", "lương", "tài khoản", "ví"]):
-        suggested.extend(["man working late night", "man walking alone city", "night shift worker cinematic", "dark street b roll"])
+        suggested.extend(["man working late night", "empty road through forest", "dark street b roll", "dark sea cinematic"])
     elif any(k in q_lower for k in ["áp lực", "mệt", "kiệt sức", "nặng nề", "đổ sụp"]):
-        suggested.extend(["tired man sitting alone", "man in empty room cinematic", "lonely man at night", "man sitting in car at night"])
-    elif any(k in q_lower for k in ["trưởng thành", "thay đổi", "năm tháng", "tuổi trẻ", "tiến về"]):
-        suggested.extend(["man walking alone back view", "man walking in city cinematic", "man walking into distance", "silhouette man walking sunset"])
-    elif any(k in q_lower for k in ["im lặng", "không khoe", "bớt nói", "nhịn", "giấu"]):
-        suggested.extend(["lone man shadow", "man silhouette city", "man walking away cinematic", "cinematic urban solitude"])
-    elif any(k in q_lower for k in ["thất vọng", "mất niềm tin", "ngã", "đau", "phản bội"]):
-        suggested.extend(["man sitting alone rain", "lonely man looking out window", "dark rainy street", "lonely man walking at night"])
+        suggested.extend(["tired man sitting alone", "dark sea cinematic", "empty road through forest", "man in empty room cinematic"])
+    
+    # Trưởng thành, cuộc đời -> Núi phủ sương, mây trôi, bước đi
+    elif any(k in q_lower for k in ["trưởng thành", "thay đổi", "năm tháng", "cuộc đời", "tuổi trẻ", "tiến về"]):
+        suggested.extend(["misty mountains cinematic", "clouds moving over mountains", "man walking alone back view", "foggy forest slow motion"])
+    
+    # Bản lĩnh, im lặng, không khoe khoang -> Rừng thông, cây lay trong gió, bóng người
+    elif any(k in q_lower for k in ["im lặng", "không khoe", "bớt nói", "nhịn", "giấu", "bản lĩnh", "vững vàng"]):
+        suggested.extend(["dark pine forest fog", "trees in wind cinematic", "forest trees swaying in wind", "lone man shadow"])
+    
+    # Cô đơn, thất vọng, mất niềm tin -> Biển rộng, sóng vỗ vào đá, mưa đêm
+    elif any(k in q_lower for k in ["thất vọng", "mất niềm tin", "ngã", "đau", "phản bội", "cô đơn", "lòng tin"]):
+        suggested.extend(["moody ocean waves", "waves hitting rocky shore", "dark rainy street", "man sitting alone at night"])
+    
+    # Buông bỏ, bình thản -> Hồ tĩnh lặng, hoàng hôn, sóng biển
+    elif any(k in q_lower for k in ["bình thản", "buông bỏ", "phẳng lặng", "thôi thì", "kệ", "nhẹ nhõm", "an yên"]):
+        suggested.extend(["sunset lake reflection", "mountain lake reflection", "ocean waves cinematic", "mountain mist cinematic"])
+    
+    # Thời gian, hoài niệm -> Nắng xuyên rừng, hoàng hôn, phim xưa
     elif any(k in q_lower for k in ["hoài niệm", "thời gian", "ngày xưa", "nhớ", "quá khứ"]):
-        suggested.extend(["nostalgic film footage", "old street cinematic", "sunset through window", "city lights bokeh rain"])
-    elif any(k in q_lower for k in ["bình thản", "buông bỏ", "phẳng lặng", "thôi thì", "kệ", "nhẹ nhõm"]):
-        suggested.extend(["ocean waves cinematic", "empty road sunset", "mountain mist cinematic", "man drinking coffee alone"])
+        suggested.extend(["sunset lake cinematic", "golden hour nature landscape", "nostalgic film footage", "clouds moving over mountains"])
+    
+    # Công sở, thường ngày
     elif any(k in q_lower for k in ["công sở", "văn phòng", "công ty", "đồng nghiệp", "họp"]):
-        suggested.extend(["late night office cinematic", "man sitting in cafe window", "man working late night", "city lights night road"])
-    elif any(k in q_lower for k in ["mưa", "đêm", "cửa kính", "đèn"]):
-        suggested.extend(["rainy city night cinematic", "rain on window at night", "city lights bokeh rain", "night traffic rain reflections"])
+        suggested.extend(["late night office cinematic", "man sitting in cafe window", "city lights night road"])
+    
+    # Mưa, đêm, tâm trạng
+    elif any(k in q_lower for k in ["mưa", "đêm", "cửa kính", "giọt"]):
+        suggested.extend(["rain falling on leaves", "rainy city night cinematic", "rain on window at night", "city lights bokeh rain"])
+    
     else:
-        suggested.extend(["lonely man walking at night", "rainy city night cinematic", "man sitting alone at night", "man looking out window"])
+        # Mặc định kết hợp luân phiên đô thị và thiên nhiên cinematic
+        suggested.extend(["misty mountains cinematic", "lonely man walking at night", "moody ocean waves", "man sitting alone at night"])
 
     return list(dict.fromkeys(suggested))  # Unique items
+
 
 

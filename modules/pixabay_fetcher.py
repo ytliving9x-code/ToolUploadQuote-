@@ -21,7 +21,7 @@ from PIL import Image
 
 logger = logging.getLogger("tiktok_tool.pixabay_fetcher")
 
-# 10 Từ khóa ưu tiên hàng đầu theo phong cách Cinematic, Trầm, Cô độc
+# 10 Từ khóa ưu tiên hàng đầu theo phong cách Đô thị, Trầm, Cô độc
 TOP_PRIORITY_CINEMATIC_KEYWORDS = [
     "lonely man walking at night",
     "rainy city night cinematic",
@@ -35,8 +35,24 @@ TOP_PRIORITY_CINEMATIC_KEYWORDS = [
     "moody city b roll",
 ]
 
-# Toàn bộ kho từ khóa phân loại theo concept
-CINEMATIC_KEYWORD_CATEGORIES = {
+# 12 Từ khóa ưu tiên hàng đầu theo phong cách Thiên nhiên trầm lặng (Cinematic Nature)
+NATURE_PRIORITY_KEYWORDS = [
+    "misty mountains cinematic",
+    "foggy forest slow motion",
+    "moody ocean waves",
+    "waves hitting rocky shore",
+    "empty road through forest",
+    "forest river cinematic",
+    "rain falling on leaves",
+    "sunset lake reflection",
+    "dark pine forest fog",
+    "clouds moving over mountains",
+    "waterfall in forest cinematic",
+    "wind blowing through grass",
+]
+
+# Toàn bộ kho từ khóa phân loại theo concept Đô thị & Nội tâm
+URBAN_KEYWORD_CATEGORIES = {
     "Đường phố ban đêm — trầm, lạnh": [
         "lonely man walking at night",
         "rainy city night cinematic",
@@ -82,7 +98,51 @@ CINEMATIC_KEYWORD_CATEGORIES = {
     ],
 }
 
-DEFAULT_DARK_KEYWORDS = TOP_PRIORITY_CINEMATIC_KEYWORDS
+# Toàn bộ kho từ khóa phân loại theo concept Thiên nhiên tĩnh lặng (Cinematic Nature)
+NATURE_KEYWORD_CATEGORIES = {
+    "Núi rừng phủ sương (Bình thản, nhìn lại cuộc đời)": [
+        "misty mountains cinematic",
+        "foggy forest sunrise",
+        "mountain clouds slow motion",
+        "clouds moving over mountains",
+    ],
+    "Biển rộng, sóng vỗ (Cô độc, tự do, buông bỏ)": [
+        "moody ocean waves",
+        "dark sea cinematic",
+        "ocean waves cloudy sky",
+        "waves hitting rocky shore",
+    ],
+    "Con đường xuyên rừng (Hành trình, tiếp tục bước đi)": [
+        "empty road through forest",
+        "foggy forest road cinematic",
+        "winding road mountain mist",
+    ],
+    "Mưa rơi trên lá cây (Trầm lắng, suy tư, chữa lành)": [
+        "rain falling on leaves",
+        "rainy forest cinematic",
+        "forest after rain slow motion",
+    ],
+    "Hoàng hôn trên hồ (Hoài niệm, bình yên, thời gian)": [
+        "sunset lake cinematic",
+        "mountain lake reflection",
+        "golden hour nature landscape",
+        "sunset lake reflection",
+    ],
+    "Rừng cây và gió (Tĩnh lặng, vững vàng, bản lĩnh)": [
+        "forest trees swaying in wind",
+        "dark pine forest fog",
+        "trees in wind cinematic",
+        "waterfall in forest cinematic",
+        "wind blowing through grass",
+    ],
+}
+
+# Danh mục tổng hợp cả Đô thị và Thiên nhiên
+CINEMATIC_KEYWORD_CATEGORIES = {**URBAN_KEYWORD_CATEGORIES, **NATURE_KEYWORD_CATEGORIES}
+
+ALL_PRIORITY_KEYWORDS = TOP_PRIORITY_CINEMATIC_KEYWORDS + NATURE_PRIORITY_KEYWORDS
+DEFAULT_DARK_KEYWORDS = ALL_PRIORITY_KEYWORDS
+
 
 
 
