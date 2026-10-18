@@ -22,6 +22,32 @@ load_dotenv()
 
 # Danh mục 15+ quote mẫu chất lượng cao dự phòng (phong cách người trưởng thành 27-35 tuổi từng trải, cơm áo gạo tiền)
 FALLBACK_QUOTES: Dict[str, List[Dict[str, Any]]] = {
+    "trưởng thành": [
+        {
+            "quote": "Không còn ai đứng phía sau để dựa dẫm, bước chân tự khắc phải vững vàng hơn.",
+            "pexels_keywords": ["night street rain aesthetic", "lone wolf dark moody", "calm ocean night moody"],
+            "caption": "Tự gánh vác cuộc đời mình, không than vãn, không trông chờ ai thương hại. 🌙",
+            "hashtags": ["#truongthanh", "#tamtrang", "#doithuc", "#phattrienbanthan", "#tulam"],
+        },
+        {
+            "quote": "Bớt phân bua đúng sai với thiên hạ, dành thời gian đó kiếm tiền lo cho gia đình.",
+            "pexels_keywords": ["city lights night blurred", "dark office building night", "rain street reflections"],
+            "caption": "Tranh cãi hơn thua không mua được bình yên, chỉ có trách nhiệm là điều ở lại. 💼",
+            "hashtags": ["#truongthanh", "#trachnhiem", "#giadinh", "#kiemtien", "#thucte"],
+        },
+        {
+            "quote": "Tan làm tắt chuông điện thoại, ngồi im một góc mới thấy lòng mình thực sự thuộc về mình.",
+            "pexels_keywords": ["rainy window coffee", "night city drive lights", "quiet aesthetic corner"],
+            "caption": "Khoảnh khắc tĩnh lặng quý giá sau một ngày dài lăn lộn mưu sinh ngoài phố xá. ☕",
+            "hashtags": ["#truongthanh", "#binhyen", "#gocnhotamhon", "#langdong", "#chill"],
+        },
+        {
+            "quote": "Có những uất ức chỉ biết nuốt ngược vào trong, vì sáng mai vẫn phải xuất hiện với vẻ ngoài chỉn chu.",
+            "pexels_keywords": ["dark aesthetic office night", "foggy forest dark moody", "rain street reflections"],
+            "caption": "Người lớn là khi không có quyền yếu đuối trước mặt những người cần mình che chở. 🥀",
+            "hashtags": ["#truongthanh", "#apluc", "#comaogaotien", "#bandoi", "#suyngam"],
+        },
+    ],
     "điềm tĩnh": [
         {
             "quote": "Trưởng thành là khi mở mắt ra chỉ thấy hóa đơn. Muốn mệt mỏi buông xuôi, nhưng ví tiền không cho phép.",
