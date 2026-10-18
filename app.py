@@ -280,75 +280,44 @@ with tab_maker:
         # -------------------------------------------------------------
         st.subheader("2. Chọn Nguồn Ảnh Nền (Photo Khổ Dọc 9:16)")
 
-        tab_unsplash, tab_pixabay, tab_upload_local = st.tabs([
-            "📸 Tải Ảnh Từ Unsplash (Đề Xuất)",
-            "🌐 Tải Ảnh Từ Pixabay",
+        tab_pixabay, tab_ai_gen, tab_upload_local = st.tabs([
+            "🌐 Tải Ảnh Từ Pixabay (Kho Ảnh Gốc)",
+            "🎨 AI Tạo Ảnh Độc Bản (Không Cần Key)",
             "📤 Tải Ảnh Từ Máy Tính",
         ])
 
-        # Gợi ý từ khóa chung cho cả 2 tab
+        # Gợi ý từ khóa chung
         suggested_kw_list = suggest_keywords_from_quote(st.session_state.current_quote_text)
 
-        with tab_unsplash:
-            st.markdown("💡 **Từ khóa gợi ý theo câu quote (Unsplash có ảnh nghệ thuật, màu film rất đẹp):**")
-            cols_chips_uns = st.columns(min(len(suggested_kw_list), 4))
-            for i, kw_item in enumerate(suggested_kw_list[:4]):
-                with cols_chips_uns[i]:
-                    if st.button(f"👉 {kw_item}", key=f"chip_kw_uns_{i}", use_container_width=True):
-                        st.session_state.current_keywords = [kw_item]
-                        st.session_state["uns_kw_input"] = kw_item
-                        st.rerun()
+        with tab_ai_gen:
+            st.markdown("💡 **AI Tự Động Vẽ Ảnh Nền Độc Bản (Chuẩn khổ dọc 1080x1920, Không Đụng Hàng, Hoàn Toàn Miễn Phí):**")
+            st.caption("AI sẽ phân tích câu quote và tạo ra bức tranh nghệ thuật cinematic dành riêng cho video của bạn.")
 
-            st.write("")
-            col_kw_uns, col_btn_uns_rnd = st.columns([2, 1])
-            with col_kw_uns:
-                default_kw_uns = suggested_kw_list[0] if suggested_kw_list else "night street rain"
-                if st.session_state.current_keywords:
-                    default_kw_uns = st.session_state.current_keywords[0]
-                if "uns_kw_input" not in st.session_state:
-                    st.session_state["uns_kw_input"] = default_kw_uns
+            ai_default_prompt = suggested_kw_list[0] if suggested_kw_list else "rainy city street night lonely"
+            ai_prompt_input = st.text_input(
+                "Mô tả khung cảnh muốn AI vẽ (hoặc dùng gợi ý theo câu quote):",
+                value=ai_default_prompt,
+                key="ai_img_prompt_input",
+                help="Gõ tiếng Anh hoặc tiếng Việt (vd: 'mưa đêm phố vắng', 'quán cà phê khuya', 'rainy street night moody').",
+            )
 
-                kw_input_uns = st.text_input(
-                    "Từ khóa tìm ảnh dọc trên Unsplash:",
-                    key="uns_kw_input",
-                    help="Tìm ảnh nghệ thuật, màu film trầm tối, khổ dọc portrait 1080x1920.",
-                )
-            with col_btn_uns_rnd:
-                st.write("")
-                st.write("")
-                btn_rnd_kw_uns = st.button("🎲 Đổi Gợi Ý Khác", key="btn_rnd_uns", use_container_width=True)
-                if btn_rnd_kw_uns:
-                    new_kw = random.choice(DEFAULT_DARK_KEYWORDS)
-                    st.session_state.current_keywords = [new_kw]
-                    st.session_state["uns_kw_input"] = new_kw
-                    st.rerun()
-
-            # Ô nhập Unsplash Access Key tùy chọn
-            with st.expander("🔑 Cấu hình Unsplash Access Key (Tùy chọn - Miễn phí tại unsplash.com/developers)", expanded=False):
-                st.info("Nếu chưa có Unsplash Key, hệ thống sẽ tự động dùng ảnh Pixabay chất lượng cao thay thế để app không bị gián đoạn.")
-                uns_key_input = st.text_input(
-                    "Unsplash Access Key:",
-                    value=os.getenv("UNSPLASH_ACCESS_KEY", ""),
-                    type="password",
-                    help="Lấy miễn phí trong 30s tại: https://unsplash.com/developers",
-                )
-
-            btn_fetch_unsplash = st.button("📥 Tìm & Tải Ảnh Unsplash Này", type="primary", use_container_width=True)
-            if btn_fetch_unsplash:
-                with st.spinner("Đang tìm và tải ảnh nghệ thuật dọc chuẩn 1080x1920 từ Unsplash..."):
+            btn_gen_ai_img = st.button("✨ AI Tạo Ảnh Nền Này Ngay", type="primary", use_container_width=True)
+            if btn_gen_ai_img:
+                with st.spinner("AI đang vẽ ảnh nghệ thuật chuẩn 1080x1920 (khoảng 3 - 5 giây)..."):
                     try:
-                        from modules.unsplash_fetcher import fetch_unsplash_photo
-                        fetched_img = fetch_unsplash_photo(
-                            query=kw_input_uns,
-                            access_key=uns_key_input if uns_key_input else None,
-                            output_path=Path("temp/background.jpg"),
+                        from modules.ai_image_gen import generate_ai_image
+                        out_ai_img = generate_ai_image(
+                            prompt=ai_prompt_input,
+                            output_dir=Path("temp"),
+                            width=1080,
+                            height=1920,
                         )
-                        st.session_state.current_bg_image = str(fetched_img)
+                        st.session_state.current_bg_image = str(out_ai_img)
                         st.session_state.rendered_18s_video = None
-                        st.toast("Đã chuẩn bị ảnh nền 1080x1920 thành công!", icon="📸")
+                        st.toast("Đã tạo ảnh nền nghệ thuật độc bản thành công!", icon="🎨")
                         st.rerun()
                     except Exception as e:
-                        st.error(f"Lỗi khi tải ảnh từ Unsplash: {e}")
+                        st.error(f"Lỗi khi tạo ảnh AI: {e}")
 
         with tab_pixabay:
             st.markdown("💡 **Từ khóa gợi ý khớp nhất với câu quote hiện tại:**")
