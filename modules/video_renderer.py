@@ -76,13 +76,16 @@ def create_quote_overlay(
     margin_bottom: int = 420, # Cách đáy 420px tránh che thanh nhạc, tên kênh và caption TikTok
     line_spacing: int = 18,
     font_size: int = 42,      # Cỡ chữ nhỏ gọn, tinh tế hơn (42px)
+    signature: Optional[str] = "saigonbac",
+    signature_font_size: int = 24,
 ) -> Image.Image:
     """
-    Tạo lớp ảnh chữ trong suốt RGBA (1080x1920) chứa câu quote:
+    Tạo lớp ảnh chữ trong suốt RGBA (1080x1920) chứa câu quote và chữ ký nhỏ:
     - Font chữ nhỏ hơn, tinh tế, sang trọng (42px).
     - Canh lề trái (x = 90px), nằm ở góc dưới bên trái (cách đáy 420px an toàn).
     - Tránh hoàn toàn khu vực nút Like/Share/Comment bên phải và thanh nhạc TikTok ở đáy.
-    - Chữ trắng tinh #FFFFFF với bóng đổ đen mờ mềm mại (Drop Shadow).
+    - Chữ trắng tinh #FFFFFF nguyên bản.
+    - Kèm chữ ký nhỏ (saigonbac) ngay dưới câu quote.
     """
     img = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
     max_text_width = canvas_size[0] - margin_left - margin_right
@@ -110,16 +113,34 @@ def create_quote_overlay(
 
     total_text_h += (len(lines) - 1) * line_spacing
 
+    # Thêm chiều cao cho chữ ký nếu có
+    sig_font = None
+    sig_h = 0
+    sig_spacing = 16
+    if signature:
+        sig_font = get_vietnamese_font(signature_font_size)
+        sig_bbox = draw_dummy.textbbox((0, 0), signature, font=sig_font)
+        sig_h = sig_bbox[3] - sig_bbox[1]
+        total_text_h += sig_spacing + sig_h
+
     # Vị trí Y: đặt ở góc dưới (cách đáy màn hình khoảng margin_bottom px)
     start_y = canvas_size[1] - margin_bottom - total_text_h
     start_x = margin_left
 
-    # Vẽ chữ trắng tinh khiết nguyên bản (#FFFFFF), KHÔNG bóng đổ, KHÔNG viền, KHÔNG nền mờ
+    # Vẽ chữ trắng tinh khiết nguyên bản (#FFFFFF)
     draw = ImageDraw.Draw(img)
     curr_y = start_y
     for line, w, h in line_metrics:
         draw.text((start_x, curr_y), line, font=font, fill=(255, 255, 255, 255))
         curr_y += h + line_spacing
+
+    # Vẽ chữ ký nhỏ bên dưới câu quote, canh lề phải theo khung quote (tránh che cụm nút TikTok)
+    if signature and sig_font:
+        curr_y += (sig_spacing - line_spacing) if lines else 0
+        sig_bbox = draw_dummy.textbbox((0, 0), signature, font=sig_font)
+        sig_w = sig_bbox[2] - sig_bbox[0]
+        sig_x = (canvas_size[0] - margin_right) - sig_w
+        draw.text((sig_x, curr_y), signature, font=sig_font, fill=(255, 255, 255, 190))
 
     return img
 
@@ -130,6 +151,7 @@ def render_18s_video(
     output_path: Path | str = Path("output/tiktok_18s_ready.mp4"),
     duration: float = 18.0,
     overlay_opacity: float = 0.30,
+    signature: Optional[str] = "saigonbac",
 ) -> Path:
     """
     Render video TikTok chuẩn 18 giây, tỷ lệ 9:16 (1080x1920), không có âm thanh.
@@ -140,6 +162,7 @@ def render_18s_video(
         output_path: Đường dẫn file video xuất ra (mặc định output/tiktok_18s_ready.mp4).
         duration: Thời lượng video (cố định 18.0s).
         overlay_opacity: Độ tối lớp phủ đen (mặc định 30% = 0.30).
+        signature: Chữ ký thương hiệu nhỏ (mặc định 'saigonbac').
 
     Returns:
         Path dẫn tới video thành phẩm.
@@ -151,8 +174,8 @@ def render_18s_video(
     out_file = Path(output_path)
     out_file.parent.mkdir(parents=True, exist_ok=True)
 
-    # 1. Tạo ảnh chữ PNG tạm thời
-    overlay_img = create_quote_overlay(quote=quote)
+    # 1. Tạo ảnh chữ PNG tạm thời kèm chữ ký
+    overlay_img = create_quote_overlay(quote=quote, signature=signature)
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_png:
         tmp_png_path = Path(tmp_png.name)
     overlay_img.save(tmp_png_path, format="PNG")

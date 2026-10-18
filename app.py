@@ -21,6 +21,7 @@ from modules.pixabay_fetcher import (
     fetch_pixabay_image,
     search_pixabay_images,
     download_and_crop_pixabay_image,
+    fetch_dark_moody_image_for_quote,
 )
 from modules.quote_manager import (
     get_all_categories,
@@ -202,6 +203,12 @@ if "current_bg_image" not in st.session_state:
 if "rendered_18s_video" not in st.session_state:
     st.session_state.rendered_18s_video = None
 
+if "current_signature" not in st.session_state:
+    st.session_state.current_signature = config.get("branding", {}).get("signature", "saigonbac")
+
+if "auto_dark_bg_enabled" not in st.session_state:
+    st.session_state.auto_dark_bg_enabled = True
+
 
 # ==============================================================================
 # TIÊU ĐỀ CHÍNH
@@ -229,20 +236,48 @@ with col_input:
 
     all_quotes_data = load_all_quotes()
 
+    # Checkbox tự động tìm ảnh nền màu tối
+    st.session_state.auto_dark_bg_enabled = st.checkbox(
+        "🌙 **Tự động tìm ảnh nền gam màu tối phù hợp ngay khi sinh quote**",
+        value=st.session_state.auto_dark_bg_enabled,
+        help="Khi bật, hệ thống sẽ tự động phân tích câu quote và tải 1 ảnh nền chất lượng cao gam màu tối (đêm, mưa, phố vắng, cinematic) cập nhật ngay vào khung xem trước 9:16.",
+    )
+
     if quote_mode == "🤖 Dùng AI sinh mới (Gemini/OpenAI)":
-        st.caption("AI nhập vai người 27–35 tuổi, bươn chải mưu sinh, tự độc thoại nội tâm 14–26 từ chân thật, không văn mẫu.")
-        if st.button("✨ Sinh Quote Mới Bằng AI (14–26 Từ Chuẩn TikTok)", type="primary", use_container_width=True):
-            with st.spinner("AI đang viết câu quote độc thoại nội tâm..."):
+        st.caption("AI viết quote 'buồn một chút' cho video TikTok: tâm sự chân thật, buồn nhẹ, trầm lắng, 15–35 từ, không sến súa.")
+        ai_topic_options = config.get("topics", [
+            "tự mình chịu đựng",
+            "giấu nỗi buồn",
+            "cô đơn",
+            "áp lực tiền bạc và trưởng thành",
+            "cha mẹ và gia đình",
+            "khó tin người",
+            "cố gắng nhưng không như ý",
+            "chấp nhận buông bỏ",
+            "đi dạo một mình buổi tối"
+        ])
+        selected_ai_topic = st.selectbox("Chọn chủ đề tâm sự:", options=ai_topic_options, index=0)
+
+        if st.button("✨ Sinh Quote Mới Bằng AI (Phong Cách Buồn Một Chút)", type="primary", use_container_width=True):
+            with st.spinner(f"AI đang viết câu quote tâm sự theo chủ đề '{selected_ai_topic}'..."):
                 try:
-                    ai_res = generate_quote(topic="trưởng thành và cơm áo gạo tiền")
-                    st.session_state.current_quote_text = ai_res["quote"]
+                    ai_res = generate_quote(topic=selected_ai_topic, config=config)
+                    new_q = ai_res["quote"]
+                    st.session_state.current_quote_text = new_q
                     if ai_res.get("pexels_keywords"):
                         kw_first = ai_res["pexels_keywords"][0]
                         st.session_state.current_keywords = ai_res["pexels_keywords"]
-                        st.session_state["uns_kw_input"] = kw_first
                         st.session_state["pix_kw_input"] = kw_first
+
+                    # Tự động tìm ảnh nền gam màu tối nếu tính năng đang bật
+                    if st.session_state.auto_dark_bg_enabled:
+                        with st.spinner("Đang tìm và áp dụng ảnh nền gam màu tối phù hợp..."):
+                            dark_bg = fetch_dark_moody_image_for_quote(new_q, api_key=config.get("pixabay_api_key"))
+                            st.session_state.current_bg_image = str(dark_bg)
+                            st.session_state.rendered_18s_video = None
+
                     if ai_res.get("is_ai_generated", True):
-                        st.toast("Đã dùng Gemini sáng tạo quote mới thành công!", icon="✨")
+                        st.toast("Đã sinh quote & cập nhật ảnh nền tối tâm trạng thành công!", icon="✨")
                     else:
                         st.warning("⚠️ Không thể kết nối AI hoặc phát hiện trùng lặp nhiều lần. Đã lấy câu ngẫu nhiên từ kho mẫu dự phòng.")
                     st.rerun()
@@ -259,11 +294,20 @@ with col_input:
             st.write("")
             if st.button("🎲 Random Quote Ngẫu Nhiên", use_container_width=True):
                 rnd_q = get_random_quote(chosen_cat)
-                st.session_state.current_quote_text = rnd_q["quote"]
+                new_q = rnd_q["quote"]
+                st.session_state.current_quote_text = new_q
                 rnd_kws = rnd_q.get("keywords", ["night street rain aesthetic"])
                 st.session_state.current_keywords = rnd_kws
-                st.session_state["uns_kw_input"] = rnd_kws[0]
                 st.session_state["pix_kw_input"] = rnd_kws[0]
+
+                # Tự động tìm ảnh nền gam màu tối nếu tính năng đang bật
+                if st.session_state.auto_dark_bg_enabled:
+                    with st.spinner("Đang tìm và áp dụng ảnh nền gam màu tối phù hợp..."):
+                        dark_bg = fetch_dark_moody_image_for_quote(new_q, api_key=config.get("pixabay_api_key"))
+                        st.session_state.current_bg_image = str(dark_bg)
+                        st.session_state.rendered_18s_video = None
+
+                st.toast("Đã chọn quote & đổi ảnh nền tối tâm trạng!", icon="🎲")
                 st.rerun()
 
         # Lọc danh sách câu để hiển thị dropdown
@@ -290,9 +334,17 @@ with col_input:
         "Nội dung Quote (hiển thị trên video):",
         value=st.session_state.current_quote_text,
         height=85,
-        help="Chữ sẽ được vẽ căn giữa, lề an toàn 100px, font Be Vietnam Pro SemiBold trắng tinh kèm bóng đen mờ mềm mại.",
+        help="Chữ sẽ được vẽ căn lề trái, lề an toàn 90px, font Be Vietnam Pro trắng tinh khiết.",
     )
     st.session_state.current_quote_text = quote_input_box
+
+    sig_input = st.text_input(
+        "Chữ ký nhận diện thương hiệu nhỏ (Signature):",
+        value=st.session_state.current_signature,
+        placeholder="saigonbac",
+        help="Chữ ký nhỏ gọn hiển thị ngay dưới câu quote (để trống nếu không muốn chèn).",
+    )
+    st.session_state.current_signature = sig_input.strip()
 
     st.divider()
 
@@ -504,6 +556,7 @@ with col_input:
                     quote=st.session_state.current_quote_text,
                     output_path=out_vid,
                     duration=18.0,
+                    signature=st.session_state.current_signature or None,
                 )
                 st.session_state.rendered_18s_video = str(out_vid)
                 st.toast("Dựng video tĩnh 18s hoàn tất 100%!", icon="🎉")
@@ -550,10 +603,13 @@ with col_preview:
     elif bg_curr and Path(bg_curr).exists():
         st.caption("👁️ **Xem Trước Chữ Trên Ảnh Nền (Tỉ Lệ Chuẩn 9:16):**")
         try:
+            preview_config = dict(config)
+            preview_config["branding"] = dict(config.get("branding", {}))
+            preview_config["branding"]["signature"] = st.session_state.current_signature
             preview_img_path = generate_quote_preview_image(
                 image_path=bg_curr,
                 quote=st.session_state.current_quote_text,
-                config=config,
+                config=preview_config,
             )
             st.image(str(preview_img_path), use_container_width=True)
         except Exception as ex:

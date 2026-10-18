@@ -47,7 +47,17 @@ def run_pipeline(count: int = 1, topic: str = "random", config_path: str = "conf
     else:
         config = {}
 
-    topics_list = config.get("topics", ["điềm tĩnh", "nỗ lực", "tiền bạc", "chữa lành"])
+    topics_list = config.get("topics", [
+        "tự mình chịu đựng",
+        "giấu nỗi buồn",
+        "cô đơn",
+        "áp lực tiền bạc và trưởng thành",
+        "cha mẹ và gia đình",
+        "khó tin người",
+        "cố gắng nhưng không như ý",
+        "chấp nhận buông bỏ",
+        "đi dạo một mình buổi tối"
+    ])
 
     logger.info(f"=== BẮT ĐẦU QUY TRÌNH TỰ ĐỘNG SẢN XUẤT {count} VIDEO ===")
     success_count = 0

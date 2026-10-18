@@ -1,122 +1,122 @@
 [
   {
     "id": 1,
-    "category": "cơm áo gạo tiền",
-    "quote": "Trưởng thành là khi mở mắt ra chỉ thấy hóa đơn. Muốn buông xuôi, nhưng ví tiền chưa bao giờ cho phép.",
+    "category": "cố gắng nhưng không như ý",
+    "quote": "Không phải mình không nỗ lực, mà là có những chuyện dù cố gắng đến kiệt cùng vẫn chẳng thể như ý muốn.",
     "keywords": ["night street rain aesthetic", "dark city lonely", "rainy car window"]
   },
   {
     "id": 2,
-    "category": "cơm áo gạo tiền",
-    "quote": "Mỗi sáng thức dậy là một cuộc chiến không tiếng súng. Nuốt sự mệt mỏi vào trong rồi mặc áo bước ra đường.",
+    "category": "giấu nỗi buồn",
+    "quote": "Có thể ngoài mặt vẫn cười nói bình thường, nhưng chỉ mình mới biết trong lòng đã vụn vỡ từ lâu.",
     "keywords": ["subway dark quiet", "foggy morning street", "night walk city"]
   },
   {
     "id": 3,
-    "category": "cơm áo gạo tiền",
-    "quote": "Người lớn không có quyền ốm đau. Phía trước là chi phí cuộc sống, phía sau là người cần mình chống đỡ.",
+    "category": "tự mình chịu đựng",
+    "quote": "Mình có mạnh mẽ đâu. Nhưng ngoài việc tự lau nước mắt rồi bước tiếp, mình còn biết dựa vào ai...",
     "keywords": ["office night work dark", "rain window moody", "city lights night blurred"]
   },
   {
     "id": 4,
-    "category": "cơm áo gạo tiền",
-    "quote": "Có những ngày tan sở chỉ muốn ngồi im trong xe mười phút. Tìm lại chính mình trước khi bước qua cánh cửa nhà.",
+    "category": "đi dạo một mình buổi tối",
+    "quote": "Sau này khi đã đi qua đủ giông bão, bạn nhớ rằng những tối lang thang một mình chính là lúc lòng ta tĩnh lặng nhất.",
     "keywords": ["rain on car windshield", "night city drive", "dark parking lot moody"]
   },
   {
     "id": 5,
-    "category": "cơm áo gạo tiền",
-    "quote": "Cơm áo gạo tiền dạy ta bớt mơ mộng. Bình an lớn nhất mỗi tối là thấy ví tiền đủ trả tiền nhà tháng tới.",
+    "category": "áp lực tiền bạc và trưởng thành",
+    "quote": "Không phải mình yêu tiền đến mức thực dụng, mà là không có tiền thì ngay cả tư cách bảo vệ người thân cũng không có.",
     "keywords": ["dark room night lamp", "rain cafe window", "quiet aesthetic corner"]
   },
   {
     "id": 6,
-    "category": "thất bại trong im lặng",
-    "quote": "Ngã đau đến mấy cũng không dám kể với ai. Tự lau vết thương trong đêm, sáng mai vẫn phải đi làm đúng giờ.",
+    "category": "khó tin người",
+    "quote": "Bị phản bội một lần là quá đủ để sau này đối diện với bất kỳ ai, mình cũng phải giữ lại cho mình một lối lui.",
     "keywords": ["dark rainy street aesthetic", "lonely walking night street", "misty street light"]
   },
   {
     "id": 7,
-    "category": "thất bại trong im lặng",
-    "quote": "Sau lưng không có ai che chắn, lấy tư cách gì để gục ngã? Cay đắng tự chịu, cuộc đời tự gánh vác.",
+    "category": "cha mẹ và gia đình",
+    "quote": "Có thể mình chịu bao nhiêu ấm ức ngoài xã hội cũng được, nhưng chỉ cần nghe giọng mẹ qua điện thoại là khóe mắt lại cay.",
     "keywords": ["neon lights dark rain", "dark subway station", "city bridge night moody"]
   },
   {
     "id": 8,
-    "category": "thất bại trong im lặng",
-    "quote": "Không ai có nghĩa vụ phải hiểu bạn vất vả thế nào. Đời người, kết quả là câu trả lời duy nhất.",
+    "category": "cô đơn",
+    "quote": "Mình có thích ở một mình đâu. Nhưng việc phải giải thích nỗi buồn của mình cho người khác còn mệt mỏi hơn gấp vạn lần.",
     "keywords": ["city skyscraper night moody", "dark luxury minimalist", "night road lights"]
   },
   {
     "id": 9,
-    "category": "thất bại trong im lặng",
-    "quote": "Từng nghĩ thất bại là trời sụp. Đi qua rồi mới hiểu, sụp đổ cũng chỉ được phép trong im lặng vài canh giờ.",
+    "category": "chấp nhận buông bỏ",
+    "quote": "Sau này khi nhìn lại, bạn nhớ rằng có những thứ buông tay không phải vì hết thương, mà vì giữ lại chỉ làm cả hai thêm đau.",
     "keywords": ["dark aesthetic office night", "foggy forest dark moody", "calm ocean night moody"]
   },
   {
     "id": 10,
-    "category": "thất bại trong im lặng",
-    "quote": "Đừng kể lể vết thương khi chưa lành lặn. Thế giới này chỉ nhìn thấy người đứng vững, không bận tâm ai từng ngã.",
+    "category": "tự mình chịu đựng",
+    "quote": "Là do bản thân kỳ vọng quá nhiều, hay là do cuộc đời này vốn dĩ chưa từng dịu dàng với mình...",
     "keywords": ["dark beach waves night", "rain mist forest", "aesthetic night street"]
   },
   {
     "id": 11,
-    "category": "sự điềm đạm bắt buộc",
-    "quote": "Bớt nói lại không phải vì hèn nhát, mà hiểu rằng chẳng ai gánh thay mình một ngày giông bão.",
-    "keywords": ["coffee cup rain window", "quiet coffee shop dark", "soft night lamp aesthetic"]
+    "category": "áp lực tiền bạc và trưởng thành",
+    "quote": "Không phải sợ già đi, mà sợ nhất là tốc độ thành công của bản thân không kịp đuổi theo mái tóc bạc của cha mẹ.",
+    "keywords": ["city lights night blurred", "dark office building night", "rain street reflections"]
   },
   {
     "id": 12,
-    "category": "sự điềm đạm bắt buộc",
-    "quote": "Đến một độ tuổi, im lặng trở thành câu trả lời duy nhất cho mọi bất công và hiểu lầm.",
-    "keywords": ["dark vintage library", "dark rainy alley aesthetic", "quiet train window night"]
+    "category": "giấu nỗi buồn",
+    "quote": "Có thể người ta thấy anh luôn ổn và điềm tĩnh, nhưng chỉ mình anh biết đã phải trải qua bao đêm thức trắng để học cách im lặng.",
+    "keywords": ["rainy window coffee", "night city drive lights", "quiet aesthetic corner"]
   },
   {
     "id": 13,
-    "category": "sự điềm đạm bắt buộc",
-    "quote": "Cười ít đi nhưng lòng bớt xáo động. Không tranh cãi đúng sai, chỉ muốn giữ cho lòng mình chút tĩnh lặng.",
-    "keywords": ["rainy cafe window dark", "gentle rain leaves moody", "dark room warm light"]
+    "category": "cố gắng nhưng không như ý",
+    "quote": "Mình có cam tâm chấp nhận thất bại đâu. Nhưng cố hết sức rồi, đành thở dài mỉm cười cho qua chuyện.",
+    "keywords": ["dark aesthetic office night", "foggy forest dark moody", "rain street reflections"]
   },
   {
     "id": 14,
-    "category": "sự điềm đạm bắt buộc",
-    "quote": "Không còn tha thiết giải thích với bất kỳ ai. Người hiểu thì không cần, kẻ không hiểu nói cũng bằng thừa.",
+    "category": "đi dạo một mình buổi tối",
+    "quote": "Thích nhất những đêm muộn một mình chạy xe ngoài phố. Gió thốc vào mặt, không cần diễn vai một người lớn thành công.",
     "keywords": ["moody dark street night", "lonely bench park rain", "silhouette night street"]
   },
   {
     "id": 15,
-    "category": "sự điềm đạm bắt buộc",
-    "quote": "Trải qua đủ va vấp mới thấy bình yên quý giá hơn thắng thua. Cúi đầu làm việc, điềm đạm bước qua bão giông.",
+    "category": "chấp nhận buông bỏ",
+    "quote": "Không phải mình muốn từ bỏ, mà là mình hiểu ra có những cánh cửa cố gõ mãi cũng chỉ là làm phiền người bên trong.",
     "keywords": ["dark street lamps rainy", "calm water reflections night", "night architecture dark"]
   },
   {
     "id": 16,
-    "category": "cơm áo gạo tiền",
-    "quote": "Tiền không phải là tất cả, nhưng không có tiền thì mọi sự lựa chọn đều trở thành thỏa hiệp.",
+    "category": "khó tin người",
+    "quote": "Có thể ngoài mặt vẫn hòa nhã với tất cả, nhưng để thực sự đặt niềm tin vào ai đó lần nữa, khó lắm...",
     "keywords": ["dark skyscraper lights", "financial district night moody", "dark street rain"]
   },
   {
     "id": 17,
-    "category": "thất bại trong im lặng",
-    "quote": "Có những nỗi đau chỉ có thể tự mình tiêu hóa. Nói ra thì yếu đuối, giữ lại thì thành bản lĩnh.",
+    "category": "cô đơn",
+    "quote": "Càng lớn càng nhận ra, sự cô độc đáng sợ nhất không phải là ở một mình, mà là giữa biển người mà chẳng ai hiểu thấu lòng mình.",
     "keywords": ["foggy river night moody", "dark rainy car window", "lone tree foggy dark"]
   },
   {
     "id": 18,
-    "category": "sự điềm đạm bắt buộc",
-    "quote": "Học cách chấp nhận những điều không như ý. Không than thở, không oán trách, bình thản sống tiếp phần đời của mình.",
+    "category": "tự mình chịu đựng",
+    "quote": "Sau này dù cuộc sống có xô ngã bạn bao nhiêu lần, bạn nhớ rằng tự đứng dậy tuy cô đơn nhưng sẽ chẳng bao giờ sợ bị ai bỏ rơi.",
     "keywords": ["gentle rain ripples dark", "cozy dark room candle", "night city misty street"]
   },
   {
     "id": 19,
-    "category": "áp lực văn phòng",
-    "quote": "Đến công ty để bán sức kiếm tiền, không phải để tìm bạn thân. Bớt nhiều chuyện, làm xong việc rồi xách cặp về.",
+    "category": "cha mẹ và gia đình",
+    "quote": "Mình có muốn xa nhà đâu. Nhưng nếu không đi xa bươn chải, lấy gì lo cho bữa cơm và thuốc thang của bố mẹ những ngày trái gió...",
     "keywords": ["working late laptop rainy", "aesthetic office night dark", "dark subway station"]
   },
   {
     "id": 20,
-    "category": "áp lực văn phòng",
-    "quote": "Đồng nghiệp chỉ là người ngồi chung phòng máy lạnh. Đừng dại dột đem ruột gan ra kể để rồi tự chuốc lấy phiền toái.",
+    "category": "chấp nhận buông bỏ",
+    "quote": "Đến một lúc nào đó, im lặng không còn là tức giận nữa, mà là một sự chấp nhận buông bỏ nhẹ nhõm và bình an.",
     "keywords": ["office night work dark", "city lights night blurred", "rainy car window night"]
   }
 ]

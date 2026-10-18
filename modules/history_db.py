@@ -70,7 +70,7 @@ def init_db(custom_path: Optional[str | Path] = None) -> None:
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_quotes_created ON quotes_history(created_at)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_quotes_status ON quotes_history(status)")
         conn.commit()
-    logger.info(f"Đã khởi tạo database tại: {db_file}")
+    logger.debug(f"Đã khởi tạo database tại: {db_file}")
 
 
 def calculate_similarity(text1: str, text2: str) -> float:

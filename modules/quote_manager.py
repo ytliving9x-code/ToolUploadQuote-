@@ -22,8 +22,8 @@ def load_all_quotes() -> List[Dict[str, Any]]:
         return [
             {
                 "id": 1,
-                "category": "cơm áo gạo tiền",
-                "quote": "Trưởng thành là khi mở mắt ra chỉ thấy hóa đơn. Muốn buông xuôi, nhưng ví tiền chưa bao giờ cho phép.",
+                "category": "cố gắng nhưng không như ý",
+                "quote": "Không phải mình không nỗ lực, mà là có những chuyện dù cố gắng đến kiệt cùng vẫn chẳng thể như ý muốn.",
                 "keywords": ["night street rain aesthetic", "dark city lonely", "rainy car window"],
             }
         ]
@@ -46,8 +46,8 @@ def get_random_quote(category: Optional[str] = None) -> Dict[str, Any]:
     if not quotes:
         return {
             "id": 0,
-            "category": "cơm áo gạo tiền",
-            "quote": "Trưởng thành là khi mở mắt ra chỉ thấy hóa đơn. Ví tiền chưa bao giờ cho phép buông xuôi.",
+            "category": "cố gắng nhưng không như ý",
+            "quote": "Không phải mình không nỗ lực, mà là có những chuyện dù cố gắng đến kiệt cùng vẫn chẳng thể như ý muốn.",
             "keywords": ["night street rain aesthetic"],
         }
 

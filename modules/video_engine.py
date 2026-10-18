@@ -106,11 +106,15 @@ def create_text_overlay_image(
     shadow_color: Tuple[int, int, int, int] = (0, 0, 0, 230),
     shadow_offset: Tuple[int, int] = (3, 3),
     margin_left: int = 90,
+    margin_right: int = 180,
     margin_bottom: int = 420,
+    signature: Optional[str] = "saigonbac",
+    signature_font_size: int = 24,
 ) -> Image.Image:
     """
     Vẽ typography quote lên khung ảnh trong suốt RGBA (1080x1920).
     Chữ nhỏ gọn, canh lề trái (x=90), góc dưới cách đáy 420px tránh che UI TikTok.
+    Kèm chữ ký nhỏ saigonbac ngay bên dưới câu quote.
     """
     width, height = canvas_size
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -128,6 +132,16 @@ def create_text_overlay_image(
 
     total_height += line_spacing * max(0, len(lines) - 1)
 
+    # Thêm chiều cao cho chữ ký nếu có
+    sig_font = None
+    sig_h = 0
+    sig_spacing = 16
+    if signature:
+        sig_font = get_font(font_size=signature_font_size)
+        sig_bbox = sig_font.getbbox(signature)
+        sig_h = sig_bbox[3] - sig_bbox[1]
+        total_height += sig_spacing + sig_h
+
     # Vị trí góc dưới bên trái
     start_y = height - margin_bottom - total_height
     start_x = margin_left
@@ -143,6 +157,18 @@ def create_text_overlay_image(
         )
 
         current_y += line_sizes[i][1] + line_spacing
+
+    # Vẽ chữ ký nhỏ bên dưới quote
+    if signature and sig_font:
+        current_y += (sig_spacing - line_spacing) if lines else 0
+        sig_w = sig_bbox[2] - sig_bbox[0]
+        sig_x = (width - margin_right) - sig_w
+        draw.text(
+            (sig_x, current_y),
+            signature,
+            font=sig_font,
+            fill=(255, 255, 255, 190),
+        )
 
     return img
 
@@ -199,11 +225,16 @@ def generate_quote_preview_image(
         font = get_font(font_file, font_size - 6)
         lines = wrap_text_to_lines(quote, font, max_width=max_text_width, max_lines=4)
 
+    signature = config.get("branding", {}).get("signature", "saigonbac")
+    signature_font_size = config.get("branding", {}).get("signature_font_size", 24)
+
     overlay_img = create_text_overlay_image(
         lines=lines,
         font=font,
         canvas_size=(1080, 1920),
         line_spacing=line_spacing,
+        signature=signature,
+        signature_font_size=signature_font_size,
     )
 
     final_img = Image.alpha_composite(bg_composite, overlay_img)
@@ -389,11 +420,16 @@ def build_video(
         font = get_font(font_family, font_size - 6)
         lines = wrap_text_to_lines(quote, font, max_width=max_text_width, max_lines=4)
 
+    signature = config.get("branding", {}).get("signature", "saigonbac")
+    signature_font_size = config.get("branding", {}).get("signature_font_size", 24)
+
     overlay_img = create_text_overlay_image(
         lines=lines,
         font=font,
         canvas_size=(1080, 1920),
         line_spacing=line_spacing,
+        signature=signature,
+        signature_font_size=signature_font_size,
     )
 
     # Lưu ảnh chữ RGBA vào file tạm

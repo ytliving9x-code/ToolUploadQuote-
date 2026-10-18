@@ -36,12 +36,24 @@ def test_wrap_text_to_lines_long():
 
 
 def test_create_text_overlay_image():
-    """Kiểm tra tạo ảnh chữ Pillow RGBA chuẩn 1080x1920."""
+    """Kiểm tra tạo ảnh chữ Pillow RGBA chuẩn 1080x1920 có chữ ký."""
     font = get_font(font_size=54)
     lines = ["Nước sâu tĩnh lặng", "Lúa chín cúi đầu"]
-    img = create_text_overlay_image(lines, font, canvas_size=(1080, 1920))
+    img = create_text_overlay_image(lines, font, canvas_size=(1080, 1920), signature="saigonbac")
     assert img.size == (1080, 1920)
     assert img.mode == "RGBA"
+
+
+def test_create_quote_overlay_signature():
+    """Kiểm tra tạo overlay quote với chữ ký saigonbac từ module video_renderer."""
+    from modules.video_renderer import create_quote_overlay
+    img = create_quote_overlay(
+        quote="Bình yên trong tâm hồn là tài sản vô giá.",
+        signature="saigonbac",
+    )
+    assert img.size == (1080, 1920)
+    assert img.mode == "RGBA"
+
 
 
 def test_export_and_publish_flow(tmp_path: Path):

@@ -34,8 +34,8 @@ def main():
     # 1. Khởi tạo DB
     init_db()
 
-    # 2. Sinh 1 quote (chủ đề: 'điềm tĩnh')
-    topic = "điềm tĩnh"
+    # 2. Sinh 1 quote (chủ đề: 'tự mình chịu đựng')
+    topic = "tự mình chịu đựng"
     logger.info(f"-> Bước 1: Đang sinh quote cho chủ đề '{topic}'...")
     quote_data = generate_quote(topic=topic)
 

@@ -20,150 +20,66 @@ logger = logging.getLogger("tiktok_tool.quote_gen")
 # Tải biến môi trường từ .env
 load_dotenv()
 
-# Danh mục 15+ quote mẫu chất lượng cao dự phòng (phong cách người trưởng thành 27-35 tuổi từng trải, cơm áo gạo tiền)
+# Danh mục quote mẫu chất lượng cao dự phòng (phong cách buồn một chút, tâm sự chân thật, 15-35 từ)
 FALLBACK_QUOTES: Dict[str, List[Dict[str, Any]]] = {
-    "trưởng thành": [
+    "tự mình chịu đựng": [
         {
-            "quote": "Không còn ai đứng phía sau để dựa dẫm, bước chân tự khắc phải vững vàng hơn.",
+            "quote": "Không phải mình không muốn chia sẻ, mà là có những nỗi buồn nói ra chỉ khiến người khác thêm bận lòng.",
             "pexels_keywords": ["night street rain aesthetic", "lone wolf dark moody", "calm ocean night moody"],
-            "caption": "Tự gánh vác cuộc đời mình, không than vãn, không trông chờ ai thương hại. 🌙",
-            "hashtags": ["#truongthanh", "#tamtrang", "#doithuc", "#phattrienbanthan", "#tulam"],
+            "caption": "Tự ôm lấy mình đi qua bão giông. 🌙",
+            "hashtags": ["#buonmotchut", "#tamtrang", "#doithuc", "#tuchan", "#suyngam"],
         },
         {
-            "quote": "Bớt phân bua đúng sai với thiên hạ, dành thời gian đó kiếm tiền lo cho gia đình.",
+            "quote": "Mình có mạnh mẽ đâu. Nhưng ngoài việc tự lau nước mắt rồi bước tiếp, mình còn biết dựa vào ai...",
+            "pexels_keywords": ["dark rainy street aesthetic", "lonely walking night street", "rainy car window"],
+            "caption": "Là do cuộc sống này quá khó khăn, hay là do mình chưa đủ may mắn...",
+            "hashtags": ["#buonmotchut", "#tamtrang", "#côđơn", "#imlang", "#chill"],
+        },
+    ],
+    "giấu nỗi buồn": [
+        {
+            "quote": "Có thể ngoài mặt vẫn cười nói bình thường, nhưng chỉ mình mới biết trong lòng đã vụn vỡ từ lâu.",
             "pexels_keywords": ["city lights night blurred", "dark office building night", "rain street reflections"],
-            "caption": "Tranh cãi hơn thua không mua được bình yên, chỉ có trách nhiệm là điều ở lại. 💼",
-            "hashtags": ["#truongthanh", "#trachnhiem", "#giadinh", "#kiemtien", "#thucte"],
+            "caption": "Sau nụ cười là những vết thương không tên. 🥀",
+            "hashtags": ["#buonmotchut", "#giaunoibuon", "#tamtrang", "#gocnhotamhon"],
         },
         {
-            "quote": "Tan làm tắt chuông điện thoại, ngồi im một góc mới thấy lòng mình thực sự thuộc về mình.",
+            "quote": "Có thể người ta thấy anh luôn ổn và điềm tĩnh, nhưng chỉ mình anh biết đã phải trải qua bao đêm thức trắng để học cách im lặng.",
             "pexels_keywords": ["rainy window coffee", "night city drive lights", "quiet aesthetic corner"],
-            "caption": "Khoảnh khắc tĩnh lặng quý giá sau một ngày dài lăn lộn mưu sinh ngoài phố xá. ☕",
-            "hashtags": ["#truongthanh", "#binhyen", "#gocnhotamhon", "#langdong", "#chill"],
-        },
-        {
-            "quote": "Có những uất ức chỉ biết nuốt ngược vào trong, vì sáng mai vẫn phải xuất hiện với vẻ ngoài chỉn chu.",
-            "pexels_keywords": ["dark aesthetic office night", "foggy forest dark moody", "rain street reflections"],
-            "caption": "Người lớn là khi không có quyền yếu đuối trước mặt những người cần mình che chở. 🥀",
-            "hashtags": ["#truongthanh", "#apluc", "#comaogaotien", "#bandoi", "#suyngam"],
+            "caption": "Trưởng thành là học cách nuốt nước mắt vào trong. ☕",
+            "hashtags": ["#buonmotchut", "#imlang", "#tamtrang", "#nhatky"],
         },
     ],
-    "điềm tĩnh": [
+    "cô đơn": [
         {
-            "quote": "Trưởng thành là khi mở mắt ra chỉ thấy hóa đơn. Muốn mệt mỏi buông xuôi, nhưng ví tiền không cho phép.",
-            "pexels_keywords": ["night street rain aesthetic", "dark subway quiet", "rainy window coffee"],
-            "caption": "Mỗi sáng thức dậy là một trận chiến không tiếng súng. Nuốt mệt mỏi vào trong rồi bước tiếp. 🌧️",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#truongthanh", "#comaogaotien"],
-        },
-        {
-            "quote": "Bớt nói lại không phải vì hèn nhát, mà hiểu rằng chẳng ai gánh thay mình gánh nặng cuộc đời.",
-            "pexels_keywords": ["dark city lights night blurred", "lonely walking night street", "rainy car window"],
-            "caption": "Cười ít đi nhưng lòng bớt xáo động. Bình thản đi qua bão giông. 🌙",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#diemtinh", "#suyngam"],
-        },
-        {
-            "quote": "Đến một độ tuổi, im lặng trở thành câu trả lời duy nhất cho mọi bất công và cay đắng.",
+            "quote": "Mình có thích ở một mình đâu. Nhưng việc phải giải thích nỗi buồn của mình cho người khác còn mệt mỏi hơn gấp vạn lần.",
             "pexels_keywords": ["foggy forest dark moody", "calm ocean night moody", "aesthetic coffee rain"],
-            "caption": "Không tranh cãi, không giải thích. Người hiểu thì không cần, kẻ không hiểu nói cũng vô ích. ☕",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#imlang", "#chimnghiem"],
-        },
-        {
-            "quote": "Có những ngày kiệt sức, chỉ muốn ngồi im trong xe thêm 10 phút trước khi bước vào nhà.",
-            "pexels_keywords": ["night city drive lights", "rain on windshield dark", "dark parking lot moody"],
-            "caption": "10 phút ngắn ngủi được làm chính mình, trước khi quay lại vai người lớn gánh vác cả gia đình. 🥀",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#gocnhotamhon", "#apluc"],
+            "caption": "Đôi khi cô đơn lại là khoảng lặng bình yên nhất. 🍃",
+            "hashtags": ["#buonmotchut", "#codon", "#tamtrang", "#langdong"],
         },
     ],
-    "nỗ lực": [
+    "đi dạo một mình buổi tối": [
         {
-            "quote": "Ngã đau mấy cũng không dám kể với ai. Tự lau vết thương rồi ngày mai vẫn phải đi làm đúng giờ.",
-            "pexels_keywords": ["late night work desk", "city lights night blurred", "rainy train moody"],
-            "caption": "Sau lưng không có ai chống đỡ, lấy tư cách gì để gục ngã? Bước tiếp thôi. 💼",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#noluoc", "#kientri"],
-        },
-        {
-            "quote": "Không có chỗ dựa thì tự làm chỗ dựa. Tiền tự kiếm, cay đắng tự chịu, cuộc đời tự lo.",
-            "pexels_keywords": ["walking night street moody", "neon lights dark rain", "dark subway station"],
-            "caption": "Độc lập là tự do lớn nhất mà một người trưởng thành có thể tự trao cho mình. 🔥",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#tulam", "#bandoi"],
-        },
-        {
-            "quote": "Nỗ lực âm thầm trong bóng tối, không kèn không trống. Kết quả tự nó sẽ lên tiếng.",
-            "pexels_keywords": ["aesthetic office night dark", "working late laptop rainy", "misty street light"],
-            "caption": "Đừng vội khoe vết thương, hãy khoe sự kiên cường sau khi lành lặn. 🎯",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#amtham", "#chienthang"],
-        },
-        {
-            "quote": "Thất bại lớn nhất không phải là mất trắng, mà là đánh mất lòng tự trọng vì vài đồng bạc lẻ.",
-            "pexels_keywords": ["city skyscraper night moody", "dark luxury minimalist", "night road lights"],
-            "caption": "Kiếm tiền chân chính tuy chậm và nhọc, nhưng đêm về ngủ được giấc an lành. ✨",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#tuduy", "#songdep"],
+            "quote": "Mình thích cái cảm giác đi lang thang một mình vào buổi tối. Không ai nhìn rõ mình, còn mình có thể nhìn thấu bản thân.",
+            "pexels_keywords": ["night street rain aesthetic", "dark subway quiet", "rainy window coffee"],
+            "caption": "Đêm muộn, đối diện với chính tâm can mình. 🌙",
+            "hashtags": ["#buonmotchut", "#didaodem", "#tamtrang", "#chill"],
         },
     ],
-    "tiền bạc": [
+    "cố gắng nhưng không như ý": [
         {
-            "quote": "Tiền không phải vạn năng, nhưng khi người thân cần tiền viện phí, bạn sẽ hiểu tiền là mạng sống.",
-            "pexels_keywords": ["dark aesthetic office night", "night city drive lights", "rain street reflections"],
-            "caption": "Lý do duy nhất để cày cuốc ngày đêm: bảo vệ những người mình yêu thương khi giông bão tới. 💰",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#tienbac", "#trachnhiem"],
+            "quote": "Không phải mình không nỗ lực, mà là có những chuyện dù cố gắng đến kiệt cùng vẫn chẳng thể như ý muốn.",
+            "pexels_keywords": ["dark aesthetic office night", "foggy forest dark moody", "rain street reflections"],
+            "caption": "Cố gắng hết sức rồi, đành buông tay cho nhẹ lòng. 🥀",
+            "hashtags": ["#buonmotchut", "#cogang", "#tamtrang", "#buongbo"],
         },
+    ],
+    "chấp nhận buông bỏ": [
         {
-            "quote": "Không có tiền thì tự do chỉ là lời nói suông. Làm chủ đồng tiền để không phải cúi đầu trước ai.",
-            "pexels_keywords": ["city skyscraper night moody", "dark luxury minimalist", "dark office building"],
-            "caption": "Đồng tiền mang lại quyền năng từ chối những thứ mình ghét và những kẻ mình không muốn gặp. 📈",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#tudotaichinh", "#sinhhoa"],
-        },
-        {
-            "quote": "Mở mắt ra là tiền thuê nhà, tiền ăn uống, tiền hiếu hỉ. Người lớn không có quyền ốm đau.",
-            "pexels_keywords": ["rainy cafe window dark", "soft night lamp aesthetic", "gentle rain leaves moody"],
-            "caption": "Khi áp lực sinh tồn đè nặng, cảm xúc chỉ là thứ xa xỉ phải gác lại phía sau. 💳",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#gietgian", "#thucte"],
-        },
-        {
-            "quote": "Kiếm tiền khi còn trẻ không phải vì tham lam, mà để tuổi già không trở thành gánh nặng của con cái.",
+            "quote": "Đến một lúc nào đó, im lặng không còn là tức giận nữa, mà là một sự chấp nhận buông bỏ nhẹ nhõm và bình an.",
             "pexels_keywords": ["dark beach waves night", "rain mist forest", "aesthetic night street"],
-            "caption": "Tích lũy hôm nay là tấm khiên vững chãi cho ngày mai. 🛡️",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#tichluy", "#loxa"],
-        },
-    ],
-    "chữa lành": [
-        {
-            "quote": "Sau tất cả va vấp, nhận ra bình yên quý giá hơn đúng sai. Bỏ qua để lòng mình được nhẹ nhõm.",
-            "pexels_keywords": ["rainy cafe window dark", "soft night lamp aesthetic", "gentle rain leaves moody"],
-            "caption": "Học cách buông tay những gì không thuộc về mình. Trưởng thành là tha thứ cho chính mình. 🍃",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#chualanh", "#buongbo"],
-        },
-        {
-            "quote": "Bữa cơm đạm bạc sau giờ tan sở, ly trà nóng lúc nửa đêm. Bình an đôi khi chỉ đơn giản thế thôi.",
-            "pexels_keywords": ["dark room night lamp", "coffee cup rain window", "quiet aesthetic corner"],
-            "caption": "Tìm một góc bình yên cho riêng mình sau một ngày lăn lộn mưu sinh ngoài phố xá. 🍵",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#binhyen", "#tinhlang"],
-        },
-        {
-            "quote": "Không ai nợ bạn một cuộc sống dễ dàng. Chấp nhận thực tại là bước đầu tiên để thấy lòng thanh thản.",
-            "pexels_keywords": ["dark beach waves night", "rain mist forest", "aesthetic night street"],
-            "caption": "Đời không như ý là chuyện bình thường. Dịu dàng với bản thân một chút nhé. 🤍",
-            "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#chapnhan", "#yeuthuong"],
-        },
-    ],
-    "văn phòng": [
-        {
-            "quote": "Đi làm để đổi sức lấy lương, đừng mang cảm xúc đặt lên bàn họp. Hết giờ thì xách cặp về, ai tốt ai xấu kệ họ.",
-            "pexels_keywords": ["working late laptop rainy", "aesthetic office night dark", "empty subway station night"],
-            "caption": "Chốn công sở, nói ít làm nhiều, bảo vệ nồi cơm của mình trước.",
-            "hashtags": ["#congso", "#vanphong", "#doithuc", "#comaogaotien", "#kinhnghiem"],
-        },
-        {
-            "quote": "Đồng nghiệp chỉ là người ngồi chung phòng máy lạnh, không phải tri kỷ. Đừng dại dột đem ruột gan ra kể.",
-            "pexels_keywords": ["dark office building night", "rain street reflections", "night city drive lights"],
-            "caption": "Giữ khoảng cách an toàn là cách sống khôn ngoan nhất chốn văn phòng.",
-            "hashtags": ["#congso", "#vanphong", "#doithuc", "#bandoi", "#kinhnghiemsong"],
-        },
-        {
-            "quote": "Chẳng có công việc nào nhẹ nhàng cả. Nuốt ấm ức vào trong, làm tròn trách nhiệm rồi cuối tháng nhận lương.",
-            "pexels_keywords": ["office night work dark", "rain window moody", "city lights night blurred"],
-            "caption": "Áp lực nào rồi cũng qua, tài khoản ting ting là mọi mệt mỏi tan biến.",
-            "hashtags": ["#congso", "#vanphong", "#lamcong", "#kiemtien", "#truongthanh"],
+            "caption": "Buông tay để tìm lại bình yên cho chính mình. 🤍",
+            "hashtags": ["#buonmotchut", "#buongbo", "#tamtrang", "#binhyen"],
         },
     ],
 }
@@ -218,9 +134,9 @@ def clean_and_parse_json(raw_text: str) -> Dict[str, Any]:
 
     # Nếu không phải JSON, nghĩa là AI đã tuân thủ prompt xuất DUY NHẤT 1 CÂU QUOTE VĂN BẢN
     cleaned_quote = text.strip().strip('"').strip("'").strip("`").strip()
-    # Lấy dòng đầu tiên có chữ
     lines = [line.strip().strip('"').strip("'") for line in cleaned_quote.split("\n") if line.strip()]
-    final_quote = lines[0] if lines else cleaned_quote
+    # Ghép các dòng lại thành câu hoàn chỉnh (nếu có xuống dòng)
+    final_quote = " ".join(lines) if lines else cleaned_quote
 
     return {
         "quote": final_quote,
@@ -231,50 +147,54 @@ def clean_and_parse_json(raw_text: str) -> Dict[str, Any]:
 
 
 
-def build_system_prompt(topic: str = "trưởng thành và cơm áo gạo tiền", recent_quotes: Optional[List[str]] = None) -> str:
+def build_system_prompt(topic: str = "buồn một chút", recent_quotes: Optional[List[str]] = None) -> str:
     """
-    Xây dựng prompt chuyên biệt định hình nhân vật:
-    Người bình thường trong độ tuổi 27–35, đang tự bươn chải mưu sinh, nếm đủ áp lực cơm áo gạo tiền.
-    Đêm muộn tự nhủ với chính mình một nhận thức trần trụi về cuộc sống.
+    Xây dựng prompt chuyên biệt định hình:
+    Người viết quote 'buồn một chút' cho video TikTok tiếng Việt.
+    Giọng tâm sự, chân thật, buồn nhẹ, trầm lắng, không sến, không kêu gào.
     """
     recent_quotes_section = ""
     if recent_quotes:
         quotes_list_str = "\n".join(f"  + \"{q}\"" for q in recent_quotes[-15:])
-        recent_quotes_section = f"""- TUYỆT ĐỐI KHÔNG TRÙNG Ý TƯỞNG VỚI CÁC CÂU GẦN ĐÂY:
+        recent_quotes_section = f"""- TRÁNH LẶP Ý HOẶC CÂU CHỮ VỚI CÁC CÂU GẦN ĐÂY:
 {quotes_list_str}"""
 
-    topic_str = topic if topic and topic.strip() else "trưởng thành và cơm áo gạo tiền"
+    topic_str = topic if topic and topic.strip() else "tự mình chịu đựng"
 
-    return f"""Bạn là một người bình thường trong độ tuổi 27–35, đang tự bươn chải mưu sinh, nếm đủ áp lực cơm áo gạo tiền, từng thất bại và đi qua nhiều va vấp. 
+    return f"""Bạn là người viết quote "buồn một chút" cho video TikTok tiếng Việt.
 
-BỐI CẢNH: 
-Đêm muộn sau một ngày dài làm việc. Bạn ngồi một mình trong im lặng, không cần chứng tỏ với ai, không diễn thuyết, không rao giảng đạo lý. Bạn chỉ đang thành thật tự nhủ với chính mình một nhận thức trần trụi về cuộc sống.
+PHONG CÁCH:
+- Giọng tâm sự, chân thật, buồn nhẹ, trầm lắng, không sến và không kêu gào.
+- Xưng "mình" (tự sự) hoặc "bạn" (nói với người xem). Thỉnh thoảng dùng "anh" như một lời tự thú.
+- Mỗi quote 1-3 câu, tổng 15-35 từ. Có thể ngắt thành 2 đoạn ngắn (dùng dấu xuống dòng hoặc dấu câu rõ ràng).
+- Văn nói đời thường, không dùng từ hoa mỹ hay sáo rỗng.
 
-NHIỆM VỤ:
-Viết DUY NHẤT 1 câu độc thoại nội tâm bằng tiếng Việt theo chủ đề: "{topic_str}".
+CHỦ ĐỀ ĐANG YÊU CẦU:
+"{topic_str}"
+(Các chủ đề xoay vòng thường gặp: giấu nỗi buồn không cho ai thấy, tự mình chịu đựng, cô đơn, áp lực tiền bạc và trưởng thành, cha mẹ và gia đình, bị phản bội rồi khó tin người, cố gắng nhưng không được như ý, chấp nhận buông bỏ, đi dạo một mình buổi tối).
 
-TIÊU CHUẨN CÂU TỪ & THỊ GIÁC:
-1. Độ dài: Cố định từ 14 đến 26 từ (ngắt tối đa 2 vế câu bằng dấu phẩy hoặc dấu chấm). Đảm bảo người xem đọc trọn vẹn trong 5–7 giây trên màn hình video TikTok.
-2. Tinh thần: Điềm tĩnh, thực tế, có chút cô độc và sức nặng của người từng trải; mang tính thức tỉnh nhưng không cay đắng thù hằn.
-3. Nội dung: Phản ánh trực diện thực tế (trách nhiệm gia đình, tài chính, sự im lặng, sự tự lập khi không còn đường lui).
-4. Giọng điệu: Tự nói với bản thân, dùng từ ngữ đời thường, gãy gọn, không viết như văn học hay triết học sách vở.
+CẤU TRÚC (linh hoạt áp dụng đa dạng một trong các dạng sau):
+1. "Không phải X, mà là Y."
+2. "Có thể A, nhưng chỉ mình mới biết B."
+3. Mở đầu bằng câu phủ định nhẹ rồi nói điều thật lòng ("Mình có hạnh phúc đâu. Nhưng...")
+4. Kết bằng câu hỏi tu từ hoặc dấu "..." để lửng.
+5. "Sau này... bạn nhớ rằng..."
 
-DANH SÁCH BỊ CẤM TUYỆT ĐỐI (NEGATIVE CONSTRAINTS):
-- CẤM các mẫu câu rập khuôn, văn mẫu TikTok:
-  + "Trưởng thành rồi mới nhận ra..."
-  + "Lớn lên rồi mới hiểu..."
-  + "Trưởng thành là khi..."
-  + "Cuộc đời này...", "Sau tất cả...", "Bạn có biết..."
-  + "Càng lớn...", "Ngày trước..., bây giờ...", "Không phải..., mà là..."
-- CẤM khẩu hiệu truyền động lực: "hãy cố lên", "mọi chuyện sẽ ổn", "thành công sẽ đến", "hãy tin vào bản thân".
-- CẤM ẩn dụ hoa mỹ, từ Hán-Việt sáo rỗng hoặc hành văn gieo vần như thơ.
-- CẤM dạy đời hoặc dùng đại từ hướng tới người khác ("bạn", "chúng ta", "hãy").
+VÍ DỤ TIÊU BIỂU VỀ VĂN PHONG (THAM KHẢO, KHÔNG ĐƯỢC CHÉP LẠI):
+- "Thứ khiến con người ta buồn nhất không phải là mất mát, mà là đã cố gắng rất nhiều nhưng mọi chuyện chẳng như mong muốn."
+- "Mình thích cái cảm giác đi lang thang một mình vào buổi tối. Không ai nhìn rõ mình, còn mình có thể nhìn thấu bản thân."
+- "Là do cuộc sống này quá khó khăn, hay là do mình chưa được may mắn..."
+- "Mình có hạnh phúc đâu. Nhưng mình không muốn để người khác thấy mình khổ."
+
+RÀNG BUỘC AN TOÀN & NỘI DUNG:
+- Tuyệt đối không nhắc tự tử, tự hại hay phương pháp làm đau bản thân.
+- Buồn nhưng vẫn giữ chút ấm áp hoặc chấp nhận ở cuối.
+- Không sến súa, không giật gân, không rao giảng đạo lý.
 {recent_quotes_section}
 
-ĐỊNH DẠNG ĐẦU RA (STRICT OUTPUT FORMAT):
-- Trả về đúng 1 dòng văn bản thuần túy duy nhất chứa nội dung câu nói.
-- KHÔNG dùng dấu ngoặc kép (""), KHÔNG viết lời dẫn, KHÔNG giải thích, KHÔNG emoji, KHÔNG hashtag.
-"""
+ĐỊNH DẠNG ĐẦU RA (BẮT BUỘC):
+- Trả về đúng 1 câu quote duy nhất (có thể ngắt 1-2 dòng ngắn).
+- KHÔNG dùng dấu ngoặc kép (""), KHÔNG viết lời chào/lời dẫn, KHÔNG giải thích, KHÔNG kèm hashtag."""
 
 
 
@@ -451,7 +371,8 @@ def get_fallback_quote(topic: str, custom_db_path: Optional[str | Path] = None) 
     import random
 
     topic_key = topic.lower().strip()
-    quote_list = FALLBACK_QUOTES.get(topic_key, FALLBACK_QUOTES["trưởng thành"])
+    fallback_default = next(iter(FALLBACK_QUOTES.values()))
+    quote_list = FALLBACK_QUOTES.get(topic_key, fallback_default)
     chosen = random.choice(quote_list).copy()
 
     # Lưu vào CSDL

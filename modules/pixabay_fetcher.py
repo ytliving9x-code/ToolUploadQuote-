@@ -395,4 +395,40 @@ def fetch_pixabay_image(
     return resize_and_crop_to_tiktok(out_file)
 
 
+def fetch_dark_moody_image_for_quote(
+    quote_text: str,
+    api_key: Optional[str] = None,
+    output_path: Optional[Path] = None,
+) -> Path:
+    """
+    Tự động phân tích câu quote và tải 1 ảnh nền gam màu tối (dark moody / night / rain / cinematic)
+    phù hợp với ngữ cảnh câu quote.
+    """
+    from modules.quote_manager import suggest_keywords_from_quote
+
+    # 1. Lấy danh sách từ khóa gợi ý theo ngữ cảnh quote
+    keywords = suggest_keywords_from_quote(quote_text)
+    primary_kw = keywords[0] if keywords else "night street rain aesthetic"
+
+    # 2. Bổ sung các chỉ định màu tối, cinematic để bảo đảm gam màu trầm lắng
+    dark_mood_modifiers = [
+        "dark moody night",
+        "rainy night dark cinematic",
+        "dark lonely street night",
+        "night lights bokeh dark",
+        "foggy dark misty night",
+    ]
+    modifier = random.choice(dark_mood_modifiers)
+    query_str = f"{primary_kw} {modifier}".strip()
+
+    logger.info(f"Đang tự động tìm ảnh nền màu tối cho quote: '{query_str}'")
+    return fetch_pixabay_image(
+        query=query_str,
+        api_key=api_key,
+        output_path=output_path,
+        colors="black,grayscale",  # Ưu tiên tone đen, xám tối
+    )
+
+
+
 
