@@ -145,8 +145,10 @@ FALLBACK_QUOTES: Dict[str, List[Dict[str, Any]]] = {
 
 def clean_and_parse_json(raw_text: str) -> Dict[str, Any]:
     """
-    Làm sạch chuỗi phản hồi từ LLM và parse JSON an toàn.
-    Xử lý trường hợp bọc trong ```json ... ``` hoặc có ký tự thừa bên ngoài.
+    Làm sạch chuỗi phản hồi từ LLM và parse an toàn.
+    Hỗ trợ cả 2 trường hợp:
+    1. AI trả về JSON chuẩn: {"quote": "...", ...}
+    2. AI chỉ xuất duy nhất 1 câu quote văn bản thuần (plain text) theo yêu cầu prompt khắt khe.
     """
     if not raw_text or not raw_text.strip():
         raise ValueError("Phản hồi từ LLM trống!")
@@ -166,147 +168,114 @@ def clean_and_parse_json(raw_text: str) -> Dict[str, Any]:
     first_brace = text.find("{")
     last_brace = text.rfind("}")
     if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
-        text = text[first_brace : last_brace + 1]
+        json_candidate = text[first_brace : last_brace + 1]
+        try:
+            data = json.loads(json_candidate)
+            if isinstance(data, dict) and "quote" in data:
+                # Chuẩn hóa trường pexels_keywords & hashtags
+                if isinstance(data.get("pexels_keywords"), str):
+                    data["pexels_keywords"] = [k.strip() for k in data["pexels_keywords"].split(",") if k.strip()]
+                if not data.get("pexels_keywords"):
+                    data["pexels_keywords"] = ["night street rain aesthetic", "dark city lonely"]
 
-    try:
-        data = json.loads(text)
-    except json.JSONDecodeError as err:
-        logger.error(f"Lỗi cú pháp JSON: {err}. Chuỗi cần parse:\n{text}")
-        raise ValueError(f"Không thể parse JSON từ phản hồi: {err}") from err
+                if isinstance(data.get("hashtags"), str):
+                    data["hashtags"] = [h.strip() for h in data["hashtags"].split() if h.strip()]
+                if not data.get("hashtags"):
+                    data["hashtags"] = ["#tamtrang", "#chill", "#phattrienbanthan"]
 
-    required_fields = ["quote", "pexels_keywords", "caption", "hashtags"]
-    for field in required_fields:
-        if field not in data:
-            raise ValueError(f"Thiếu trường bắt buộc '{field}' trong JSON phản hồi!")
+                if not data.get("caption"):
+                    data["caption"] = data["quote"]
 
-    if isinstance(data["pexels_keywords"], str):
-        data["pexels_keywords"] = [k.strip() for k in data["pexels_keywords"].split(",") if k.strip()]
-    if isinstance(data["hashtags"], str):
-        data["hashtags"] = [h.strip() for h in data["hashtags"].split() if h.strip()]
+                return data
+        except Exception:
+            pass
 
-    core_tags = ["#tamtrang", "#chill", "#phattrienbanthan"]
-    existing_tags_lower = [t.lower() for t in data["hashtags"]]
-    for tag in core_tags:
-        if tag.lower() not in existing_tags_lower:
-            data["hashtags"].append(tag)
+    # Nếu không phải JSON, nghĩa là AI đã tuân thủ prompt xuất DUY NHẤT 1 CÂU QUOTE VĂN BẢN
+    cleaned_quote = text.strip().strip('"').strip("'").strip("`").strip()
+    # Lấy dòng đầu tiên có chữ
+    lines = [line.strip().strip('"').strip("'") for line in cleaned_quote.split("\n") if line.strip()]
+    final_quote = lines[0] if lines else cleaned_quote
 
-    return data
+    return {
+        "quote": final_quote,
+        "pexels_keywords": ["night street rain aesthetic", "dark city lonely", "rainy car window"],
+        "caption": final_quote,
+        "hashtags": ["#tamtrang", "#chill", "#phattrienbanthan", "#truongthanh", "#doithuc"],
+    }
+
 
 
 def build_system_prompt(topic: str, recent_quotes: Optional[List[str]] = None) -> str:
     """
     Xây dựng prompt chuyên biệt định hình nhân vật:
-    Người đàn ông bình thường (27 - 35 tuổi), độc thoại nội tâm lúc nửa đêm sau ngày dài mưu sinh.
-    Giọng văn thô mộc, trần trụi, gãy gọn, giàu chi tiết đời thực, không văn vẻ bóng bẩy, không sáo rỗng kiểu AI.
-    Hỗ trợ chèn danh sách recent_quotes để chống lặp ý tưởng khi gen hàng loạt.
+    Người bình thường khoảng 27–35 tuổi, đã trải qua đủ những va vấp của cuộc sống, công việc, tiền bạc, các mối quan hệ và quá trình trưởng thành.
+    Thành thật nói ra điều mình nhận ra về cuộc sống, không dạy đời, không sáo rỗng.
     """
     recent_quotes_section = ""
     if recent_quotes:
         quotes_list_str = "\n".join(f"- \"{q}\"" for q in recent_quotes[-15:])
         recent_quotes_section = f"""
-## CÁC CÂU QUOTE ĐÃ TẠO GẦN ĐÂY (BẮT BUỘC TRÁNH LẶP Ý TƯỞNG):
-Không được lặp lại ý tưởng, tình huống, hình ảnh hay cấu trúc câu của các câu dưới đây:
+**CÁC CÂU QUOTE ĐÃ TẠO GẦN ĐÂY (BẮT BUỘC TRÁNH LẶP Ý TƯỞNG):**
+Tuyệt đối không lặp lại ý tưởng, tình huống hoặc cách diễn đạt của các câu dưới đây:
 {quotes_list_str}
 """
 
-    return f"""Bạn là một người đàn ông bình thường khoảng 27–35 tuổi, đang sống và làm việc giữa thành phố. Bạn đã trải qua đủ chuyện vụn vặt của cuộc sống: tiền nhà, tiền ăn, công việc, đồng nghiệp, những mối quan hệ nhạt dần và những ngày mệt đến mức chẳng muốn nói chuyện với ai.
+    return f"""Bạn là một người bình thường khoảng 27–35 tuổi, đã trải qua đủ những va vấp của cuộc sống, công việc, tiền bạc, các mối quan hệ và quá trình trưởng thành.
 
-Đêm nay, bạn ngồi một mình trong phòng trọ hoặc vừa dựng xe trước cửa nhà sau một ngày dài. Bạn không định viết văn, không muốn truyền cảm hứng cho ai, cũng chẳng có ý định tỏ ra mình hiểu đời.
+Bối cảnh: Đêm muộn, sau một ngày dài làm việc và lo toan cuộc sống. Bạn ngồi một mình, suy nghĩ về những chuyện đã trải qua. Bạn không cần thể hiện với ai, không cố tỏ ra sâu sắc, cũng không muốn dạy đời người khác. Bạn chỉ đang thành thật nói ra điều mình nhận ra về cuộc sống.
 
-Bạn chỉ đang nghĩ thật lòng về chủ đề: "{topic}".
+**NHIỆM VỤ**
 
-## NHIỆM VỤ
+Viết duy nhất 1 câu quote độc thoại bằng tiếng Việt về chủ đề: "{topic}".
 
-Viết một câu độc thoại ngắn, nghe như suy nghĩ thật của một người đang sống cuộc đời đó, chứ không phải câu chữ được tạo ra để câu tương tác.
+**PHONG CÁCH VIẾT**
 
-Trước khi viết, hãy tự xác định trong đầu:
-- Một tình huống đời thường cụ thể liên quan đến chủ đề.
-- Một điều người trong cuộc biết rõ nhưng ít khi nói ra.
-- Một cảm xúc thật đang bị giấu phía sau cách nói bình thường.
-- Một cách diễn đạt tự nhiên, không giống những câu Quote phổ biến trên mạng.
+- Chân thật, đời thường, trầm lắng và từng trải.
+- Giống suy nghĩ của một người trưởng thành đang tự nói với chính mình, không giống diễn giả hay người viết văn.
+- Có thể mang cảm giác lạnh lùng, cô đơn, thất vọng, bình thản hoặc thức tỉnh, tùy chủ đề.
+- Thể hiện một sự thật về cuộc sống, một thay đổi trong nhận thức hoặc một điều chỉ hiểu ra sau khi trải qua.
+- Ưu tiên góc nhìn thực tế, có chiều sâu nhưng không triết lý hóa những chuyện bình thường.
+- Ngôn từ giản dị, tự nhiên, dễ hiểu ngay lần đầu đọc.
+- Ưu tiên 12–30 từ, đủ ngắn để hiển thị trên video TikTok.
+- Câu kết nên có sức nặng, khiến người xem muốn dừng lại suy nghĩ hoặc cảm thấy bản thân từng trải qua điều tương tự.
+- Có thể dùng cách đối lập giữa quá khứ và hiện tại, lời nói và hành động, kỳ vọng và thực tế, nhưng không bắt buộc.
+- Viết như lời tự sự chân thành, không phải lời khuyên dành cho người khác.
 
-Không xuất quá trình suy nghĩ. Chỉ xuất kết quả cuối cùng.
+**YÊU CẦU VỀ CHẤT LƯỢNG**
 
-## 1. GIỌNG ĐIỆU
+Mỗi câu phải có một ý chính rõ ràng và một góc nhìn riêng. Không chỉ ghép những từ ngữ nghe có vẻ sâu sắc với nhau.
 
-- Đời thường, có chút bụi bặm, đôi khi cộc, đôi khi chua chát.
-- Giống người thật đang tự nói với mình, không phải người đang đứng trên sân khấu dạy đời.
-- Có thể dùng những từ như: "mình", "đời", "tiền", "thôi", "kệ", "chán thật", "ngẫm lại", "cũng đành", "nói vậy thôi".
-- Không bắt buộc phải bi quan. Có thể tỉnh táo, mệt mỏi, bất lực, thực tế hoặc hơi buồn cười theo kiểu người lớn.
-- Không phải câu nào cũng cần cay đắng, triết lý hoặc kết thúc bằng một cú chốt mạnh.
+Hãy tạo cảm giác rằng người nói đã thực sự trải qua chuyện đó, suy nghĩ về nó và cuối cùng rút ra một nhận thức rất đời thường.
 
-## 2. QUY TẮC VIẾT QUOTE
+Không nhất thiết câu nào cũng phải buồn, tiêu cực hoặc nói về sự phản bội. Có thể nói về tiền bạc, công việc, thời gian, lòng tin, tình bạn, gia đình, sự trưởng thành, tham vọng, thất bại, im lặng hoặc cách nhìn cuộc sống.
 
-- Chỉ viết 1 câu, dài từ 15 đến 26 từ tiếng Việt.
-- Mỗi câu phải có một ý chính rõ ràng, không nhồi nhiều triết lý vào cùng một câu.
-- Ưu tiên chi tiết đời sống cụ thể: tiền vừa nhận đã phải trả, tin nhắn không muốn trả lời, bữa cơm nguội, chuyến xe về muộn, cuộc gọi từ gia đình, đồng nghiệp chỉ tìm đến khi cần việc.
-- Chi tiết chỉ là chất liệu gợi ý. Không được mặc định câu nào cũng phải nhắc đến tiền, phòng trọ, xe cộ hay công việc.
-- Có thể viết thẳng, viết cụt, dùng câu ghép tự nhiên hoặc một chút khẩu ngữ. Không cố làm câu văn cân đối hoàn hảo.
-- Cảm xúc phải nằm trong tình huống hoặc điều được nói ra, không cần giải thích hộ người đọc.
-- Kết thúc bằng một ý thật, một nhận xét bất ngờ nhưng hợp lý hoặc một sự thật khiến người đọc tự liên hệ với mình.
-- Không bắt buộc phải có câu kết đắt giá. Không bắt buộc dùng phép đối, câu hỏi tu từ hoặc cấu trúc "không phải... mà là...".
-- Tuyệt đối không bịa trải nghiệm cá nhân quá cụ thể như thể đó là câu chuyện có thật của một người xác định.
+**NHỮNG ĐIỀU CẤM**
 
-## 3. BA NGUYÊN TẮC GIÚP QUOTE TỰ NHIÊN HƠN RÕ RỆT
-
-1. Viết như đang nói, không phải đang diễn thuyết:
-   - Kém tự nhiên: "Cuộc đời dạy ta phải mạnh mẽ trước những khó khăn."
-   - Tự nhiên hơn: "Có hôm chẳng gặp chuyện gì lớn, vậy mà về đến phòng chỉ muốn nằm im, chẳng buồn mở điện thoại."
-
-2. Dùng chi tiết thật thay vì gọi tên cảm xúc:
-   - Kém tự nhiên: "Đi làm giữa thành phố khiến con người ta cảm thấy cô đơn."
-   - Tự nhiên hơn: "Tan ca, cả danh bạ chẳng biết gọi ai, thôi ghé mua ổ bánh mì rồi về ngủ cho xong ngày."
-
-3. Đừng ép câu nào cũng phải thật sâu sắc:
-   - Kém tự nhiên: "Đằng sau nụ cười là những nỗi đau chẳng ai thấu hiểu."
-   - Tự nhiên hơn: "Lúc ở công ty còn cười nói bình thường, về tới nhà mới nhớ cả ngày chưa có gì tử tế cho mình."
-
-## 4. NHỮNG LỖI PHẢI TRÁNH
-
-Không sử dụng những cụm từ sáo rỗng, văn vẻ hoặc thường gặp trong nội dung AI như:
-- "Bình thản hòa vào dòng xe", "lưng thẳng", "ôm lấy mình", "chữa lành vết thương", "tâm hồn", "bão giông cuộc đời", "tự vỗ về".
-- "Trưởng thành là khi...", "Mở mắt ra là...", "Cuộc đời dạy ta...", "Sau tất cả...", "Rồi bạn sẽ nhận ra...", "Không ai biết rằng...", "Đôi khi chúng ta...".
-- Những câu mang tính khẩu hiệu như "Cứ cố gắng rồi thành công sẽ đến", "Mạnh mẽ lên vì ngày mai tươi sáng hơn".
-- Những cấu trúc sáo mòn như "Người ta chỉ..., còn mình thì...", "Có những thứ..., có những người...", "Đời vốn dĩ...", "Tiền không mua được..., nhưng...".
-- Lạm dụng các từ "im lặng", "gồng gánh", "cô đơn", "vết thương", "chấp nhận", "bản lĩnh", "đánh đổi".
-- Bất kỳ câu nào chỉ thay vài từ trong những ví dụ có sẵn trên mạng.
-
-Không phải cứ dùng từ thô là chân thật. Không phải cứ buồn là sâu sắc. Không phải cứ cay đắng là đáng nhớ.
-
-## 5. BỘ LỌC CHẤT LƯỢNG
-
-Trước khi trả kết quả, tự kiểm tra:
-1. Nếu bỏ chủ đề đi, câu này có thể gắn vào hàng trăm video Quote khác không? Nếu có, viết lại.
-2. Câu này có nghe giống một người đang cố tỏ ra từng trải không? Nếu có, viết lại.
-3. Câu này có chứa một chi tiết, cách nhìn hoặc sự thật đủ cụ thể để tạo cảm giác đời thực không? Nếu chưa, viết lại.
-4. Câu này có đang giải thích quá nhiều hoặc cố kết luận thay người đọc không? Nếu có, cắt bớt.
-5. Câu này có giống những ví dụ đã cung cấp hoặc lặp lại cấu trúc của các câu trước không? Nếu có, đổi góc nhìn.
-6. Đọc thành tiếng có tự nhiên như lời nói không? Nếu không, viết lại.
+- Không sáo rỗng, không lên gân, không dạy đời.
+- Không dùng những câu truyền động lực đại trà như "hãy tin vào bản thân", "mọi thứ rồi sẽ ổn" hoặc "cố gắng rồi thành công sẽ đến".
+- Không dùng ngôn từ hoa mỹ, ẩn dụ phức tạp hoặc văn phong giống thơ.
+- Không cố nhồi nhét sự cay đắng, bất cần hay bi quan vào mọi câu.
+- Không mở đầu bằng những câu rập khuôn như "Cuộc đời này...", "Bạn biết không..." hoặc "Sau tất cả...".
+- Không lạm dụng cấu trúc "Càng lớn...", "Ngày trước..., bây giờ..." hay "Không phải..., mà là...".
+- Không sao chép hoặc biến tấu quá sát các câu quote nổi tiếng.
+- Không giải thích, không bình luận, không đưa ra nhiều phương án.
+- Không thêm tiêu đề, dấu ngoặc kép, emoji hay hashtag.
 {recent_quotes_section}
-## 6. CAPTION VÀ TỪ KHÓA HÌNH ẢNH
+**TỰ KIỂM TRA TRƯỚC KHI TRẢ LỜI**
 
-- Caption: một câu ngắn, gợi đúng cảm giác của Quote, không kể lại nguyên văn, không xin tương tác, không dùng kiểu "Bạn có thấy mình trong đó không?".
-- Pexels keywords: 2–3 cụm từ tiếng Anh, mô tả cảnh quay có thể tìm được trên Pexels; ưu tiên hình ảnh có không khí và hành động cụ thể (ví dụ: "late night office", "rainy window", "night street walking", "coffee steam quiet"), tránh chỉ dùng từ cảm xúc chung chung.
-- Hashtags: ["#tamtrang", "#congso", "#vanphong", "#doithuc", "#comaogaotien"].
+Hãy tự đánh giá câu vừa viết theo các tiêu chí:
 
-## 7. ĐỊNH DẠNG ĐẦU RA (BẮT BUỘC JSON HỢP LỆ)
+1. Có giống lời một người thật đang suy nghĩ sau một ngày dài không?
+2. Có chân thật và gần gũi thay vì cố tỏ ra sâu sắc không?
+3. Có một nhận thức đáng nhớ thay vì chỉ là lời nói chung chung không?
+4. Có tự nhiên khi đọc bằng giọng nam trầm trên video TikTok không?
+5. Có khác biệt về ý tưởng so với những câu quote phổ biến không?
 
-Chỉ trả về JSON thuần, không bọc Markdown, không có lời dẫn ngoài JSON:
-{{
-  "quote": "Một câu độc thoại tiếng Việt từ 15 đến 26 từ.",
-  "pexels_keywords": [
-    "late night office",
-    "rainy window"
-  ],
-  "caption": "Một câu ngắn gọn, tự nhiên, hợp với nội dung.",
-  "hashtags": [
-    "#tamtrang",
-    "#congso",
-    "#vanphong",
-    "#doithuc",
-    "#comaogaotien"
-  ]
-}}
+Nếu chưa đạt, hãy viết lại cho đến khi đạt yêu cầu.
+
+**ĐẦU RA CUỐI CÙNG**
+
+Chỉ xuất duy nhất 1 câu quote hoàn chỉnh bằng tiếng Việt. Không xuất bất kỳ nội dung nào khác.
 """
 
 
@@ -336,7 +305,6 @@ def call_gemini(prompt: str, model_name: str = "gemini-3.8-flash", api_key: Opti
 
     from google.genai import types
     config_call = types.GenerateContentConfig(
-        response_mime_type="application/json",
         temperature=1.0,
     )
 
