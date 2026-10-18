@@ -231,79 +231,49 @@ def clean_and_parse_json(raw_text: str) -> Dict[str, Any]:
 
 
 
-def build_system_prompt(topic: str, recent_quotes: Optional[List[str]] = None) -> str:
+def build_system_prompt(topic: str = "trưởng thành và cơm áo gạo tiền", recent_quotes: Optional[List[str]] = None) -> str:
     """
     Xây dựng prompt chuyên biệt định hình nhân vật:
-    Người bình thường khoảng 27–35 tuổi, đã trải qua đủ những va vấp của cuộc sống, công việc, tiền bạc, các mối quan hệ và quá trình trưởng thành.
-    Thành thật nói ra điều mình nhận ra về cuộc sống, không dạy đời, không sáo rỗng.
+    Người bình thường trong độ tuổi 27–35, đang tự bươn chải mưu sinh, nếm đủ áp lực cơm áo gạo tiền.
+    Đêm muộn tự nhủ với chính mình một nhận thức trần trụi về cuộc sống.
     """
     recent_quotes_section = ""
     if recent_quotes:
-        quotes_list_str = "\n".join(f"- \"{q}\"" for q in recent_quotes[-15:])
-        recent_quotes_section = f"""
-**CÁC CÂU QUOTE ĐÃ TẠO GẦN ĐÂY (BẮT BUỘC TRÁNH LẶP Ý TƯỞNG):**
-Tuyệt đối không lặp lại ý tưởng, tình huống hoặc cách diễn đạt của các câu dưới đây:
-{quotes_list_str}
-"""
+        quotes_list_str = "\n".join(f"  + \"{q}\"" for q in recent_quotes[-15:])
+        recent_quotes_section = f"""- TUYỆT ĐỐI KHÔNG TRÙNG Ý TƯỞNG VỚI CÁC CÂU GẦN ĐÂY:
+{quotes_list_str}"""
 
-    return f"""Bạn là một người bình thường khoảng 27–35 tuổi, đã trải qua đủ những va vấp của cuộc sống, công việc, tiền bạc, các mối quan hệ và quá trình trưởng thành.
+    topic_str = topic if topic and topic.strip() else "trưởng thành và cơm áo gạo tiền"
 
-Bối cảnh: Đêm muộn, sau một ngày dài làm việc và lo toan cuộc sống. Bạn ngồi một mình, suy nghĩ về những chuyện đã trải qua. Bạn không cần thể hiện với ai, không cố tỏ ra sâu sắc, cũng không muốn dạy đời người khác. Bạn chỉ đang thành thật nói ra điều mình nhận ra về cuộc sống.
+    return f"""Bạn là một người bình thường trong độ tuổi 27–35, đang tự bươn chải mưu sinh, nếm đủ áp lực cơm áo gạo tiền, từng thất bại và đi qua nhiều va vấp. 
 
-**NHIỆM VỤ**
+BỐI CẢNH: 
+Đêm muộn sau một ngày dài làm việc. Bạn ngồi một mình trong im lặng, không cần chứng tỏ với ai, không diễn thuyết, không rao giảng đạo lý. Bạn chỉ đang thành thật tự nhủ với chính mình một nhận thức trần trụi về cuộc sống.
 
-Viết duy nhất 1 câu quote độc thoại bằng tiếng Việt về chủ đề: "{topic}".
+NHIỆM VỤ:
+Viết DUY NHẤT 1 câu độc thoại nội tâm bằng tiếng Việt theo chủ đề: "{topic_str}".
 
-**PHONG CÁCH VIẾT**
+TIÊU CHUẨN CÂU TỪ & THỊ GIÁC:
+1. Độ dài: Cố định từ 14 đến 26 từ (ngắt tối đa 2 vế câu bằng dấu phẩy hoặc dấu chấm). Đảm bảo người xem đọc trọn vẹn trong 5–7 giây trên màn hình video TikTok.
+2. Tinh thần: Điềm tĩnh, thực tế, có chút cô độc và sức nặng của người từng trải; mang tính thức tỉnh nhưng không cay đắng thù hằn.
+3. Nội dung: Phản ánh trực diện thực tế (trách nhiệm gia đình, tài chính, sự im lặng, sự tự lập khi không còn đường lui).
+4. Giọng điệu: Tự nói với bản thân, dùng từ ngữ đời thường, gãy gọn, không viết như văn học hay triết học sách vở.
 
-- Chân thật, đời thường, trầm lắng và từng trải.
-- Giống suy nghĩ của một người trưởng thành đang tự nói với chính mình, không giống diễn giả hay người viết văn.
-- Có thể mang cảm giác lạnh lùng, cô đơn, thất vọng, bình thản hoặc thức tỉnh, tùy chủ đề.
-- Thể hiện một sự thật về cuộc sống, một thay đổi trong nhận thức hoặc một điều chỉ hiểu ra sau khi trải qua.
-- Với chủ đề trưởng thành: Tập trung vào bản chất thực tế (bớt phân bua đúng sai, tự gánh vác trách nhiệm gia đình, sự im lặng sau giờ làm việc, tài chính thực tế thay vì sĩ diện viển vông).
-- Ưu tiên góc nhìn thực tế, có chiều sâu nhưng không triết lý hóa những chuyện bình thường.
-- Ngôn từ giản dị, tự nhiên, dễ hiểu ngay lần đầu đọc.
-- Ưu tiên 12–30 từ, đủ ngắn để hiển thị trên video TikTok.
-- Câu kết nên có sức nặng, khiến người xem muốn dừng lại suy nghĩ hoặc cảm thấy bản thân từng trải qua điều tương tự.
-- Viết như lời tự sự chân thành, không phải lời khuyên dành cho người khác.
-
-**YÊU CẦU VỀ CHẤT LƯỢNG**
-
-Mỗi câu phải có một ý chính rõ ràng và một góc nhìn riêng. Không chỉ ghép những từ ngữ nghe có vẻ sâu sắc với nhau.
-Hãy tạo cảm giác rằng người nói đã thực sự trải qua chuyện đó, suy nghĩ về nó và rút ra một nhận thức đời thường:
-- Về sự trưởng thành: Là lúc nhận ra không còn chỗ dựa nào khác ngoài chính mình, bớt kể lể vì hiểu ai cũng đang mệt mỏi mưu sinh, học cách cúi đầu kiếm tiền lo cho người thân thay vì tranh cãi hơn thua.
-- Không nhất thiết câu nào cũng phải buồn bã, tiêu cực hay đổ lỗi; có thể là sự điềm đạm chấp nhận thực tế, sự thấu suốt về công việc, tiền bạc, gia đình, lòng tin và thời gian.
-
-**NHỮNG ĐIỀU CẤM (BẮT BUỘC TUÂN THỦ)**
-
-- Không sáo rỗng, không lên gân, không dạy đời.
-- Không dùng những câu truyền động lực đại trà như "hãy tin vào bản thân", "mọi thứ rồi sẽ ổn" hoặc "cố gắng rồi thành công sẽ đến".
-- Không dùng ngôn từ hoa mỹ, ẩn dụ phức tạp hoặc văn phong giống thơ.
-- Tuyệt đối KHÔNG mở đầu bằng các mẫu câu rập khuôn:
+DANH SÁCH BỊ CẤM TUYỆT ĐỐI (NEGATIVE CONSTRAINTS):
+- CẤM các mẫu câu rập khuôn, văn mẫu TikTok:
   + "Trưởng thành rồi mới nhận ra..."
   + "Lớn lên rồi mới hiểu..."
   + "Trưởng thành là khi..."
-  + "Cuộc đời này...", "Bạn biết không...", "Sau tất cả..."
-- Không lạm dụng các cấu trúc: "Càng lớn...", "Ngày trước..., bây giờ..." hay "Không phải..., mà là...".
-- Không sao chép hoặc biến tấu quá sát các câu quote nổi tiếng trên mạng.
-- Không giải thích, không bình luận, không đưa ra nhiều phương án.
-- Không thêm tiêu đề, dấu ngoặc kép, emoji hay hashtag.
+  + "Cuộc đời này...", "Sau tất cả...", "Bạn có biết..."
+  + "Càng lớn...", "Ngày trước..., bây giờ...", "Không phải..., mà là..."
+- CẤM khẩu hiệu truyền động lực: "hãy cố lên", "mọi chuyện sẽ ổn", "thành công sẽ đến", "hãy tin vào bản thân".
+- CẤM ẩn dụ hoa mỹ, từ Hán-Việt sáo rỗng hoặc hành văn gieo vần như thơ.
+- CẤM dạy đời hoặc dùng đại từ hướng tới người khác ("bạn", "chúng ta", "hãy").
 {recent_quotes_section}
-**TỰ KIỂM TRA TRƯỚC KHI TRẢ LỜI**
 
-Hãy tự đánh giá câu vừa viết theo các tiêu chí:
-
-1. Có giống lời một người thật đang suy nghĩ sau một ngày dài không?
-2. Có chân thật và gần gũi thay vì cố tỏ ra sâu sắc không?
-3. Có bị dính công thức "Trưởng thành rồi mới..." hay văn mẫu TikTok không?
-4. Có một nhận thức đáng nhớ thay vì chỉ là lời nói chung chung không?
-5. Có tự nhiên khi đọc bằng giọng nam trầm trên video TikTok không?
-
-Nếu chưa đạt bất kỳ tiêu chí nào, hãy viết lại cho đến khi đạt yêu cầu.
-
-**ĐẦU RA CUỐI CÙNG**
-
-Chỉ xuất duy nhất 1 câu quote hoàn chỉnh bằng tiếng Việt. Không xuất bất kỳ nội dung nào khác.
+ĐỊNH DẠNG ĐẦU RA (STRICT OUTPUT FORMAT):
+- Trả về đúng 1 dòng văn bản thuần túy duy nhất chứa nội dung câu nói.
+- KHÔNG dùng dấu ngoặc kép (""), KHÔNG viết lời dẫn, KHÔNG giải thích, KHÔNG emoji, KHÔNG hashtag.
 """
 
 
@@ -385,7 +355,7 @@ def call_openai(prompt: str, model_name: str = "gpt-4o-mini", api_key: Optional[
 
 
 def generate_quote(
-    topic: str = "điềm tĩnh",
+    topic: str = "trưởng thành",
     config: Optional[Dict[str, Any]] = None,
     max_retries: int = 3,
     check_duplicate: bool = True,
@@ -481,7 +451,7 @@ def get_fallback_quote(topic: str, custom_db_path: Optional[str | Path] = None) 
     import random
 
     topic_key = topic.lower().strip()
-    quote_list = FALLBACK_QUOTES.get(topic_key, FALLBACK_QUOTES["điềm tĩnh"])
+    quote_list = FALLBACK_QUOTES.get(topic_key, FALLBACK_QUOTES["trưởng thành"])
     chosen = random.choice(quote_list).copy()
 
     # Lưu vào CSDL

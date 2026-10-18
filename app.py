@@ -274,34 +274,24 @@ with tab_maker:
         all_quotes_data = load_all_quotes()
 
         if quote_mode == "🤖 Dùng AI sinh mới (Gemini/OpenAI)":
-            col_ai_top, col_ai_btn = st.columns([1.5, 1])
-            with col_ai_top:
-                ai_topic = st.selectbox(
-                    "Chọn chủ đề muốn AI viết:",
-                    options=["trưởng thành", "điềm tĩnh", "tiền bạc", "nỗ lực", "chữa lành", "văn phòng"],
-                    index=0,
-                    help="AI sẽ nhập vai người 27-35 tuổi, lăn lộn cơm áo gạo tiền, câu chữ trần trụi gãy gọn 15-26 từ.",
-                )
-            with col_ai_btn:
-                st.write("")
-                st.write("")
-                if st.button("✨ Sinh Quote AI Mới", type="primary", use_container_width=True):
-                    with st.spinner("AI đang viết câu quote sâu sắc (chuẩn 15-28 từ)..."):
-                        try:
-                            ai_res = generate_quote(topic=ai_topic)
-                            st.session_state.current_quote_text = ai_res["quote"]
-                            if ai_res.get("pexels_keywords"):
-                                kw_first = ai_res["pexels_keywords"][0]
-                                st.session_state.current_keywords = ai_res["pexels_keywords"]
-                                st.session_state["uns_kw_input"] = kw_first
-                                st.session_state["pix_kw_input"] = kw_first
-                            if ai_res.get("is_ai_generated", True):
-                                st.toast("Đã dùng Gemini sáng tạo quote mới thành công!", icon="✨")
-                            else:
-                                st.warning("⚠️ Không thể kết nối AI hoặc phát hiện trùng lặp nhiều lần. Đã lấy câu ngẫu nhiên từ kho mẫu dự phòng.")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Lỗi khi gọi AI: {e}")
+            st.caption("AI nhập vai người 27–35 tuổi, bươn chải mưu sinh, tự độc thoại nội tâm 14–26 từ chân thật, không văn mẫu.")
+            if st.button("✨ Sinh Quote Mới Bằng AI (14–26 Từ Chuẩn TikTok)", type="primary", use_container_width=True):
+                with st.spinner("AI đang viết câu quote độc thoại nội tâm..."):
+                    try:
+                        ai_res = generate_quote(topic="trưởng thành và cơm áo gạo tiền")
+                        st.session_state.current_quote_text = ai_res["quote"]
+                        if ai_res.get("pexels_keywords"):
+                            kw_first = ai_res["pexels_keywords"][0]
+                            st.session_state.current_keywords = ai_res["pexels_keywords"]
+                            st.session_state["uns_kw_input"] = kw_first
+                            st.session_state["pix_kw_input"] = kw_first
+                        if ai_res.get("is_ai_generated", True):
+                            st.toast("Đã dùng Gemini sáng tạo quote mới thành công!", icon="✨")
+                        else:
+                            st.warning("⚠️ Không thể kết nối AI hoặc phát hiện trùng lặp nhiều lần. Đã lấy câu ngẫu nhiên từ kho mẫu dự phòng.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Lỗi khi gọi AI: {e}")
 
         elif quote_mode == "📜 Dùng quote có sẵn trong kho":
             col_cat, col_rnd = st.columns([1.5, 1])
