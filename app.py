@@ -427,30 +427,44 @@ with tab_maker:
                 st.session_state["pix_theme_input"] = user_theme_text
 
             st.write("")
-            # 2 Nút hành động chính
+            # Nút hành động Pixabay
             col_act1, col_act2 = st.columns(2)
             with col_act1:
-                btn_search_gallery = st.button("🔍 Tìm & Chọn Ảnh", type="primary", use_container_width=True)
+                btn_search_gallery = st.button("🔍 Tìm & Chọn 4 Ảnh", type="primary", use_container_width=True)
             with col_act2:
-                btn_rnd_one = st.button("🎲 Lấy Ngẫu Nhiên 1 Ảnh", type="secondary", use_container_width=True)
+                btn_rnd_one = st.button("🎲 1 Ảnh Ngẫu Nhiên", type="secondary", use_container_width=True)
 
-            # Xử lý nút [ 🔍 Tìm & Chọn Ảnh ] -> Lấy đúng 4 ảnh xem trước
+            # Nút chọn nhanh nguồn ảnh thật Picsum Photos (Hoàn toàn miễn phí, không cần key)
+            col_pic1, col_pic2 = st.columns(2)
+            with col_pic1:
+                btn_picsum_one = st.button("📸 1 Ảnh Thật Picsum (Không Cần Key)", use_container_width=True, help="Tải 1 ảnh thật ngẫu nhiên chất lượng cao từ kho ảnh quốc tế Picsum Photos, không cần bất kỳ API key nào.")
+            with col_pic2:
+                btn_picsum_gallery = st.button("🖼️ Xem 4 Ảnh Picsum Khác", use_container_width=True, help="Xem lưới 4 ảnh chụp thật từ Picsum Photos để bạn tự chọn.")
+
+            # Quản lý số trang Pixabay để không bao giờ bị lặp ảnh
+            if "pix_current_page" not in st.session_state:
+                st.session_state["pix_current_page"] = 1
+
+            # Xử lý nút [ 🔍 Tìm & Chọn 4 Ảnh ] -> Nhảy trang để liên tục đổi mới
             if btn_search_gallery:
                 current_query = st.session_state.get("pix_theme_input", "mưa đêm")
-                with st.spinner("Đang tìm 4 ảnh đẹp nhất từ Pixabay..."):
+                st.session_state["pix_current_page"] = (st.session_state["pix_current_page"] % 8) + 1
+                curr_p = st.session_state["pix_current_page"]
+                with st.spinner(f"Đang tìm 4 ảnh đẹp nhất từ Pixabay (Trang {curr_p})..."):
                     gallery_hits = search_pixabay_images(
                         query=current_query,
                         api_key=config.get("pixabay_api_key"),
                         per_page=4,
+                        page=curr_p,
                     )
                     st.session_state["pixabay_gallery_results"] = gallery_hits
                     if not gallery_hits:
                         st.warning("Không tìm thấy ảnh với chủ đề này. Bạn hãy thử từ khóa khác nhé.")
 
-            # Xử lý nút [ 🎲 Lấy Ngẫu Nhiên 1 Ảnh ] -> Tự bốc 1 ảnh đẹp cắt chuẩn 9:16
+            # Xử lý nút [ 🎲 1 Ảnh Ngẫu Nhiên ] Pixabay
             if btn_rnd_one:
                 current_query = st.session_state.get("pix_theme_input", "mưa đêm")
-                with st.spinner("Đang tải ngẫu nhiên 1 ảnh dọc 1080x1920..."):
+                with st.spinner("Đang tải ngẫu nhiên 1 ảnh dọc 1080x1920 từ Pixabay..."):
                     try:
                         fetched_img = fetch_pixabay_image(
                             query=current_query,
@@ -459,10 +473,31 @@ with tab_maker:
                         )
                         st.session_state.current_bg_image = str(fetched_img)
                         st.session_state.rendered_18s_video = None
-                        st.toast("Đã chọn ngẫu nhiên 1 ảnh nền thành công!", icon="🎨")
+                        st.toast("Đã chọn ngẫu nhiên 1 ảnh nền Pixabay thành công!", icon="🎨")
                         st.rerun()
                     except Exception as e:
                         st.error(f"Lỗi: {e}")
+
+            # Xử lý nút [ 📸 1 Ảnh Thật Picsum ] -> Không cần API Key
+            if btn_picsum_one:
+                with st.spinner("Đang tải 1 bức ảnh thật nghệ thuật mới toanh từ Picsum Photos (không cần key)..."):
+                    try:
+                        from modules.picsum_fetcher import fetch_picsum_image
+                        p_img = fetch_picsum_image(Path("temp/background.jpg"))
+                        st.session_state.current_bg_image = str(p_img)
+                        st.session_state.rendered_18s_video = None
+                        st.toast("Đã tải ảnh thật nghệ thuật từ Picsum Photos thành công!", icon="📸")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Lỗi khi tải Picsum: {e}")
+
+            # Xử lý nút [ 🖼️ Xem 4 Ảnh Picsum Khác ] -> Lấy gallery 4 ảnh Picsum
+            if btn_picsum_gallery:
+                with st.spinner("Đang lấy 4 ảnh chụp thật từ kho Picsum Photos..."):
+                    from modules.picsum_fetcher import get_picsum_gallery
+                    p_gallery = get_picsum_gallery(limit=4)
+                    st.session_state["pixabay_gallery_results"] = p_gallery
+                    st.toast("Đã nạp 4 ảnh thật từ Picsum!", icon="🖼️")
 
             # Hiển thị 4 ảnh xem trước trong lưới 2x2
             gallery_items = st.session_state.get("pixabay_gallery_results", [])

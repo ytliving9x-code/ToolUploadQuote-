@@ -259,10 +259,12 @@ def search_pixabay_images(
     colors: Optional[str] = None,
     orientation: str = "vertical",
     per_page: int = 4,
+    page: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
     """
     Tìm kiếm danh sách ảnh từ Pixabay để hiển thị 4 ảnh xem trước cho người dùng chọn.
     Tự động dịch từ khóa tiếng Việt sang tiếng Anh và thêm 'dark moody vertical'.
+    Hỗ trợ tham số page để nhảy sang các trang khác nhau, tránh lặp lại ảnh cũ.
     """
     key = get_pixabay_api_key(api_key)
     if not key or key == "your_pixabay_api_key_here":
@@ -271,6 +273,8 @@ def search_pixabay_images(
     # Dịch tiếng Việt tự do sang query tiếng Anh chuẩn Pixabay
     clean_query = translate_vietnamese_to_pixabay_query(query)
 
+    target_page = page if (page and page > 0) else 1
+
     params: Dict[str, Any] = {
         "key": key,
         "q": clean_query,
@@ -278,12 +282,13 @@ def search_pixabay_images(
         "orientation": "vertical",       # Cố định ngầm: chỉ lấy ảnh khổ dọc 9:16
         "safesearch": "true",           # Cố định ngầm: lọc nội dung an toàn
         "per_page": min(max(per_page, 4), 20),
+        "page": target_page,
     }
     if colors and colors.lower() not in ["all", "none", ""]:
         params["colors"] = colors.lower()
 
     url = f"https://pixabay.com/api/?{urllib.parse.urlencode(params)}"
-    logger.info(f"Đang tìm gallery ảnh Pixabay với query='{clean_query}', params={params}...")
+    logger.info(f"Đang tìm gallery ảnh Pixabay (Trang {target_page}) với query='{clean_query}'...")
 
     try:
         req = urllib.request.Request(
@@ -294,9 +299,19 @@ def search_pixabay_images(
             data = json.loads(response.read().decode("utf-8"))
 
         hits = data.get("hits", [])
+        if not hits and target_page > 1:
+            # Nếu trang quá xa không có ảnh, quay về trang 1
+            params["page"] = 1
+            url_p1 = f"https://pixabay.com/api/?{urllib.parse.urlencode(params)}"
+            req_p1 = urllib.request.Request(url_p1, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req_p1, timeout=12) as resp_p1:
+                data_p1 = json.loads(resp_p1.read().decode("utf-8"))
+                hits = data_p1.get("hits", [])
+
         if not hits:
             # Thử từ khóa mở rộng hơn
             params["q"] = "night street dark moody vertical"
+            params["page"] = 1
             url_fb = f"https://pixabay.com/api/?{urllib.parse.urlencode(params)}"
             req_fb = urllib.request.Request(url_fb, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req_fb, timeout=12) as response_fb:
@@ -340,6 +355,7 @@ def fetch_pixabay_image(
 ) -> Path:
     """
     Tự động tìm kiếm và tải 1 bức ảnh chất lượng cao khổ dọc từ Pixabay.
+    Tự động nhảy trang ngẫu nhiên (page=1..8) để ảnh luôn mới toanh, không trùng lặp.
     Crop chuẩn 1080x1920 portrait.
     """
     out_file = Path(output_path) if output_path else Path("temp/background.jpg")
@@ -356,13 +372,15 @@ def fetch_pixabay_image(
             f_dst.write(f_src.read())
         return resize_and_crop_to_tiktok(out_file)
 
-    # Lấy danh sách ảnh
+    # Nhảy trang ngẫu nhiên từ 1 đến 8 để mỗi lần tải là 1 ảnh mới hoàn toàn
+    rnd_page = random.randint(1, 8)
     hits = search_pixabay_images(
         query=combined_query,
         api_key=key,
         colors=colors,
         orientation="vertical",
         per_page=12,
+        page=rnd_page,
     )
 
     if hits:
@@ -375,5 +393,6 @@ def fetch_pixabay_image(
     with open(fb_path, "rb") as f_src, open(out_file, "wb") as f_dst:
         f_dst.write(f_src.read())
     return resize_and_crop_to_tiktok(out_file)
+
 
 

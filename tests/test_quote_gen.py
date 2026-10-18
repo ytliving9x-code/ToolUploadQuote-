@@ -180,3 +180,15 @@ def test_vietnamese_pixabay_query_translation():
     assert "night" in q_field
 
 
+def test_picsum_fetcher():
+    """Kiểm tra module picsum_fetcher lấy ảnh thật không cần API key."""
+    from modules.picsum_fetcher import get_picsum_gallery
+
+    gallery = get_picsum_gallery(page=1, limit=2)
+    assert len(gallery) > 0
+    assert "preview_url" in gallery[0]
+    assert "large_url" in gallery[0]
+    assert "picsum" in gallery[0]["large_url"]
+
+
+
