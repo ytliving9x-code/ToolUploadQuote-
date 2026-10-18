@@ -10,8 +10,18 @@ import json
 import logging
 import os
 import random
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+# Đảm bảo thư mục gốc dự án luôn nằm đầu sys.path và working directory chuẩn trên Streamlit Cloud / Linux
+project_root = Path(__file__).resolve().parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+try:
+    os.chdir(project_root)
+except Exception:
+    pass
 
 import streamlit as st
 from dotenv import get_key, load_dotenv, set_key
