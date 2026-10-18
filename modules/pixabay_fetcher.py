@@ -69,22 +69,26 @@ def fetch_pixabay_image(
     query: str,
     api_key: Optional[str] = None,
     output_path: Path | str = Path("temp/background.jpg"),
+    colors: Optional[str] = "black",
+    orientation: str = "vertical",
+    default_prefix: str = "background sad",
 ) -> Path:
     """
-    Tìm kiếm và tải 1 ảnh tĩnh dọc từ Pixabay API.
+    Tìm kiếm và tải 1 ảnh tĩnh dọc từ Pixabay API với bộ filter tối ưu cho video Quote tâm trạng.
     
     Args:
-        query: Từ khóa tìm kiếm hình ảnh (vd: "night cafe", "dark street").
+        query: Từ khóa tìm kiếm bổ sung (vd: "night street", "rain window").
         api_key: Pixabay API key (nếu None sẽ lấy từ .env hoặc config.json).
         output_path: Nơi lưu file ảnh tải về (mặc định temp/background.jpg).
+        colors: Lọc tông màu ảnh ("black", "grayscale", "blue", ... hoặc None/all).
+        orientation: "vertical" (khổ dọc 9:16) hoặc "horizontal", "all".
+        default_prefix: Tiền tố tìm kiếm mặc định (ví dụ: "background sad").
     
     Returns:
         Path dẫn tới file ảnh đã được crop chuẩn 1080x1920.
     """
-    out_file = Path(output_path)
-    out_file.parent.mkdir(parents=True, exist_ok=True)
-
-    # Lấy API Key (hỗ trợ .env, config.json và Streamlit Cloud Secrets)
+def get_pixabay_api_key(api_key: Optional[str] = None) -> str:
+    """Lấy API Key Pixabay từ tham số, .env, Streamlit secrets hoặc config.json."""
     key = api_key or os.getenv("PIXABAY_API_KEY")
     if not key:
         try:
@@ -103,30 +107,39 @@ def fetch_pixabay_image(
                     key = cfg.get("pixabay_api_key")
             except Exception:
                 pass
+    return key or ""
 
+
+def search_pixabay_images(
+    query: str = "",
+    api_key: Optional[str] = None,
+    colors: Optional[str] = None,
+    orientation: str = "vertical",
+    per_page: int = 12,
+) -> List[Dict[str, Any]]:
+    """
+    Tìm kiếm danh sách ảnh từ Pixabay để hiển thị lưới gallery cho người dùng chọn.
+    Trả về danh sách dict chứa: id, preview_url, large_url, tags.
+    """
+    key = get_pixabay_api_key(api_key)
     if not key or key == "your_pixabay_api_key_here":
-        # Fallback ảnh chất lượng cao nếu chưa có API key để đảm bảo người dùng vẫn trải nghiệm được mượt mà
-        logger.warning("Chưa cấu hình Pixabay API Key! Dùng ảnh aesthetic fallback chất lượng cao.")
-        from modules.ai_image_gen import generate_ai_image
-        fb_path = generate_ai_image(query)
-        with open(fb_path, "rb") as f_src, open(out_file, "wb") as f_dst:
-            f_dst.write(f_src.read())
-        return resize_and_crop_to_tiktok(out_file)
+        return []
 
     clean_query = query.strip() if query else random.choice(DEFAULT_DARK_KEYWORDS)
 
-    # Xây dựng URL request Pixabay
-    params = {
+    params: Dict[str, Any] = {
         "key": key,
         "q": clean_query,
         "image_type": "photo",
-        "orientation": "vertical",
+        "orientation": orientation or "vertical",
         "safesearch": "true",
-        "per_page": 20,
+        "per_page": min(per_page, 30),
     }
+    if colors and colors.lower() not in ["all", "none", ""]:
+        params["colors"] = colors.lower()
 
     url = f"https://pixabay.com/api/?{urllib.parse.urlencode(params)}"
-    logger.info(f"Đang tìm ảnh Pixabay với từ khóa: '{clean_query}'...")
+    logger.info(f"Đang tìm gallery ảnh Pixabay với query='{clean_query}', params={params}...")
 
     try:
         req = urllib.request.Request(
@@ -138,33 +151,95 @@ def fetch_pixabay_image(
 
         hits = data.get("hits", [])
         if not hits:
-            logger.warning(f"Pixabay không có kết quả cho '{clean_query}'. Đang thử từ khóa chung...")
-            # Thử từ khóa chung
+            # Thử từ khóa mở rộng hơn
             params["q"] = "night street"
-            url_fallback = f"https://pixabay.com/api/?{urllib.parse.urlencode(params)}"
-            req_fb = urllib.request.Request(url_fallback, headers={"User-Agent": "Mozilla/5.0"})
+            url_fb = f"https://pixabay.com/api/?{urllib.parse.urlencode(params)}"
+            req_fb = urllib.request.Request(url_fb, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req_fb, timeout=12) as response_fb:
                 data_fb = json.loads(response_fb.read().decode("utf-8"))
                 hits = data_fb.get("hits", [])
 
-        if hits:
-            selected_hit = random.choice(hits)
-            img_url = selected_hit.get("largeImageURL") or selected_hit.get("webformatURL")
-            logger.info(f"Đang tải ảnh từ: {img_url}...")
-
-            img_req = urllib.request.Request(img_url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(img_req, timeout=15) as img_resp:
-                with open(out_file, "wb") as f_out:
-                    f_out.write(img_resp.read())
-
-            return resize_and_crop_to_tiktok(out_file)
-
-        raise ValueError(f"Không tìm thấy ảnh phù hợp trên Pixabay.")
-
+        results = []
+        for h in hits:
+            results.append({
+                "id": h.get("id"),
+                "preview_url": h.get("webformatURL") or h.get("previewURL"),
+                "large_url": h.get("largeImageURL") or h.get("webformatURL"),
+                "tags": h.get("tags", ""),
+            })
+        return results
     except Exception as e:
-        logger.error(f"Lỗi khi gọi Pixabay API: {e}. Đang dùng ảnh aesthetic thay thế...")
+        logger.error(f"Lỗi khi tìm gallery Pixabay: {e}")
+        return []
+
+
+def download_and_crop_pixabay_image(image_url: str, output_path: Optional[Path] = None) -> Path:
+    """Tải một ảnh cụ thể từ URL và crop chuẩn 1080x1920."""
+    out_file = Path(output_path) if output_path else Path("temp/background.jpg")
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+
+    img_req = urllib.request.Request(image_url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(img_req, timeout=15) as img_resp:
+        with open(out_file, "wb") as f_out:
+            f_out.write(img_resp.read())
+
+    return resize_and_crop_to_tiktok(out_file)
+
+
+def fetch_pixabay_image(
+    query: str = "",
+    api_key: Optional[str] = None,
+    output_path: Optional[Path] = None,
+    colors: Optional[str] = None,
+    orientation: str = "vertical",
+    default_prefix: str = "",
+) -> Path:
+    """
+    Tự động tìm kiếm và tải 1 bức ảnh chất lượng cao khổ dọc từ Pixabay.
+    Crop chuẩn 1080x1920 portrait.
+    """
+    out_file = Path(output_path) if output_path else Path("temp/background.jpg")
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+
+    key = get_pixabay_api_key(api_key)
+
+    user_query = query.strip() if query else ""
+    if default_prefix and default_prefix.strip():
+        if user_query:
+            if default_prefix.lower() in user_query.lower():
+                combined_query = user_query
+            else:
+                combined_query = f"{default_prefix.strip()} {user_query}".strip()
+        else:
+            combined_query = default_prefix.strip()
+    else:
+        combined_query = user_query or random.choice(DEFAULT_DARK_KEYWORDS)
+
+    if not key or key == "your_pixabay_api_key_here":
+        logger.warning("Chưa cấu hình Pixabay API Key! Dùng ảnh aesthetic fallback.")
         from modules.ai_image_gen import generate_ai_image
-        fb_path = generate_ai_image(clean_query)
+        fb_path = generate_ai_image(combined_query)
         with open(fb_path, "rb") as f_src, open(out_file, "wb") as f_dst:
             f_dst.write(f_src.read())
         return resize_and_crop_to_tiktok(out_file)
+
+    # Lấy danh sách ảnh
+    hits = search_pixabay_images(
+        query=combined_query,
+        api_key=key,
+        colors=colors,
+        orientation=orientation,
+        per_page=20,
+    )
+
+    if hits:
+        chosen = random.choice(hits)
+        return download_and_crop_pixabay_image(chosen["large_url"], out_file)
+
+    # Fallback an toàn
+    from modules.ai_image_gen import generate_ai_image
+    fb_path = generate_ai_image(combined_query)
+    with open(fb_path, "rb") as f_src, open(out_file, "wb") as f_dst:
+        f_dst.write(f_src.read())
+    return resize_and_crop_to_tiktok(out_file)
+

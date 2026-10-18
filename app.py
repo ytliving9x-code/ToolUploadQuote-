@@ -216,9 +216,12 @@ with tab_maker:
                             ai_res = generate_quote(topic=ai_topic)
                             st.session_state.current_quote_text = ai_res["quote"]
                             if ai_res.get("pexels_keywords"):
+                                kw_first = ai_res["pexels_keywords"][0]
                                 st.session_state.current_keywords = ai_res["pexels_keywords"]
+                                st.session_state["uns_kw_input"] = kw_first
+                                st.session_state["pix_kw_input"] = kw_first
                             if ai_res.get("is_ai_generated", True):
-                                st.toast("Đã dùng Gemini 3.8 Flash sáng tạo quote mới thành công!", icon="✨")
+                                st.toast("Đã dùng Gemini sáng tạo quote mới thành công!", icon="✨")
                             else:
                                 st.warning("⚠️ Không thể kết nối AI hoặc phát hiện trùng lặp nhiều lần. Đã lấy câu ngẫu nhiên từ kho mẫu dự phòng.")
                             st.rerun()
@@ -236,7 +239,10 @@ with tab_maker:
                 if st.button("🎲 Random Quote Ngẫu Nhiên", use_container_width=True):
                     rnd_q = get_random_quote(chosen_cat)
                     st.session_state.current_quote_text = rnd_q["quote"]
-                    st.session_state.current_keywords = rnd_q.get("keywords", ["night street rain aesthetic"])
+                    rnd_kws = rnd_q.get("keywords", ["night street rain aesthetic"])
+                    st.session_state.current_keywords = rnd_kws
+                    st.session_state["uns_kw_input"] = rnd_kws[0]
+                    st.session_state["pix_kw_input"] = rnd_kws[0]
                     st.rerun()
 
             # Lọc danh sách câu để hiển thị dropdown
@@ -290,6 +296,7 @@ with tab_maker:
                 with cols_chips_uns[i]:
                     if st.button(f"👉 {kw_item}", key=f"chip_kw_uns_{i}", use_container_width=True):
                         st.session_state.current_keywords = [kw_item]
+                        st.session_state["uns_kw_input"] = kw_item
                         st.rerun()
 
             st.write("")
@@ -298,10 +305,11 @@ with tab_maker:
                 default_kw_uns = suggested_kw_list[0] if suggested_kw_list else "night street rain"
                 if st.session_state.current_keywords:
                     default_kw_uns = st.session_state.current_keywords[0]
+                if "uns_kw_input" not in st.session_state:
+                    st.session_state["uns_kw_input"] = default_kw_uns
 
                 kw_input_uns = st.text_input(
                     "Từ khóa tìm ảnh dọc trên Unsplash:",
-                    value=default_kw_uns,
                     key="uns_kw_input",
                     help="Tìm ảnh nghệ thuật, màu film trầm tối, khổ dọc portrait 1080x1920.",
                 )
@@ -312,6 +320,7 @@ with tab_maker:
                 if btn_rnd_kw_uns:
                     new_kw = random.choice(DEFAULT_DARK_KEYWORDS)
                     st.session_state.current_keywords = [new_kw]
+                    st.session_state["uns_kw_input"] = new_kw
                     st.rerun()
 
             # Ô nhập Unsplash Access Key tùy chọn
@@ -348,6 +357,7 @@ with tab_maker:
                 with cols_chips[i]:
                     if st.button(f"👉 {kw_item}", key=f"chip_kw_{i}", use_container_width=True):
                         st.session_state.current_keywords = [kw_item]
+                        st.session_state["pix_kw_input"] = kw_item
                         st.rerun()
 
             st.write("")
@@ -356,12 +366,13 @@ with tab_maker:
                 default_kw = suggested_kw_list[0] if suggested_kw_list else "night street rain"
                 if st.session_state.current_keywords:
                     default_kw = st.session_state.current_keywords[0]
+                if "pix_kw_input" not in st.session_state:
+                    st.session_state["pix_kw_input"] = default_kw
 
                 kw_input = st.text_input(
-                    "Từ khóa tìm ảnh dọc trên Pixabay:",
-                    value=default_kw,
+                    "Từ khóa tìm kiếm bổ sung trên Pixabay:",
                     key="pix_kw_input",
-                    help="Bạn có thể bấm vào các từ khóa gợi ý ở trên hoặc tự gõ theo ý muốn.",
+                    help="Bạn có thể gõ thêm từ khóa (ví dụ: 'rain', 'lonely', 'city') hoặc click vào các gợi ý ở trên.",
                 )
             with col_btn_pix:
                 st.write("")
@@ -370,23 +381,103 @@ with tab_maker:
                 if btn_rnd_kw:
                     new_kw = random.choice(DEFAULT_DARK_KEYWORDS)
                     st.session_state.current_keywords = [new_kw]
+                    st.session_state["pix_kw_input"] = new_kw
                     st.rerun()
 
-            btn_fetch_pixabay = st.button("📥 Tìm & Tải Ảnh Pixabay Này", type="secondary", use_container_width=True)
-            if btn_fetch_pixabay:
-                with st.spinner("Đang tìm và tải ảnh dọc chuẩn 1080x1920 từ Pixabay..."):
+            # Bộ lọc Pixabay: Mặc định tông màu tự nhiên (all) và tiền tố để trống để ảnh phong phú
+            with st.expander("⚙️ Tùy Chỉnh Bộ Lọc Ảnh (Tông màu, Khổ ảnh)", expanded=False):
+                col_f1, col_f2, col_f3 = st.columns(3)
+                with col_f1:
+                    pix_orientation = st.selectbox(
+                        "Khổ ảnh (Orientation):",
+                        options=["vertical", "all", "horizontal"],
+                        index=0,
+                        help="vertical: chỉ lấy ảnh dọc 9:16 phù hợp với TikTok.",
+                    )
+                with col_f2:
+                    pix_colors = st.selectbox(
+                        "Tông màu (Colors):",
+                        options=["all (tự nhiên, đa dạng)", "black (đen/tối)", "grayscale (đen trắng)", "blue (xanh lạnh)"],
+                        index=0,
+                        help="Mặc định để 'all' để ảnh phong phú và đẹp nhất.",
+                    )
+                with col_f3:
+                    pix_prefix = st.text_input(
+                        "Tiền tố chủ đề (nếu muốn ghép thêm):",
+                        value="",
+                        help="Để trống để tìm chính xác từ khóa bạn muốn, hoặc gõ 'night', 'moody'...",
+                    )
+
+            # Nút tìm kiếm ảnh để hiện Gallery
+            col_b1, col_b2 = st.columns([1.5, 1])
+            with col_b1:
+                btn_search_gallery = st.button("🔍 Tìm Danh Sách Ảnh Để Chọn", type="primary", use_container_width=True)
+            with col_b2:
+                btn_rnd_one = st.button("🎲 Tải Ngẫu Nhiên 1 Ảnh", type="secondary", use_container_width=True)
+
+            # Lấy color param chuẩn
+            color_param = None
+            if "black" in pix_colors:
+                color_param = "black"
+            elif "grayscale" in pix_colors:
+                color_param = "grayscale"
+            elif "blue" in pix_colors:
+                color_param = "blue"
+
+            # Xử lý nút tìm danh sách ảnh gallery
+            if btn_search_gallery:
+                with st.spinner("Đang tìm các ảnh đẹp nhất từ Pixabay..."):
+                    from modules.pixabay_fetcher import search_pixabay_images
+                    search_q = f"{pix_prefix.strip()} {kw_input.strip()}".strip() if pix_prefix else kw_input.strip()
+                    gallery_hits = search_pixabay_images(
+                        query=search_q,
+                        api_key=config.get("pixabay_api_key"),
+                        colors=color_param,
+                        orientation=pix_orientation,
+                        per_page=8,
+                    )
+                    st.session_state["pixabay_gallery_results"] = gallery_hits
+                    if not gallery_hits:
+                        st.warning("Không tìm thấy ảnh với từ khóa này. Bạn hãy thử từ khóa khác nhé.")
+
+            # Xử lý nút tải ngẫu nhiên 1 ảnh
+            if btn_rnd_one:
+                with st.spinner("Đang tải ngẫu nhiên 1 ảnh dọc 1080x1920..."):
                     try:
+                        search_q = f"{pix_prefix.strip()} {kw_input.strip()}".strip() if pix_prefix else kw_input.strip()
                         fetched_img = fetch_pixabay_image(
-                            query=kw_input,
+                            query=search_q,
                             api_key=config.get("pixabay_api_key"),
                             output_path=Path("temp/background.jpg"),
+                            colors=color_param,
+                            orientation=pix_orientation,
                         )
                         st.session_state.current_bg_image = str(fetched_img)
                         st.session_state.rendered_18s_video = None
-                        st.toast("Đã tải ảnh Pixabay 1080x1920 thành công!", icon="🎨")
+                        st.toast("Đã chọn ngẫu nhiên 1 ảnh nền thành công!", icon="🎨")
                         st.rerun()
                     except Exception as e:
-                        st.error(f"Lỗi khi tải ảnh từ Pixabay: {e}")
+                        st.error(f"Lỗi: {e}")
+
+            # Hiển thị Gallery xem trước để người dùng chọn
+            gallery_items = st.session_state.get("pixabay_gallery_results", [])
+            if gallery_items:
+                st.markdown("---")
+                st.markdown("🖼️ **Bấm vào nút bên dưới bức ảnh bạn ưng ý nhất để chọn:**")
+                grid_cols = st.columns(4)
+                for idx, item in enumerate(gallery_items):
+                    col_idx = idx % 4
+                    with grid_cols[col_idx]:
+                        st.image(item["preview_url"], use_container_width=True)
+                        if st.button(f"✅ Chọn Ảnh #{idx+1}", key=f"btn_pick_img_{item['id']}", use_container_width=True):
+                            with st.spinner(f"Đang tải và chuẩn hóa ảnh #{idx+1} về chuẩn 1080x1920..."):
+                                from modules.pixabay_fetcher import download_and_crop_pixabay_image
+                                out_img = download_and_crop_pixabay_image(item["large_url"], Path("temp/background.jpg"))
+                                st.session_state.current_bg_image = str(out_img)
+                                st.session_state.rendered_18s_video = None
+                                st.toast(f"Đã chọn ảnh #{idx+1} làm hình nền video!", icon="✨")
+                                st.rerun()
+
 
         with tab_upload_local:
             up_file = st.file_uploader(
