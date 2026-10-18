@@ -324,7 +324,7 @@ with tab_maker:
                         st.error(f"Lỗi khi tạo ảnh AI: {e}")
 
         with tab_pixabay:
-            st.markdown("💡 **Từ khóa gợi ý khớp nhất với câu quote hiện tại:**")
+            st.markdown("💡 **Từ khóa gợi ý thông minh khớp với câu quote hiện tại:**")
             cols_chips = st.columns(min(len(suggested_kw_list), 4))
             for i, kw_item in enumerate(suggested_kw_list[:4]):
                 with cols_chips[i]:
@@ -333,26 +333,59 @@ with tab_maker:
                         st.session_state["pix_kw_input"] = kw_item
                         st.rerun()
 
+            # Hộp chọn nhanh 10 từ khóa chuẩn Cinematic ưu tiên nhất
+            with st.expander("🎬 Kho 10 Từ Khóa Cinematic Đẹp Nhất (Đồng bộ phong cách kênh)", expanded=True):
+                from modules.pixabay_fetcher import TOP_PRIORITY_CINEMATIC_KEYWORDS, CINEMATIC_KEYWORD_CATEGORIES
+                col_c1, col_c2 = st.columns([1.5, 1])
+                with col_c1:
+                    chosen_top_kw = st.selectbox(
+                        "Chọn nhanh từ khóa chuẩn Cinematic:",
+                        options=["-- Chọn từ khóa có sẵn --"] + TOP_PRIORITY_CINEMATIC_KEYWORDS,
+                        index=0,
+                        help="10 từ khóa được chọn lọc kỹ lưỡng để tạo video nền trầm, cô độc, đời thường chuẩn TikTok.",
+                    )
+                    if chosen_top_kw != "-- Chọn từ khóa có sẵn --":
+                        if st.session_state.get("pix_kw_input") != chosen_top_kw:
+                            st.session_state["pix_kw_input"] = chosen_top_kw
+                            st.rerun()
+                with col_c2:
+                    concept_choice = st.selectbox(
+                        "Xem theo nhóm chủ đề:",
+                        options=list(CINEMATIC_KEYWORD_CATEGORIES.keys()),
+                        index=0,
+                    )
+
+                # Hiển thị các chip từ khóa thuộc concept được chọn
+                concept_kws = CINEMATIC_KEYWORD_CATEGORIES.get(concept_choice, [])
+                if concept_kws:
+                    c_cols = st.columns(len(concept_kws))
+                    for c_idx, c_kw in enumerate(concept_kws):
+                        with c_cols[c_idx]:
+                            if st.button(f"🏷️ {c_kw}", key=f"c_kw_chip_{c_idx}", use_container_width=True):
+                                st.session_state["pix_kw_input"] = c_kw
+                                st.rerun()
+
             st.write("")
             col_kw, col_btn_pix = st.columns([2, 1])
             with col_kw:
-                default_kw = suggested_kw_list[0] if suggested_kw_list else "night street rain"
+                default_kw = suggested_kw_list[0] if suggested_kw_list else "lonely man walking at night"
                 if st.session_state.current_keywords:
                     default_kw = st.session_state.current_keywords[0]
                 if "pix_kw_input" not in st.session_state:
                     st.session_state["pix_kw_input"] = default_kw
 
                 kw_input = st.text_input(
-                    "Từ khóa tìm kiếm bổ sung trên Pixabay:",
+                    "Từ khóa tìm kiếm ảnh/video trên Pixabay:",
                     key="pix_kw_input",
-                    help="Bạn có thể gõ thêm từ khóa (ví dụ: 'rain', 'lonely', 'city') hoặc click vào các gợi ý ở trên.",
+                    help="Bạn có thể gõ bất kỳ từ khóa tiếng Anh nào hoặc bấm chọn nhanh ở trên.",
                 )
             with col_btn_pix:
                 st.write("")
                 st.write("")
                 btn_rnd_kw = st.button("🎲 Đổi Gợi Ý Khác", key="btn_rnd_pix", use_container_width=True)
                 if btn_rnd_kw:
-                    new_kw = random.choice(DEFAULT_DARK_KEYWORDS)
+                    from modules.pixabay_fetcher import TOP_PRIORITY_CINEMATIC_KEYWORDS
+                    new_kw = random.choice(TOP_PRIORITY_CINEMATIC_KEYWORDS)
                     st.session_state.current_keywords = [new_kw]
                     st.session_state["pix_kw_input"] = new_kw
                     st.rerun()

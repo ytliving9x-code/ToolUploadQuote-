@@ -21,17 +21,69 @@ from PIL import Image
 
 logger = logging.getLogger("tiktok_tool.pixabay_fetcher")
 
-DEFAULT_DARK_KEYWORDS = [
-    "night street rain",
-    "subway dark lonely",
-    "rain window night",
-    "dark coffee shop",
-    "dark street moody",
-    "foggy forest dark",
-    "city lights night road",
-    "night drive rain car",
-    "dark room lamp quiet",
+# 10 Từ khóa ưu tiên hàng đầu theo phong cách Cinematic, Trầm, Cô độc
+TOP_PRIORITY_CINEMATIC_KEYWORDS = [
+    "lonely man walking at night",
+    "rainy city night cinematic",
+    "man sitting alone at night",
+    "man looking out window",
+    "dark street b roll",
+    "man walking alone back view",
+    "night city lights cinematic",
+    "man drinking coffee alone",
+    "cinematic urban solitude",
+    "moody city b roll",
 ]
+
+# Toàn bộ kho từ khóa phân loại theo concept
+CINEMATIC_KEYWORD_CATEGORIES = {
+    "Đường phố ban đêm — trầm, lạnh": [
+        "lonely man walking at night",
+        "rainy city night cinematic",
+        "dark street b roll",
+        "night city lights cinematic",
+        "man walking alone rain",
+    ],
+    "Một mình suy nghĩ — nội tâm": [
+        "man sitting alone at night",
+        "man looking out window cinematic",
+        "lonely man silhouette window",
+        "man thinking alone dark room",
+        "man sitting in car at night",
+    ],
+    "Người đàn ông bước đi — trưởng thành": [
+        "man walking alone back view",
+        "man walking in city cinematic",
+        "silhouette man walking sunset",
+        "man walking empty road",
+        "lonely man urban b roll",
+    ],
+    "Mưa, cửa kính, ánh đèn — tâm trạng": [
+        "rain on window at night",
+        "city lights bokeh rain",
+        "rainy window cinematic",
+        "night traffic rain reflections",
+        "moody street lights b roll",
+    ],
+    "Tiền bạc & Áp lực cuộc sống": [
+        "man working late night",
+        "man walking alone city",
+        "night shift worker cinematic",
+        "tired man sitting alone",
+        "man in empty room cinematic",
+    ],
+    "Bình thản & Thường ngày": [
+        "man drinking coffee alone",
+        "late night office cinematic",
+        "man sitting in cafe window",
+        "ocean waves cinematic",
+        "empty road sunset",
+        "mountain mist cinematic",
+    ],
+}
+
+DEFAULT_DARK_KEYWORDS = TOP_PRIORITY_CINEMATIC_KEYWORDS
+
 
 
 def resize_and_crop_to_tiktok(image_path: Path, target_size=(1080, 1920)) -> Path:
