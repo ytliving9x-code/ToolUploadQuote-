@@ -31,8 +31,7 @@ from modules.quote_manager import (
 from modules.quote_gen import generate_quote
 from modules.video_renderer import render_18s_video
 from modules.video_engine import generate_quote_preview_image, probe_video_metadata
-from modules.exporter import export_to_pending, list_pending_items, mark_as_published
-from modules.history_db import get_history, init_db
+from modules.history_db import init_db
 
 # Cấu hình logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")

@@ -16,13 +16,22 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import imageio_ffmpeg
+import shutil
+
 from PIL import Image, ImageDraw, ImageFont
 
 logger = logging.getLogger("tiktok_tool.video_engine")
 
 FONT_PATH_DEFAULT = Path("assets/fonts/BeVietnamPro-Bold.ttf")
-FFMPEG_EXE = imageio_ffmpeg.get_ffmpeg_exe()
+
+try:
+    FFMPEG_EXE = shutil.which("ffmpeg")
+    if not FFMPEG_EXE:
+        import imageio_ffmpeg
+        FFMPEG_EXE = imageio_ffmpeg.get_ffmpeg_exe()
+except Exception:
+    FFMPEG_EXE = shutil.which("ffmpeg") or "ffmpeg"
+
 
 
 def get_font(font_path: Optional[Path | str] = None, font_size: int = 54) -> ImageFont.FreeTypeFont:
@@ -215,15 +224,26 @@ def probe_video_metadata(video_path: Path | str) -> Dict[str, Any]:
     if not path.exists():
         raise FileNotFoundError(f"Không tìm thấy file: {path}")
 
-    cmd = [
-        FFMPEG_EXE,
-        "-hide_banner",
-        "-i",
-        str(path),
-    ]
-
-    process = subprocess.run(cmd, stderr=subprocess.PIPE, text=True, errors="ignore")
-    stderr = process.stderr
+    try:
+        cmd = [
+            FFMPEG_EXE,
+            "-hide_banner",
+            "-i",
+            str(path),
+        ]
+        process = subprocess.run(cmd, stderr=subprocess.PIPE, text=True, errors="ignore")
+        stderr = process.stderr
+    except Exception as e:
+        logger.warning(f"Lỗi khi chạy FFmpeg probe: {e}")
+        return {
+            "path": str(path),
+            "width": 1080,
+            "height": 1920,
+            "fps": 30.0,
+            "duration": 18.0,
+            "has_audio": False,
+            "video_codec": "h264",
+        }
 
     metadata: Dict[str, Any] = {
         "path": str(path),
