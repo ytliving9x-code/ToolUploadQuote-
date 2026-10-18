@@ -46,20 +46,43 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom CSS phong cách Aesthetic Dark Mode
+# Custom CSS phong cách Aesthetic Dark Mode tối ưu cho Điện Thoại & Desktop
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        -webkit-tap-highlight-color: transparent;
     }
     
+    /* Tối ưu lề và padding màn hình Mobile */
+    @media (max-width: 768px) {
+        .block-container {
+            padding-top: 1rem !important;
+            padding-bottom: 2rem !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+        }
+        .main-header {
+            font-size: 1.45rem !important;
+            line-height: 1.3 !important;
+        }
+        .sub-header {
+            font-size: 0.82rem !important;
+            margin-bottom: 0.8rem !important;
+        }
+        .stButton>button {
+            min-height: 48px !important;
+            font-size: 15px !important;
+        }
+    }
+
     .main-header {
-        font-size: 2.1rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #F8FAFC 0%, #94A3B8 100%);
+        font-size: 2.0rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #FFFFFF 0%, #38BDF8 60%, #818CF8 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 0.2rem;
@@ -67,24 +90,72 @@ st.markdown(
     
     .sub-header {
         color: #94A3B8;
-        font-size: 0.95rem;
-        margin-bottom: 1.2rem;
+        font-size: 0.92rem;
+        margin-bottom: 1.0rem;
+    }
+
+    /* Thiết kế thẻ Card hiện đại */
+    .step-card {
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 1rem;
+        margin-bottom: 1rem;
     }
     
+    /* Chuẩn hóa nút bấm Mobile (Touch Target >= 46px) */
     .stButton>button {
-        border-radius: 8px;
+        border-radius: 12px;
         font-weight: 600;
-        transition: all 0.2s ease-in-out;
+        min-height: 46px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        touch-action: manipulation;
+    }
+    .stButton>button:active {
+        transform: scale(0.98);
+    }
+    
+    /* Nút chính tạo video nổi bật kiểu TikTok */
+    .btn-create-main button {
+        background: linear-gradient(135deg, #FE2C55 0%, #FF0050 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        font-size: 1.05rem !important;
+        font-weight: 700 !important;
+        min-height: 52px !important;
+        box-shadow: 0 4px 15px rgba(254, 44, 85, 0.4) !important;
+    }
+
+    /* Giới hạn video & ảnh xem trước không chiếm tràn màn hình dọc */
+    video, .stImage img {
+        max-height: 480px !important;
+        width: auto !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
+        display: block !important;
+        border-radius: 16px !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    /* Khung Tabs to dễ bấm trên ngón tay */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        padding: 10px 14px !important;
+        border-radius: 10px;
+        font-weight: 600;
     }
     
     .badge-18s {
-        background-color: #0F172A;
+        background: rgba(15, 23, 42, 0.85);
         border: 1px solid #334155;
-        border-radius: 8px;
-        padding: 0.5rem 0.8rem;
+        border-radius: 10px;
+        padding: 0.6rem 0.8rem;
         font-size: 0.85rem;
         text-align: center;
         color: #38BDF8;
+        margin-top: 0.6rem;
         margin-bottom: 0.8rem;
     }
     </style>
@@ -325,9 +396,9 @@ with tab_maker:
 
         with tab_pixabay:
             st.markdown("💡 **Từ khóa gợi ý thông minh khớp với câu quote hiện tại:**")
-            cols_chips = st.columns(min(len(suggested_kw_list), 4))
+            cols_chips = st.columns(2)
             for i, kw_item in enumerate(suggested_kw_list[:4]):
-                with cols_chips[i]:
+                with cols_chips[i % 2]:
                     if st.button(f"👉 {kw_item}", key=f"chip_kw_{i}", use_container_width=True):
                         st.session_state.current_keywords = [kw_item]
                         st.session_state["pix_kw_input"] = kw_item
@@ -357,7 +428,7 @@ with tab_maker:
                     active_priority_kws = TOP_PRIORITY_CINEMATIC_KEYWORDS
                     active_categories = URBAN_KEYWORD_CATEGORIES
 
-                col_c1, col_c2 = st.columns([1.4, 1.2])
+                col_c1, col_c2 = st.columns([1.2, 1.2])
                 with col_c1:
                     chosen_top_kw = st.selectbox(
                         "Chọn nhanh từ khóa tiêu biểu:",
@@ -376,12 +447,12 @@ with tab_maker:
                         index=0,
                     )
 
-                # Hiển thị các chip từ khóa thuộc concept được chọn
+                # Hiển thị các chip từ khóa thuộc concept được chọn (2 cột chuẩn Mobile)
                 concept_kws = active_categories.get(concept_choice, [])
                 if concept_kws:
-                    c_cols = st.columns(min(len(concept_kws), 4))
+                    c_cols = st.columns(2)
                     for c_idx, c_kw in enumerate(concept_kws):
-                        with c_cols[c_idx % 4]:
+                        with c_cols[c_idx % 2]:
                             if st.button(f"🏷️ {c_kw}", key=f"c_kw_chip_{style_mode[:3]}_{c_idx}", use_container_width=True):
                                 st.session_state["pix_kw_input"] = c_kw
                                 st.rerun()
@@ -436,9 +507,9 @@ with tab_maker:
                     )
 
             # Nút tìm kiếm ảnh để hiện Gallery
-            col_b1, col_b2 = st.columns([1.5, 1])
+            col_b1, col_b2 = st.columns([1.2, 1.2])
             with col_b1:
-                btn_search_gallery = st.button("🔍 Tìm Danh Sách Ảnh Để Chọn", type="primary", use_container_width=True)
+                btn_search_gallery = st.button("🔍 Tìm Ảnh Để Chọn", type="primary", use_container_width=True)
             with col_b2:
                 btn_rnd_one = st.button("🎲 Tải Ngẫu Nhiên 1 Ảnh", type="secondary", use_container_width=True)
 
@@ -486,14 +557,14 @@ with tab_maker:
                     except Exception as e:
                         st.error(f"Lỗi: {e}")
 
-            # Hiển thị Gallery xem trước để người dùng chọn
+            # Hiển thị Gallery xem trước để người dùng chọn (2 CỘT TỐI ƯU MÀN HÌNH ĐIỆN THOẠI)
             gallery_items = st.session_state.get("pixabay_gallery_results", [])
             if gallery_items:
                 st.markdown("---")
-                st.markdown("🖼️ **Bấm vào nút bên dưới bức ảnh bạn ưng ý nhất để chọn:**")
-                grid_cols = st.columns(4)
+                st.markdown("🖼️ **Chạm vào nút bên dưới bức ảnh bạn ưng ý nhất để chọn:**")
+                grid_cols = st.columns(2)
                 for idx, item in enumerate(gallery_items):
-                    col_idx = idx % 4
+                    col_idx = idx % 2
                     with grid_cols[col_idx]:
                         st.image(item["preview_url"], use_container_width=True)
                         if st.button(f"✅ Chọn Ảnh #{idx+1}", key=f"btn_pick_img_{item['id']}", use_container_width=True):
@@ -505,10 +576,9 @@ with tab_maker:
                                 st.toast(f"Đã chọn ảnh #{idx+1} làm hình nền video!", icon="✨")
                                 st.rerun()
 
-
         with tab_upload_local:
             up_file = st.file_uploader(
-                "Tải file ảnh (.jpg, .png, .webp) từ máy tính của bạn:",
+                "Tải file ảnh (.jpg, .png, .webp) từ máy tính hoặc điện thoại của bạn:",
                 type=["jpg", "jpeg", "png", "webp"],
             )
             if up_file is not None:
@@ -527,9 +597,11 @@ with tab_maker:
         st.divider()
 
         # -------------------------------------------------------------
-        # NÚT BẤM CHÍNH TO RÕ: TẠO VIDEO 18S NGAY
+        # NÚT BẤM CHÍNH TO RÕ (TỐI ƯU NGÓN TAY CÁI TRÊN ĐIỆN THOẠI)
         # -------------------------------------------------------------
+        st.markdown('<div class="btn-create-main">', unsafe_allow_html=True)
         btn_create_18s = st.button("🚀 TẠO VIDEO 18S NGAY", type="primary", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
         if btn_create_18s:
             bg_target = st.session_state.current_bg_image
@@ -647,12 +719,16 @@ with tab_pending_list:
                     if Path(item["video_path"]).exists():
                         st.video(str(item["video_path"]))
                 with col_info:
-                    st.text_area("Caption & Hashtags:", value=item["caption"], height=120, key=f"cap_{idx}")
+                    st.caption("📋 **Nội dung Caption & Hashtags sẵn sàng để đăng:**")
+                    # Dùng st.code để Streamlit tự hiện nút 1-Click Copy góc trên bên phải
+                    st.code(item["caption"], language=None)
+                    st.caption("*(Chạm vào biểu tượng Copy góc trên bên phải khung trên để dán ngay vào TikTok)*")
+                    
                     col_p1, col_p2 = st.columns(2)
                     with col_p1:
                         with open(item["video_path"], "rb") as f_d:
                             st.download_button(
-                                "⬇️ Tải Video Này",
+                                "⬇️ Tải Video Về Máy",
                                 data=f_d.read(),
                                 file_name=Path(item["video_path"]).name,
                                 mime="video/mp4",
@@ -660,7 +736,7 @@ with tab_pending_list:
                                 use_container_width=True,
                             )
                     with col_p2:
-                        if st.button("✅ Đánh dấu Đã Đăng", key=f"mark_{idx}", use_container_width=True):
+                        if st.button("✅ Đã Đăng TikTok", key=f"mark_{idx}", use_container_width=True):
                             mark_as_published(item["video_path"])
                             st.toast("Đã chuyển trạng thái Đã Đăng!", icon="✅")
                             st.rerun()
