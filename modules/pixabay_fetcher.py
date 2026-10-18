@@ -21,21 +21,109 @@ from PIL import Image
 
 logger = logging.getLogger("tiktok_tool.pixabay_fetcher")
 
-# 10 Từ khóa ưu tiên hàng đầu theo phong cách Đô thị, Trầm, Cô độc
-TOP_PRIORITY_CINEMATIC_KEYWORDS = [
-    "lonely man walking at night",
-    "rainy city night cinematic",
-    "man sitting alone at night",
-    "man looking out window",
-    "dark street b roll",
-    "man walking alone back view",
-    "night city lights cinematic",
-    "man drinking coffee alone",
-    "cinematic urban solitude",
-    "moody city b roll",
-]
+# 6 Thẻ chủ đề tiếng Việt chọn nhanh (Bấm 1 chạm)
+QUICK_THEMES_VI = {
+    "🐺 Con Sói Bản Lĩnh": "lone wolf dark moody winter",
+    "🌧️ Mưa Phố Đêm": "night city rain street dark moody",
+    "🌲 Rừng Đêm & Sương": "foggy dark forest mist landscape",
+    "☕ Quán Cà Phê Khuya": "dark moody cafe coffee lonely night",
+    "🌊 Biển Đêm Tĩnh Lặng": "dark calm sea ocean night misty",
+    "🛣️ Con Đường Đơn Độc": "empty road dark night cinematic",
+}
 
-# 12 Từ khóa ưu tiên hàng đầu theo phong cách Thiên nhiên trầm lặng (Cinematic Nature)
+# Từ điển chuyển đổi tiếng Việt sang từ khóa tìm kiếm Pixabay tiếng Anh
+VIETNAMESE_TO_ENGLISH_MAP = {
+    "chó sói": "wolf",
+    "con sói": "wolf",
+    "sói": "wolf",
+    "cơn mưa": "rain",
+    "trời mưa": "rain",
+    "mưa": "rain",
+    "cà phê": "coffee cafe",
+    "cafe": "coffee cafe",
+    "rừng thông": "pine forest",
+    "rừng cây": "forest trees",
+    "rừng": "forest",
+    "ga tàu": "subway station",
+    "tàu hỏa": "train",
+    "xe lửa": "train",
+    "tàu": "train subway",
+    "bờ biển": "sea beach",
+    "bãi biển": "beach ocean",
+    "biển": "sea ocean",
+    "sóng biển": "ocean waves",
+    "sóng": "waves",
+    "đêm khuya": "night",
+    "ban đêm": "night",
+    "đêm": "night",
+    "trời tối": "dark night",
+    "tối": "dark night",
+    "con đường": "road",
+    "đường phố": "street",
+    "đường": "road street",
+    "thành phố": "city lights",
+    "phố xá": "city street",
+    "phố": "street",
+    "ngọn núi": "mountain",
+    "dãy núi": "mountain range",
+    "núi": "mountain",
+    "mặt hồ": "lake reflection",
+    "hồ nước": "lake",
+    "hồ": "lake",
+    "hàng cây": "trees",
+    "cây cối": "trees",
+    "cây": "tree",
+    "tuyết rơi": "snow falling",
+    "bão tuyết": "snow storm",
+    "tuyết": "snow winter",
+    "đám mây": "clouds",
+    "mây trời": "clouds sky",
+    "mây": "clouds",
+    "sương mù": "fog mist",
+    "sương": "fog mist",
+    "đàn ông": "man walking alone",
+    "người đàn ông": "man",
+    "bóng người": "silhouette man",
+    "người": "man silhouette",
+    "cô đơn": "lonely solitude",
+    "một mình": "alone solitary",
+    "nỗi buồn": "moody sadness",
+    "buồn": "moody",
+    "chiếc xe": "car night",
+    "ô tô": "car drive",
+    "xe hơi": "car",
+    "xe": "car drive night",
+    "cánh đồng": "field meadow grass",
+    "đồng cỏ": "grass field",
+    "bông hoa": "flower",
+    "hoa": "flower moody",
+    "hoàng hôn": "sunset golden hour",
+    "bình minh": "sunrise morning",
+    "dòng suối": "stream river",
+    "suối": "stream",
+    "thác nước": "waterfall",
+    "thác": "waterfall",
+    "cửa kính": "window raindrops",
+    "cửa sổ": "window rain",
+    "ánh đèn": "city lights bokeh",
+    "đèn đường": "street lights",
+    "đèn": "lights bokeh",
+    "văn phòng": "office late night",
+    "công sở": "office building",
+    "công việc": "work desk office",
+    "tiền bạc": "money skyscraper night",
+    "tiền": "skyscraper money",
+    "bầu trời": "sky horizon",
+    "trời": "sky",
+    "cơn gió": "wind blowing",
+    "gió": "wind trees",
+    "ngôi nhà": "house room window",
+    "phòng ngủ": "room dark window",
+    "nhà": "house window",
+}
+
+# 10 Từ khóa ưu tiên hàng đầu
+TOP_PRIORITY_CINEMATIC_KEYWORDS = list(QUICK_THEMES_VI.values())
 NATURE_PRIORITY_KEYWORDS = [
     "misty mountains cinematic",
     "foggy forest slow motion",
@@ -50,98 +138,65 @@ NATURE_PRIORITY_KEYWORDS = [
     "waterfall in forest cinematic",
     "wind blowing through grass",
 ]
-
-# Toàn bộ kho từ khóa phân loại theo concept Đô thị & Nội tâm
-URBAN_KEYWORD_CATEGORIES = {
-    "Đường phố ban đêm — trầm, lạnh": [
-        "lonely man walking at night",
-        "rainy city night cinematic",
-        "dark street b roll",
-        "night city lights cinematic",
-        "man walking alone rain",
-    ],
-    "Một mình suy nghĩ — nội tâm": [
-        "man sitting alone at night",
-        "man looking out window cinematic",
-        "lonely man silhouette window",
-        "man thinking alone dark room",
-        "man sitting in car at night",
-    ],
-    "Người đàn ông bước đi — trưởng thành": [
-        "man walking alone back view",
-        "man walking in city cinematic",
-        "silhouette man walking sunset",
-        "man walking empty road",
-        "lonely man urban b roll",
-    ],
-    "Mưa, cửa kính, ánh đèn — tâm trạng": [
-        "rain on window at night",
-        "city lights bokeh rain",
-        "rainy window cinematic",
-        "night traffic rain reflections",
-        "moody street lights b roll",
-    ],
-    "Tiền bạc & Áp lực cuộc sống": [
-        "man working late night",
-        "man walking alone city",
-        "night shift worker cinematic",
-        "tired man sitting alone",
-        "man in empty room cinematic",
-    ],
-    "Bình thản & Thường ngày": [
-        "man drinking coffee alone",
-        "late night office cinematic",
-        "man sitting in cafe window",
-        "ocean waves cinematic",
-        "empty road sunset",
-        "mountain mist cinematic",
-    ],
-}
-
-# Toàn bộ kho từ khóa phân loại theo concept Thiên nhiên tĩnh lặng (Cinematic Nature)
 NATURE_KEYWORD_CATEGORIES = {
-    "Núi rừng phủ sương (Bình thản, nhìn lại cuộc đời)": [
-        "misty mountains cinematic",
-        "foggy forest sunrise",
-        "mountain clouds slow motion",
-        "clouds moving over mountains",
-    ],
-    "Biển rộng, sóng vỗ (Cô độc, tự do, buông bỏ)": [
-        "moody ocean waves",
-        "dark sea cinematic",
-        "ocean waves cloudy sky",
-        "waves hitting rocky shore",
-    ],
-    "Con đường xuyên rừng (Hành trình, tiếp tục bước đi)": [
-        "empty road through forest",
-        "foggy forest road cinematic",
-        "winding road mountain mist",
-    ],
-    "Mưa rơi trên lá cây (Trầm lắng, suy tư, chữa lành)": [
-        "rain falling on leaves",
-        "rainy forest cinematic",
-        "forest after rain slow motion",
-    ],
-    "Hoàng hôn trên hồ (Hoài niệm, bình yên, thời gian)": [
-        "sunset lake cinematic",
-        "mountain lake reflection",
-        "golden hour nature landscape",
-        "sunset lake reflection",
-    ],
-    "Rừng cây và gió (Tĩnh lặng, vững vàng, bản lĩnh)": [
-        "forest trees swaying in wind",
-        "dark pine forest fog",
-        "trees in wind cinematic",
-        "waterfall in forest cinematic",
-        "wind blowing through grass",
-    ],
+    "Núi rừng phủ sương": ["misty mountains cinematic", "foggy forest sunrise", "mountain clouds slow motion", "clouds moving over mountains"],
+    "Biển rộng, sóng vỗ": ["moody ocean waves", "dark sea cinematic", "ocean waves cloudy sky", "waves hitting rocky shore"],
+    "Con đường xuyên rừng": ["empty road through forest", "foggy forest road cinematic", "winding road mountain mist"],
+    "Mưa rơi trên lá cây": ["rain falling on leaves", "rainy forest cinematic", "forest after rain slow motion"],
+    "Hoàng hôn trên hồ": ["sunset lake cinematic", "mountain lake reflection", "golden hour nature landscape", "sunset lake reflection"],
+    "Rừng cây và gió": ["forest trees swaying in wind", "dark pine forest fog", "trees in wind cinematic", "waterfall in forest cinematic", "wind blowing through grass"],
 }
+DEFAULT_DARK_KEYWORDS = list(QUICK_THEMES_VI.values())
 
-# Danh mục tổng hợp cả Đô thị và Thiên nhiên
-CINEMATIC_KEYWORD_CATEGORIES = {**URBAN_KEYWORD_CATEGORIES, **NATURE_KEYWORD_CATEGORIES}
 
-ALL_PRIORITY_KEYWORDS = TOP_PRIORITY_CINEMATIC_KEYWORDS + NATURE_PRIORITY_KEYWORDS
-DEFAULT_DARK_KEYWORDS = ALL_PRIORITY_KEYWORDS
+
+def translate_vietnamese_to_pixabay_query(text: str) -> str:
+    """
+    Dịch cụm từ tiếng Việt tự do sang truy vấn tiếng Anh tối ưu cho Pixabay.
+    Luôn tự động bổ sung '+ dark moody vertical' để ảnh có tone tối và chuẩn khổ dọc.
+    """
+    if not text or not text.strip():
+        return "night city rain street dark moody vertical"
+
+    clean_text = text.strip()
+
+    # 1. Nếu là một trong 6 thẻ chủ đề chọn nhanh
+    if clean_text in QUICK_THEMES_VI:
+        return f"{QUICK_THEMES_VI[clean_text]} vertical"
+
+    # 2. Quét từ điển tiếng Việt -> tiếng Anh
+    lower_text = clean_text.lower()
+    matched_en_words = []
+
+    # Ưu tiên các cụm từ dài trước (chó sói, cánh đồng, hoàng hôn...)
+    sorted_vi_keys = sorted(VIETNAMESE_TO_ENGLISH_MAP.keys(), key=lambda k: len(k), reverse=True)
+    for vi_word in sorted_vi_keys:
+        if vi_word in lower_text:
+            en_val = VIETNAMESE_TO_ENGLISH_MAP[vi_word]
+            matched_en_words.append(en_val)
+            # Thay thế để tránh khớp trùng lặp từ con
+            lower_text = lower_text.replace(vi_word, "")
+
+    if matched_en_words:
+        # Gom các từ đã dịch và loại trùng
+        en_query = " ".join(dict.fromkeys(matched_en_words))
+    else:
+        # Nếu người dùng đã gõ tiếng Anh hoặc từ không có trong từ điển
+        en_query = clean_text
+
+    # 3. Luôn nối thêm hậu tố '+ dark moody vertical' nếu chưa có
+    suffix_terms = []
+    for term in ["dark", "moody", "vertical"]:
+        if term not in en_query.lower():
+            suffix_terms.append(term)
+
+    if suffix_terms:
+        final_query = f"{en_query} {' '.join(suffix_terms)}".strip()
+    else:
+        final_query = en_query.strip()
+
+    return final_query
+
 
 
 
@@ -203,25 +258,26 @@ def search_pixabay_images(
     api_key: Optional[str] = None,
     colors: Optional[str] = None,
     orientation: str = "vertical",
-    per_page: int = 12,
+    per_page: int = 4,
 ) -> List[Dict[str, Any]]:
     """
-    Tìm kiếm danh sách ảnh từ Pixabay để hiển thị lưới gallery cho người dùng chọn.
-    Trả về danh sách dict chứa: id, preview_url, large_url, tags.
+    Tìm kiếm danh sách ảnh từ Pixabay để hiển thị 4 ảnh xem trước cho người dùng chọn.
+    Tự động dịch từ khóa tiếng Việt sang tiếng Anh và thêm 'dark moody vertical'.
     """
     key = get_pixabay_api_key(api_key)
     if not key or key == "your_pixabay_api_key_here":
         return []
 
-    clean_query = query.strip() if query else random.choice(DEFAULT_DARK_KEYWORDS)
+    # Dịch tiếng Việt tự do sang query tiếng Anh chuẩn Pixabay
+    clean_query = translate_vietnamese_to_pixabay_query(query)
 
     params: Dict[str, Any] = {
         "key": key,
         "q": clean_query,
-        "image_type": "photo",
-        "orientation": orientation or "vertical",
-        "safesearch": "true",
-        "per_page": min(per_page, 30),
+        "image_type": "photo",          # Cố định ngầm: chỉ lấy ảnh thật
+        "orientation": "vertical",       # Cố định ngầm: chỉ lấy ảnh khổ dọc 9:16
+        "safesearch": "true",           # Cố định ngầm: lọc nội dung an toàn
+        "per_page": min(max(per_page, 4), 20),
     }
     if colors and colors.lower() not in ["all", "none", ""]:
         params["colors"] = colors.lower()
@@ -240,7 +296,7 @@ def search_pixabay_images(
         hits = data.get("hits", [])
         if not hits:
             # Thử từ khóa mở rộng hơn
-            params["q"] = "night street"
+            params["q"] = "night street dark moody vertical"
             url_fb = f"https://pixabay.com/api/?{urllib.parse.urlencode(params)}"
             req_fb = urllib.request.Request(url_fb, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req_fb, timeout=12) as response_fb:
@@ -248,7 +304,7 @@ def search_pixabay_images(
                 hits = data_fb.get("hits", [])
 
         results = []
-        for h in hits:
+        for h in hits[:4]:  # Giữ tối đa 4 ảnh cho lưới 2x2
             results.append({
                 "id": h.get("id"),
                 "preview_url": h.get("webformatURL") or h.get("previewURL"),
@@ -290,18 +346,7 @@ def fetch_pixabay_image(
     out_file.parent.mkdir(parents=True, exist_ok=True)
 
     key = get_pixabay_api_key(api_key)
-
-    user_query = query.strip() if query else ""
-    if default_prefix and default_prefix.strip():
-        if user_query:
-            if default_prefix.lower() in user_query.lower():
-                combined_query = user_query
-            else:
-                combined_query = f"{default_prefix.strip()} {user_query}".strip()
-        else:
-            combined_query = default_prefix.strip()
-    else:
-        combined_query = user_query or random.choice(DEFAULT_DARK_KEYWORDS)
+    combined_query = translate_vietnamese_to_pixabay_query(query)
 
     if not key or key == "your_pixabay_api_key_here":
         logger.warning("Chưa cấu hình Pixabay API Key! Dùng ảnh aesthetic fallback.")
@@ -316,8 +361,8 @@ def fetch_pixabay_image(
         query=combined_query,
         api_key=key,
         colors=colors,
-        orientation=orientation,
-        per_page=20,
+        orientation="vertical",
+        per_page=12,
     )
 
     if hits:
@@ -330,4 +375,5 @@ def fetch_pixabay_image(
     with open(fb_path, "rb") as f_src, open(out_file, "wb") as f_dst:
         f_dst.write(f_src.read())
     return resize_and_crop_to_tiktok(out_file)
+
 

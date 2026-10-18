@@ -147,3 +147,36 @@ def test_nature_cinematic_keywords_and_suggestions():
     kw_tienbac = suggest_keywords_from_quote("Cơm áo gạo tiền đè nặng khiến ta mệt mỏi.")
     assert "empty road through forest" in kw_tienbac or "dark sea cinematic" in kw_tienbac
 
+
+def test_vietnamese_pixabay_query_translation():
+    """Kiểm tra chức năng chuyển đổi tiếng Việt sang từ khóa Pixabay tiếng Anh chuẩn."""
+    from modules.pixabay_fetcher import QUICK_THEMES_VI, translate_vietnamese_to_pixabay_query
+
+    # 1. Kiểm tra đủ 6 nút chủ đề tiếng Việt
+    assert len(QUICK_THEMES_VI) == 6
+    assert "🐺 Con Sói Bản Lĩnh" in QUICK_THEMES_VI
+    assert "🌧️ Mưa Phố Đêm" in QUICK_THEMES_VI
+    assert "🌲 Rừng Đêm & Sương" in QUICK_THEMES_VI
+    assert "☕ Quán Cà Phê Khuya" in QUICK_THEMES_VI
+    assert "🌊 Biển Đêm Tĩnh Lặng" in QUICK_THEMES_VI
+    assert "🛣️ Con Đường Đơn Độc" in QUICK_THEMES_VI
+
+    # 2. Bấm 1 chạm vào thẻ: Con Sói Bản Lĩnh
+    q_soi = translate_vietnamese_to_pixabay_query("🐺 Con Sói Bản Lĩnh")
+    assert "lone wolf" in q_soi
+    assert "vertical" in q_soi
+
+    # 3. Gõ tiếng Việt tự do: con sói và trời mưa
+    q_tu_do = translate_vietnamese_to_pixabay_query("con sói trời mưa")
+    assert "wolf" in q_tu_do
+    assert "rain" in q_tu_do
+    assert "dark" in q_tu_do
+    assert "moody" in q_tu_do
+    assert "vertical" in q_tu_do
+
+    # 4. Gõ tiếng Việt: cánh đồng, ga tàu
+    q_field = translate_vietnamese_to_pixabay_query("cánh đồng đêm khuya")
+    assert "field" in q_field or "grass" in q_field
+    assert "night" in q_field
+
+

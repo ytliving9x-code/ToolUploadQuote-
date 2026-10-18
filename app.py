@@ -395,160 +395,67 @@ with tab_maker:
                         st.error(f"Lỗi khi tạo ảnh AI: {e}")
 
         with tab_pixabay:
-            st.markdown("💡 **Từ khóa gợi ý thông minh khớp với câu quote hiện tại:**")
-            cols_chips = st.columns(2)
-            for i, kw_item in enumerate(suggested_kw_list[:4]):
-                with cols_chips[i % 2]:
-                    if st.button(f"👉 {kw_item}", key=f"chip_kw_{i}", use_container_width=True):
-                        st.session_state.current_keywords = [kw_item]
-                        st.session_state["pix_kw_input"] = kw_item
+            from modules.pixabay_fetcher import QUICK_THEMES_VI, search_pixabay_images, fetch_pixabay_image, download_and_crop_pixabay_image
+
+            st.markdown("🎯 **Khu Vực 1: Chọn Nhanh Chủ Đề Nổi Bật (Chạm 1 Lần)**")
+            
+            # Khởi tạo chủ đề mặc định nếu chưa có
+            if "pix_theme_input" not in st.session_state or not st.session_state["pix_theme_input"]:
+                st.session_state["pix_theme_input"] = "🌧️ Mưa Phố Đêm"
+
+            # 6 Nút bấm chọn nhanh chủ đề tiếng Việt (xếp 2 cột x 3 hàng to bản trên mobile)
+            themes_list = list(QUICK_THEMES_VI.keys())
+            row_cols = st.columns(2)
+            for t_idx, theme_label in enumerate(themes_list):
+                with row_cols[t_idx % 2]:
+                    if st.button(theme_label, key=f"btn_theme_vi_{t_idx}", use_container_width=True):
+                        st.session_state["pix_theme_input"] = theme_label
+                        st.toast(f"Đã chọn: {theme_label}", icon="✨")
                         st.rerun()
 
-            # Hộp chọn nhanh từ khóa chuẩn Cinematic (Đô thị & Thiên nhiên)
-            with st.expander("🎬 Kho Từ Khóa Cinematic Đẹp Nhất (Đô Thị & Thiên Nhiên Trầm Lắng)", expanded=True):
-                from modules.pixabay_fetcher import (
-                    TOP_PRIORITY_CINEMATIC_KEYWORDS,
-                    NATURE_PRIORITY_KEYWORDS,
-                    URBAN_KEYWORD_CATEGORIES,
-                    NATURE_KEYWORD_CATEGORIES,
-                    ALL_PRIORITY_KEYWORDS,
-                )
-
-                style_mode = st.radio(
-                    "Chọn phong cách video nền:",
-                    options=["🌲 Thiên Nhiên Trầm Lắng (Cinematic Nature)", "🏙️ Đô Thị & Nội Tâm (Cinematic Solitude)"],
-                    horizontal=True,
-                    index=0,
-                )
-
-                if "Thiên Nhiên" in style_mode:
-                    active_priority_kws = NATURE_PRIORITY_KEYWORDS
-                    active_categories = NATURE_KEYWORD_CATEGORIES
-                else:
-                    active_priority_kws = TOP_PRIORITY_CINEMATIC_KEYWORDS
-                    active_categories = URBAN_KEYWORD_CATEGORIES
-
-                col_c1, col_c2 = st.columns([1.2, 1.2])
-                with col_c1:
-                    chosen_top_kw = st.selectbox(
-                        "Chọn nhanh từ khóa tiêu biểu:",
-                        options=["-- Chọn từ khóa có sẵn --"] + active_priority_kws,
-                        index=0,
-                        help="Các từ khóa tiếng Anh chuẩn Cinematic được tối ưu cho Pixabay.",
-                    )
-                    if chosen_top_kw != "-- Chọn từ khóa có sẵn --":
-                        if st.session_state.get("pix_kw_input") != chosen_top_kw:
-                            st.session_state["pix_kw_input"] = chosen_top_kw
-                            st.rerun()
-                with col_c2:
-                    concept_choice = st.selectbox(
-                        "Xem theo nhóm cảm xúc / cảnh:",
-                        options=list(active_categories.keys()),
-                        index=0,
-                    )
-
-                # Hiển thị các chip từ khóa thuộc concept được chọn (2 cột chuẩn Mobile)
-                concept_kws = active_categories.get(concept_choice, [])
-                if concept_kws:
-                    c_cols = st.columns(2)
-                    for c_idx, c_kw in enumerate(concept_kws):
-                        with c_cols[c_idx % 2]:
-                            if st.button(f"🏷️ {c_kw}", key=f"c_kw_chip_{style_mode[:3]}_{c_idx}", use_container_width=True):
-                                st.session_state["pix_kw_input"] = c_kw
-                                st.rerun()
+            st.write("")
+            st.markdown("✍️ **Khu Vực 2: Tự Nhập Chủ Đề Bạn Muốn (Gõ Tiếng Việt Thoải Mái)**")
+            user_theme_text = st.text_input(
+                "Nhập chủ đề ảnh nền bạn thích:",
+                value=st.session_state.get("pix_theme_input", "mưa đêm"),
+                key="pix_theme_input_widget",
+                placeholder="Ví dụ: con sói, cánh đồng, ga tàu, trời mưa...",
+                help="Bạn có thể gõ bất kỳ từ ngữ tiếng Việt nào, hệ thống sẽ tự động hiểu và tối ưu ảnh nền.",
+            )
+            # Đồng bộ lại session_state nếu người dùng gõ
+            if user_theme_text != st.session_state.get("pix_theme_input"):
+                st.session_state["pix_theme_input"] = user_theme_text
 
             st.write("")
-            col_kw, col_btn_pix = st.columns([2, 1])
-            with col_kw:
-                default_kw = suggested_kw_list[0] if suggested_kw_list else "misty mountains cinematic"
-                if st.session_state.current_keywords:
-                    default_kw = st.session_state.current_keywords[0]
-                if "pix_kw_input" not in st.session_state:
-                    st.session_state["pix_kw_input"] = default_kw
+            # 2 Nút hành động chính
+            col_act1, col_act2 = st.columns(2)
+            with col_act1:
+                btn_search_gallery = st.button("🔍 Tìm & Chọn Ảnh", type="primary", use_container_width=True)
+            with col_act2:
+                btn_rnd_one = st.button("🎲 Lấy Ngẫu Nhiên 1 Ảnh", type="secondary", use_container_width=True)
 
-                kw_input = st.text_input(
-                    "Từ khóa tìm kiếm ảnh/video trên Pixabay:",
-                    key="pix_kw_input",
-                    help="Bạn có thể gõ bất kỳ từ khóa tiếng Anh nào hoặc bấm chọn nhanh ở trên.",
-                )
-            with col_btn_pix:
-                st.write("")
-                st.write("")
-                btn_rnd_kw = st.button("🎲 Đổi Gợi Ý Khác", key="btn_rnd_pix", use_container_width=True)
-                if btn_rnd_kw:
-                    from modules.pixabay_fetcher import ALL_PRIORITY_KEYWORDS
-                    new_kw = random.choice(ALL_PRIORITY_KEYWORDS)
-                    st.session_state.current_keywords = [new_kw]
-                    st.session_state["pix_kw_input"] = new_kw
-                    st.rerun()
-
-            # Bộ lọc Pixabay: Mặc định tông màu tự nhiên (all) và tiền tố để trống để ảnh phong phú
-            with st.expander("⚙️ Tùy Chỉnh Bộ Lọc Ảnh (Tông màu, Khổ ảnh)", expanded=False):
-                col_f1, col_f2, col_f3 = st.columns(3)
-                with col_f1:
-                    pix_orientation = st.selectbox(
-                        "Khổ ảnh (Orientation):",
-                        options=["vertical", "all", "horizontal"],
-                        index=0,
-                        help="vertical: chỉ lấy ảnh dọc 9:16 phù hợp với TikTok.",
-                    )
-                with col_f2:
-                    pix_colors = st.selectbox(
-                        "Tông màu (Colors):",
-                        options=["all (tự nhiên, đa dạng)", "black (đen/tối)", "grayscale (đen trắng)", "blue (xanh lạnh)"],
-                        index=0,
-                        help="Mặc định để 'all' để ảnh phong phú và đẹp nhất.",
-                    )
-                with col_f3:
-                    pix_prefix = st.text_input(
-                        "Tiền tố chủ đề (nếu muốn ghép thêm):",
-                        value="",
-                        help="Để trống để tìm chính xác từ khóa bạn muốn, hoặc gõ 'night', 'moody'...",
-                    )
-
-            # Nút tìm kiếm ảnh để hiện Gallery
-            col_b1, col_b2 = st.columns([1.2, 1.2])
-            with col_b1:
-                btn_search_gallery = st.button("🔍 Tìm Ảnh Để Chọn", type="primary", use_container_width=True)
-            with col_b2:
-                btn_rnd_one = st.button("🎲 Tải Ngẫu Nhiên 1 Ảnh", type="secondary", use_container_width=True)
-
-            # Lấy color param chuẩn
-            color_param = None
-            if "black" in pix_colors:
-                color_param = "black"
-            elif "grayscale" in pix_colors:
-                color_param = "grayscale"
-            elif "blue" in pix_colors:
-                color_param = "blue"
-
-            # Xử lý nút tìm danh sách ảnh gallery
+            # Xử lý nút [ 🔍 Tìm & Chọn Ảnh ] -> Lấy đúng 4 ảnh xem trước
             if btn_search_gallery:
-                with st.spinner("Đang tìm các ảnh đẹp nhất từ Pixabay..."):
-                    from modules.pixabay_fetcher import search_pixabay_images
-                    search_q = f"{pix_prefix.strip()} {kw_input.strip()}".strip() if pix_prefix else kw_input.strip()
+                current_query = st.session_state.get("pix_theme_input", "mưa đêm")
+                with st.spinner("Đang tìm 4 ảnh đẹp nhất từ Pixabay..."):
                     gallery_hits = search_pixabay_images(
-                        query=search_q,
+                        query=current_query,
                         api_key=config.get("pixabay_api_key"),
-                        colors=color_param,
-                        orientation=pix_orientation,
-                        per_page=8,
+                        per_page=4,
                     )
                     st.session_state["pixabay_gallery_results"] = gallery_hits
                     if not gallery_hits:
-                        st.warning("Không tìm thấy ảnh với từ khóa này. Bạn hãy thử từ khóa khác nhé.")
+                        st.warning("Không tìm thấy ảnh với chủ đề này. Bạn hãy thử từ khóa khác nhé.")
 
-            # Xử lý nút tải ngẫu nhiên 1 ảnh
+            # Xử lý nút [ 🎲 Lấy Ngẫu Nhiên 1 Ảnh ] -> Tự bốc 1 ảnh đẹp cắt chuẩn 9:16
             if btn_rnd_one:
+                current_query = st.session_state.get("pix_theme_input", "mưa đêm")
                 with st.spinner("Đang tải ngẫu nhiên 1 ảnh dọc 1080x1920..."):
                     try:
-                        search_q = f"{pix_prefix.strip()} {kw_input.strip()}".strip() if pix_prefix else kw_input.strip()
                         fetched_img = fetch_pixabay_image(
-                            query=search_q,
+                            query=current_query,
                             api_key=config.get("pixabay_api_key"),
                             output_path=Path("temp/background.jpg"),
-                            colors=color_param,
-                            orientation=pix_orientation,
                         )
                         st.session_state.current_bg_image = str(fetched_img)
                         st.session_state.rendered_18s_video = None
@@ -557,19 +464,18 @@ with tab_maker:
                     except Exception as e:
                         st.error(f"Lỗi: {e}")
 
-            # Hiển thị Gallery xem trước để người dùng chọn (2 CỘT TỐI ƯU MÀN HÌNH ĐIỆN THOẠI)
+            # Hiển thị 4 ảnh xem trước trong lưới 2x2
             gallery_items = st.session_state.get("pixabay_gallery_results", [])
             if gallery_items:
                 st.markdown("---")
-                st.markdown("🖼️ **Chạm vào nút bên dưới bức ảnh bạn ưng ý nhất để chọn:**")
+                st.markdown("🖼️ **Chạm vào ảnh bạn thích nhất bên dưới:**")
                 grid_cols = st.columns(2)
-                for idx, item in enumerate(gallery_items):
+                for idx, item in enumerate(gallery_items[:4]):
                     col_idx = idx % 2
                     with grid_cols[col_idx]:
                         st.image(item["preview_url"], use_container_width=True)
                         if st.button(f"✅ Chọn Ảnh #{idx+1}", key=f"btn_pick_img_{item['id']}", use_container_width=True):
                             with st.spinner(f"Đang tải và chuẩn hóa ảnh #{idx+1} về chuẩn 1080x1920..."):
-                                from modules.pixabay_fetcher import download_and_crop_pixabay_image
                                 out_img = download_and_crop_pixabay_image(item["large_url"], Path("temp/background.jpg"))
                                 st.session_state.current_bg_image = str(out_img)
                                 st.session_state.rendered_18s_video = None
