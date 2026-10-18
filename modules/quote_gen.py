@@ -234,30 +234,32 @@ Viết duy nhất 1 câu quote độc thoại bằng tiếng Việt về chủ �
 - Giống suy nghĩ của một người trưởng thành đang tự nói với chính mình, không giống diễn giả hay người viết văn.
 - Có thể mang cảm giác lạnh lùng, cô đơn, thất vọng, bình thản hoặc thức tỉnh, tùy chủ đề.
 - Thể hiện một sự thật về cuộc sống, một thay đổi trong nhận thức hoặc một điều chỉ hiểu ra sau khi trải qua.
+- Với chủ đề trưởng thành: Tập trung vào bản chất thực tế (bớt phân bua đúng sai, tự gánh vác trách nhiệm gia đình, sự im lặng sau giờ làm việc, tài chính thực tế thay vì sĩ diện viển vông).
 - Ưu tiên góc nhìn thực tế, có chiều sâu nhưng không triết lý hóa những chuyện bình thường.
 - Ngôn từ giản dị, tự nhiên, dễ hiểu ngay lần đầu đọc.
 - Ưu tiên 12–30 từ, đủ ngắn để hiển thị trên video TikTok.
 - Câu kết nên có sức nặng, khiến người xem muốn dừng lại suy nghĩ hoặc cảm thấy bản thân từng trải qua điều tương tự.
-- Có thể dùng cách đối lập giữa quá khứ và hiện tại, lời nói và hành động, kỳ vọng và thực tế, nhưng không bắt buộc.
 - Viết như lời tự sự chân thành, không phải lời khuyên dành cho người khác.
 
 **YÊU CẦU VỀ CHẤT LƯỢNG**
 
 Mỗi câu phải có một ý chính rõ ràng và một góc nhìn riêng. Không chỉ ghép những từ ngữ nghe có vẻ sâu sắc với nhau.
+Hãy tạo cảm giác rằng người nói đã thực sự trải qua chuyện đó, suy nghĩ về nó và rút ra một nhận thức đời thường:
+- Về sự trưởng thành: Là lúc nhận ra không còn chỗ dựa nào khác ngoài chính mình, bớt kể lể vì hiểu ai cũng đang mệt mỏi mưu sinh, học cách cúi đầu kiếm tiền lo cho người thân thay vì tranh cãi hơn thua.
+- Không nhất thiết câu nào cũng phải buồn bã, tiêu cực hay đổ lỗi; có thể là sự điềm đạm chấp nhận thực tế, sự thấu suốt về công việc, tiền bạc, gia đình, lòng tin và thời gian.
 
-Hãy tạo cảm giác rằng người nói đã thực sự trải qua chuyện đó, suy nghĩ về nó và cuối cùng rút ra một nhận thức rất đời thường.
-
-Không nhất thiết câu nào cũng phải buồn, tiêu cực hoặc nói về sự phản bội. Có thể nói về tiền bạc, công việc, thời gian, lòng tin, tình bạn, gia đình, sự trưởng thành, tham vọng, thất bại, im lặng hoặc cách nhìn cuộc sống.
-
-**NHỮNG ĐIỀU CẤM**
+**NHỮNG ĐIỀU CẤM (BẮT BUỘC TUÂN THỦ)**
 
 - Không sáo rỗng, không lên gân, không dạy đời.
 - Không dùng những câu truyền động lực đại trà như "hãy tin vào bản thân", "mọi thứ rồi sẽ ổn" hoặc "cố gắng rồi thành công sẽ đến".
 - Không dùng ngôn từ hoa mỹ, ẩn dụ phức tạp hoặc văn phong giống thơ.
-- Không cố nhồi nhét sự cay đắng, bất cần hay bi quan vào mọi câu.
-- Không mở đầu bằng những câu rập khuôn như "Cuộc đời này...", "Bạn biết không..." hoặc "Sau tất cả...".
-- Không lạm dụng cấu trúc "Càng lớn...", "Ngày trước..., bây giờ..." hay "Không phải..., mà là...".
-- Không sao chép hoặc biến tấu quá sát các câu quote nổi tiếng.
+- Tuyệt đối KHÔNG mở đầu bằng các mẫu câu rập khuôn:
+  + "Trưởng thành rồi mới nhận ra..."
+  + "Lớn lên rồi mới hiểu..."
+  + "Trưởng thành là khi..."
+  + "Cuộc đời này...", "Bạn biết không...", "Sau tất cả..."
+- Không lạm dụng các cấu trúc: "Càng lớn...", "Ngày trước..., bây giờ..." hay "Không phải..., mà là...".
+- Không sao chép hoặc biến tấu quá sát các câu quote nổi tiếng trên mạng.
 - Không giải thích, không bình luận, không đưa ra nhiều phương án.
 - Không thêm tiêu đề, dấu ngoặc kép, emoji hay hashtag.
 {recent_quotes_section}
@@ -267,11 +269,11 @@ Hãy tự đánh giá câu vừa viết theo các tiêu chí:
 
 1. Có giống lời một người thật đang suy nghĩ sau một ngày dài không?
 2. Có chân thật và gần gũi thay vì cố tỏ ra sâu sắc không?
-3. Có một nhận thức đáng nhớ thay vì chỉ là lời nói chung chung không?
-4. Có tự nhiên khi đọc bằng giọng nam trầm trên video TikTok không?
-5. Có khác biệt về ý tưởng so với những câu quote phổ biến không?
+3. Có bị dính công thức "Trưởng thành rồi mới..." hay văn mẫu TikTok không?
+4. Có một nhận thức đáng nhớ thay vì chỉ là lời nói chung chung không?
+5. Có tự nhiên khi đọc bằng giọng nam trầm trên video TikTok không?
 
-Nếu chưa đạt, hãy viết lại cho đến khi đạt yêu cầu.
+Nếu chưa đạt bất kỳ tiêu chí nào, hãy viết lại cho đến khi đạt yêu cầu.
 
 **ĐẦU RA CUỐI CÙNG**
 
