@@ -399,8 +399,8 @@ with tab_maker:
 
             st.markdown("🎯 **Khu Vực 1: Chọn Nhanh Chủ Đề Nổi Bật (Chạm 1 Lần)**")
             
-            # Khởi tạo chủ đề mặc định nếu chưa có
-            if "pix_theme_input" not in st.session_state or not st.session_state["pix_theme_input"]:
+            # Khởi tạo chủ đề mặc định nếu chưa có trong session_state
+            if "pix_theme_input" not in st.session_state:
                 st.session_state["pix_theme_input"] = "🌧️ Mưa Phố Đêm"
 
             # 6 Nút bấm chọn nhanh chủ đề tiếng Việt (xếp 2 cột x 3 hàng to bản trên mobile)
@@ -417,14 +417,11 @@ with tab_maker:
             st.markdown("✍️ **Khu Vực 2: Tự Nhập Chủ Đề Bạn Muốn (Gõ Tiếng Việt Thoải Mái)**")
             user_theme_text = st.text_input(
                 "Nhập chủ đề ảnh nền bạn thích:",
-                value=st.session_state.get("pix_theme_input", "mưa đêm"),
-                key="pix_theme_input_widget",
+                key="pix_theme_input",
                 placeholder="Ví dụ: con sói, cánh đồng, ga tàu, trời mưa...",
                 help="Bạn có thể gõ bất kỳ từ ngữ tiếng Việt nào, hệ thống sẽ tự động hiểu và tối ưu ảnh nền.",
             )
-            # Đồng bộ lại session_state nếu người dùng gõ
-            if user_theme_text != st.session_state.get("pix_theme_input"):
-                st.session_state["pix_theme_input"] = user_theme_text
+
 
             st.write("")
             # Nút hành động Pixabay
