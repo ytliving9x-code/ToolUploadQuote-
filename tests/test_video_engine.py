@@ -97,3 +97,27 @@ def test_export_and_publish_flow(tmp_path: Path):
     assert pub_mp4.exists()
     assert pub_txt.exists()
     assert not out_mp4.exists()  # Đã di chuyển khỏi chờ đăng
+
+
+def test_generate_quote_preview_image(tmp_path: Path):
+    """Kiểm tra tạo ảnh xem trước ghép chữ lên nền tĩnh 1080x1920."""
+    from PIL import Image
+    from modules.video_engine import generate_quote_preview_image
+
+    # Tạo ảnh nền mẫu
+    sample_bg = tmp_path / "bg.jpg"
+    with Image.new("RGB", (800, 1200), color=(50, 60, 70)) as img:
+        img.save(sample_bg, format="JPEG")
+
+    out_preview = tmp_path / "preview.jpg"
+    res = generate_quote_preview_image(
+        image_path=sample_bg,
+        quote="Đêm muộn nhìn lại, im lặng là cách tốt nhất.",
+        output_path=out_preview,
+    )
+
+    assert res.exists()
+    with Image.open(res) as img:
+        assert img.size == (1080, 1920)
+        assert img.mode == "RGB"
+

@@ -138,6 +138,74 @@ def create_text_overlay_image(
     return img
 
 
+def generate_quote_preview_image(
+    image_path: Path | str,
+    quote: str,
+    output_path: Optional[Path | str] = None,
+    config: Optional[Dict[str, Any]] = None,
+) -> Path:
+    """
+    Tạo nhanh 1 ảnh xem trước tĩnh 1080x1920 (9:16) ghép quote typography lên nền ảnh,
+    giúp người dùng kiểm tra ngay bố cục chữ, độ dễ đọc và sự phù hợp trước khi xuất video 18s.
+    """
+    if config is None:
+        cfg_p = Path("config.json")
+        if cfg_p.exists():
+            with open(cfg_p, "r", encoding="utf-8") as f:
+                config = json.load(f)
+        else:
+            config = {}
+
+    font_size = config.get("text_overlay", {}).get("font_size", 42)
+    font_family = config.get("text_overlay", {}).get("font_family", "BeVietnamPro-SemiBold.ttf")
+    margin_h = config.get("text_overlay", {}).get("margin_h", 80)
+    line_spacing = config.get("text_overlay", {}).get("line_spacing", 18)
+    overlay_opacity = config.get("video", {}).get("overlay_opacity", 0.15)
+
+    img_in = Path(image_path)
+    if not img_in.exists():
+        raise FileNotFoundError(f"Không tìm thấy ảnh nền: {img_in}")
+
+    with Image.open(img_in) as raw_bg:
+        raw_bg = raw_bg.convert("RGBA")
+        target_w, target_h = 1080, 1920
+        w, h = raw_bg.size
+        scale = max(target_w / w, target_h / h)
+        new_w, new_h = int(w * scale), int(h * scale)
+        resized = raw_bg.resize((new_w, new_h), Image.Resampling.LANCZOS)
+        left = (new_w - target_w) // 2
+        top = (new_h - target_h) // 2
+        bg_cropped = resized.crop((left, top, left + target_w, top + target_h))
+
+    # Phủ lớp tối nhẹ (dark overlay) tương đương trong video
+    dim_overlay = Image.new("RGBA", (1080, 1920), (0, 0, 0, int(255 * overlay_opacity)))
+    bg_composite = Image.alpha_composite(bg_cropped, dim_overlay)
+
+    # Xử lý typography
+    max_text_width = 1080 - 2 * margin_h
+    font_file = Path("assets/fonts") / font_family if not Path(font_family).exists() else Path(font_family)
+    font = get_font(font_file, font_size)
+    lines = wrap_text_to_lines(quote, font, max_width=max_text_width, max_lines=4)
+    if len(lines) > 3 and font_size > 44:
+        font = get_font(font_file, font_size - 6)
+        lines = wrap_text_to_lines(quote, font, max_width=max_text_width, max_lines=4)
+
+    overlay_img = create_text_overlay_image(
+        lines=lines,
+        font=font,
+        canvas_size=(1080, 1920),
+        line_spacing=line_spacing,
+    )
+
+    final_img = Image.alpha_composite(bg_composite, overlay_img)
+    final_rgb = final_img.convert("RGB")
+
+    out_p = Path(output_path) if output_path else Path("temp/preview_composite.jpg")
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    final_rgb.save(out_p, format="JPEG", quality=92)
+    return out_p
+
+
 def probe_video_metadata(video_path: Path | str) -> Dict[str, Any]:
     """
     Kiểm tra và trích xuất metadata của file video bằng FFmpeg.

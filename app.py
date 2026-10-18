@@ -30,7 +30,7 @@ from modules.quote_manager import (
 )
 from modules.quote_gen import generate_quote
 from modules.video_renderer import render_18s_video
-from modules.video_engine import probe_video_metadata
+from modules.video_engine import generate_quote_preview_image, probe_video_metadata
 from modules.exporter import export_to_pending, list_pending_items, mark_as_published
 from modules.history_db import get_history, init_db
 
@@ -610,9 +610,19 @@ with tab_maker:
                     st.error(f"Lỗi khi lưu: {e}")
 
         elif bg_curr and Path(bg_curr).exists():
-            st.caption("🖼️ Ảnh nền đang chọn (Chưa render video):")
-            st.image(str(bg_curr), use_container_width=True)
-            st.info("👉 Nhấn nút **[ 🚀 TẠO VIDEO 18S NGAY ]** ở bên trái để xuất video hoàn chỉnh!")
+            st.caption("👁️ **Xem Trước Chữ Trên Ảnh Nền (Tỉ Lệ Chuẩn 9:16):**")
+            try:
+                preview_img_path = generate_quote_preview_image(
+                    image_path=bg_curr,
+                    quote=st.session_state.current_quote_text,
+                    config=config,
+                )
+                st.image(str(preview_img_path), use_container_width=True)
+            except Exception as ex:
+                logger.warning(f"Lỗi khi render ảnh preview text: {ex}")
+                st.image(str(bg_curr), use_container_width=True)
+
+            st.info("👉 Bạn có thể đổi ảnh hoặc chỉnh sửa câu quote ở cột trái. Chữ sẽ tự động cập nhật ngay lập tức trên ảnh! Khi ưng ý, nhấn **[ 🚀 TẠO VIDEO 18S NGAY ]** để render video hoàn chỉnh.")
         else:
             st.markdown(
                 """
