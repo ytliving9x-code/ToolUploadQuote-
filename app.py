@@ -200,12 +200,26 @@ st.markdown(
 
 
 def load_config() -> Dict[str, Any]:
-    """Đọc cấu hình từ config.json."""
+    """Đọc cấu hình từ config.json, kết hợp st.secrets khi deploy trên Streamlit Cloud."""
     config_path = Path("config.json")
+    cfg: Dict[str, Any] = {}
     if config_path.exists():
         with open(config_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {"pixabay_api_key": ""}
+            cfg = json.load(f)
+
+    # Tự động nạp API key từ st.secrets (dành riêng cho Streamlit Cloud)
+    try:
+        if hasattr(st, "secrets"):
+            if "PIXABAY_API_KEY" in st.secrets and st.secrets["PIXABAY_API_KEY"]:
+                cfg["pixabay_api_key"] = str(st.secrets["PIXABAY_API_KEY"])
+            if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
+                os.environ["GEMINI_API_KEY"] = str(st.secrets["GEMINI_API_KEY"])
+            if "OPENAI_API_KEY" in st.secrets and st.secrets["OPENAI_API_KEY"]:
+                os.environ["OPENAI_API_KEY"] = str(st.secrets["OPENAI_API_KEY"])
+    except Exception:
+        pass
+
+    return cfg
 
 
 def save_config(cfg: Dict[str, Any]) -> None:
