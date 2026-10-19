@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Ứng dụng Web Streamlit: TikTok Multi-Channel Studio (app.py)
 Phân tách độc lập 2 kênh TikTok:

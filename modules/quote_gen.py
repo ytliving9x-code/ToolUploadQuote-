@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Module sinh nội dung Quote, Caption, Hashtags và Pexels Keywords.
 Hỗ trợ cả Google Gemini và OpenAI, bắt buộc trả về JSON hợp lệ,
@@ -9,7 +11,7 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from dotenv import load_dotenv
 
@@ -439,7 +441,7 @@ def generate_quote(
     config: Optional[Dict[str, Any]] = None,
     max_retries: int = 3,
     check_duplicate: bool = True,
-    custom_db_path: Optional[str | Path] = None,
+    custom_db_path: Optional[Union[str, Path]] = None,
     style: str = "sad_introspective",
     channel: str = "saigonbac",
 ) -> Dict[str, Any]:
@@ -545,7 +547,7 @@ def generate_quote(
     return get_fallback_quote(topic, channel=channel, custom_db_path=custom_db_path)
 
 
-def get_fallback_quote(topic: str, channel: str = "saigonbac", custom_db_path: Optional[str | Path] = None) -> Dict[str, Any]:
+def get_fallback_quote(topic: str, channel: str = "saigonbac", custom_db_path: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
     """Lấy quote mẫu có sẵn khi chưa có API key hoặc mạng gián đoạn, đúng channel."""
     import random
 

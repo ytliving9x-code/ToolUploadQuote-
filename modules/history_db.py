@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Module quản lý cơ sở dữ liệu lịch sử (SQLite) cho ứng dụng tạo video TikTok Quote.
 Chịu trách nhiệm lưu trữ quote đã tạo, footage Pexels đã dùng và kiểm tra chống trùng lặp.
@@ -9,21 +11,21 @@ import logging
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 logger = logging.getLogger("tiktok_tool.history_db")
 
 DEFAULT_DB_PATH = Path("data/history.db")
 
 
-def get_db_path(custom_path: Optional[str | Path] = None) -> Path:
+def get_db_path(custom_path: Optional[Union[str, Path]] = None) -> Path:
     """Lấy đường dẫn file SQLite database, tạo thư mục cha nếu chưa có."""
     path = Path(custom_path) if custom_path else DEFAULT_DB_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
 
 
-def init_db(custom_path: Optional[str | Path] = None) -> None:
+def init_db(custom_path: Optional[Union[str, Path]] = None) -> None:
     """
     Khởi tạo cấu trúc các bảng trong SQLite nếu chưa tồn tại.
     Bao gồm:
@@ -92,7 +94,7 @@ def is_quote_duplicate(
     new_quote: str,
     threshold: float = 0.70,
     channel: Optional[str] = None,
-    custom_path: Optional[str | Path] = None,
+    custom_path: Optional[Union[str, Path]] = None,
 ) -> Tuple[bool, float, Optional[str]]:
     """
     Kiểm tra xem quote mới có bị trùng hoặc quá giống các quote đã lưu trong lịch sử không.
@@ -146,7 +148,7 @@ def save_quote(
     topic: str,
     channel: str = "saigonbac",
     status: str = "generated",
-    custom_path: Optional[str | Path] = None,
+    custom_path: Optional[Union[str, Path]] = None,
 ) -> int:
     """
     Lưu quote mới vào bảng quotes_history.
@@ -195,7 +197,7 @@ def save_quote(
         return record_id or 0
 
 
-def is_footage_used(pexels_video_id: int, custom_path: Optional[str | Path] = None) -> bool:
+def is_footage_used(pexels_video_id: int, custom_path: Optional[Union[str, Path]] = None) -> bool:
     """Kiểm tra xem footage Pexels đã từng được dùng hay chưa."""
     init_db(custom_path)
     db_file = get_db_path(custom_path)
@@ -212,7 +214,7 @@ def mark_footage_used(
     width: int = 0,
     height: int = 0,
     duration: float = 0.0,
-    custom_path: Optional[str | Path] = None,
+    custom_path: Optional[Union[str, Path]] = None,
 ) -> None:
     """Ghi nhận footage Pexels đã được tải/sử dụng vào DB."""
     init_db(custom_path)
@@ -236,7 +238,7 @@ def update_quote_status(
     status: str,
     video_path: Optional[str] = None,
     pexels_video_id: Optional[int] = None,
-    custom_path: Optional[str | Path] = None,
+    custom_path: Optional[Union[str, Path]] = None,
 ) -> None:
     """Cập nhật trạng thái và thông tin video cho quote."""
     init_db(custom_path)
@@ -266,7 +268,7 @@ def update_quote_status(
 def get_history(
     limit: int = 100,
     channel: Optional[str] = None,
-    custom_path: Optional[str | Path] = None,
+    custom_path: Optional[Union[str, Path]] = None,
 ) -> List[Dict[str, Any]]:
     """Lấy danh sách lịch sử tạo video, sắp xếp theo thời gian mới nhất (hỗ trợ lọc theo channel)."""
     init_db(custom_path)
