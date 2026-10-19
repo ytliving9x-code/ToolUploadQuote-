@@ -20,7 +20,7 @@ logger = logging.getLogger("tiktok_tool.quote_gen")
 # Tải biến môi trường từ .env
 load_dotenv()
 
-# Danh mục quote mẫu chất lượng cao dự phòng (phong cách buồn một chút, tâm sự chân thật, 15-35 từ)
+# Danh mục quote mẫu chất lượng cao dự phòng (phong cách buồn một chút, tâm sự chân thật, 15-26 từ)
 FALLBACK_QUOTES: Dict[str, List[Dict[str, Any]]] = {
     "tự mình chịu đựng": [
         {
@@ -44,7 +44,7 @@ FALLBACK_QUOTES: Dict[str, List[Dict[str, Any]]] = {
             "hashtags": ["#buonmotchut", "#giaunoibuon", "#tamtrang", "#gocnhotamhon"],
         },
         {
-            "quote": "Có thể người ta thấy anh luôn ổn và điềm tĩnh, nhưng chỉ mình anh biết đã phải trải qua bao đêm thức trắng để học cách im lặng.",
+            "quote": "Người ta thấy mình luôn điềm tĩnh, nhưng chỉ mình mới biết đã phải trải qua bao đêm thức trắng để học cách im lặng.",
             "pexels_keywords": ["rainy window coffee", "night city drive lights", "quiet aesthetic corner"],
             "caption": "Trưởng thành là học cách nuốt nước mắt vào trong. ☕",
             "hashtags": ["#buonmotchut", "#imlang", "#tamtrang", "#nhatky"],
@@ -166,7 +166,8 @@ def build_system_prompt(topic: str = "buồn một chút", recent_quotes: Option
 PHONG CÁCH:
 - Giọng tâm sự, chân thật, buồn nhẹ, trầm lắng, không sến và không kêu gào.
 - Xưng "mình" (tự sự) hoặc "bạn" (nói với người xem). Thỉnh thoảng dùng "anh" như một lời tự thú.
-- Mỗi quote 1-3 câu, tổng 15-35 từ. Có thể ngắt thành 2 đoạn ngắn (dùng dấu xuống dòng hoặc dấu câu rõ ràng).
+- Mỗi quote 1-2 câu ngắn, TỔNG ĐỘ DÀI TỪ 15 ĐẾN 26 TỪ (tuyệt đối không vượt quá 28 từ).
+- Ngắn gọn, có chiều sâu, từ ngữ đắt giá, có thể ngắt thành 2 vế ngắn đối chiếu.
 - Văn nói đời thường, không dùng từ hoa mỹ hay sáo rỗng.
 
 CHỦ ĐỀ ĐANG YÊU CẦU:
@@ -181,15 +182,16 @@ CẤU TRÚC (linh hoạt áp dụng đa dạng một trong các dạng sau):
 5. "Sau này... bạn nhớ rằng..."
 
 VÍ DỤ TIÊU BIỂU VỀ VĂN PHONG (THAM KHẢO, KHÔNG ĐƯỢC CHÉP LẠI):
-- "Thứ khiến con người ta buồn nhất không phải là mất mát, mà là đã cố gắng rất nhiều nhưng mọi chuyện chẳng như mong muốn."
-- "Mình thích cái cảm giác đi lang thang một mình vào buổi tối. Không ai nhìn rõ mình, còn mình có thể nhìn thấu bản thân."
-- "Là do cuộc sống này quá khó khăn, hay là do mình chưa được may mắn..."
-- "Mình có hạnh phúc đâu. Nhưng mình không muốn để người khác thấy mình khổ."
+- "Thứ khiến con người ta buồn nhất không phải là mất mát, mà là đã cố gắng rất nhiều nhưng mọi chuyện chẳng như mong muốn." (24 từ)
+- "Mình thích cái cảm giác đi lang thang một mình vào buổi tối. Không ai nhìn rõ mình, còn mình có thể nhìn thấu bản thân." (25 từ)
+- "Là do cuộc sống này quá khó khăn, hay là do mình chưa được may mắn..." (14 từ)
+- "Mình có hạnh phúc đâu. Nhưng mình không muốn để người khác thấy mình khổ." (15 từ)
 
 RÀNG BUỘC AN TOÀN & NỘI DUNG:
 - Tuyệt đối không nhắc tự tử, tự hại hay phương pháp làm đau bản thân.
 - Buồn nhưng vẫn giữ chút ấm áp hoặc chấp nhận ở cuối.
 - Không sến súa, không giật gân, không rao giảng đạo lý.
+- ĐỘ DÀI BẮT BUỘC: từ 15 đến 26 từ. Câu quá 28 từ bị coi là không hợp lệ.
 {recent_quotes_section}
 
 ĐỊNH DẠNG ĐẦU RA (BẮT BUỘC):

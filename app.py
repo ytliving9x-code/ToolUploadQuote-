@@ -254,7 +254,7 @@ with col_input:
     )
 
     if quote_mode == "🤖 Dùng AI sinh mới (Gemini/OpenAI)":
-        st.caption("AI viết quote 'buồn một chút' cho video TikTok: tâm sự chân thật, buồn nhẹ, trầm lắng, 15–35 từ, không sến súa.")
+        st.caption("AI viết quote 'buồn một chút' cho video TikTok: tâm sự chân thật, buồn nhẹ, trầm lắng, 15–26 từ, không sến súa.")
         ai_topic_options = config.get("topics", [
             "tự mình chịu đựng",
             "giấu nỗi buồn",

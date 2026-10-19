@@ -191,4 +191,27 @@ def test_picsum_fetcher():
     assert "picsum" in gallery[0]["large_url"]
 
 
+def test_fallback_quotes_word_count():
+    """Kiểm tra tất cả câu trong FALLBACK_QUOTES đều nằm trong khoảng 14-26 từ."""
+    from modules.quote_gen import FALLBACK_QUOTES
+
+    for topic, quotes in FALLBACK_QUOTES.items():
+        for item in quotes:
+            quote_text = item["quote"]
+            word_count = len(quote_text.split())
+            assert 14 <= word_count <= 26, (
+                f"Quote trong topic '{topic}' có {word_count} từ, ngoài khoảng 14-26 từ: '{quote_text}'"
+            )
+
+
+def test_build_system_prompt_length_constraint():
+    """Kiểm tra system prompt chứa rõ ràng ràng buộc độ dài 15-26 từ."""
+    from modules.quote_gen import build_system_prompt
+
+    prompt = build_system_prompt("áp lực tiền bạc")
+    assert "15 ĐẾN 26 TỪ" in prompt
+    assert "28 từ" in prompt
+
+
+
 
