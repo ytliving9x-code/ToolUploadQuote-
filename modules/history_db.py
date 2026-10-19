@@ -47,10 +47,17 @@ def init_db(custom_path: Optional[str | Path] = None) -> None:
                 video_path TEXT,
                 pexels_video_id INTEGER,
                 created_at TEXT NOT NULL,
-                published_at TEXT
+                published_at TEXT,
+                channel TEXT DEFAULT 'saigonbac'
             )
             """
         )
+
+        # Migration an toàn: kiểm tra và bổ sung cột channel nếu bảng cũ chưa có
+        cursor.execute("PRAGMA table_info(quotes_history)")
+        columns = [row[1] for row in cursor.fetchall()]
+        if "channel" not in columns:
+            cursor.execute("ALTER TABLE quotes_history ADD COLUMN channel TEXT DEFAULT 'saigonbac'")
 
         cursor.execute(
             """
@@ -69,6 +76,7 @@ def init_db(custom_path: Optional[str | Path] = None) -> None:
         # Index tối ưu tìm kiếm
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_quotes_created ON quotes_history(created_at)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_quotes_status ON quotes_history(status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_quotes_channel ON quotes_history(channel)")
         conn.commit()
     logger.debug(f"Đã khởi tạo database tại: {db_file}")
 
@@ -83,6 +91,7 @@ def calculate_similarity(text1: str, text2: str) -> float:
 def is_quote_duplicate(
     new_quote: str,
     threshold: float = 0.70,
+    channel: Optional[str] = None,
     custom_path: Optional[str | Path] = None,
 ) -> Tuple[bool, float, Optional[str]]:
     """
@@ -91,6 +100,7 @@ def is_quote_duplicate(
     Args:
         new_quote: Câu quote mới cần kiểm tra.
         threshold: Ngưỡng tương đồng (0.0 - 1.0), mặc định 0.70.
+        channel: Kênh cần lọc ('saigonbac' hoặc 'kenh_moi'), nếu None thì kiểm tra toàn bộ.
         custom_path: Đường dẫn CSDL tùy chọn.
 
     Returns:
@@ -104,7 +114,10 @@ def is_quote_duplicate(
 
     with sqlite3.connect(db_file) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT quote FROM quotes_history ORDER BY id DESC LIMIT 500")
+        if channel:
+            cursor.execute("SELECT quote FROM quotes_history WHERE channel = ? ORDER BY id DESC LIMIT 500", (channel,))
+        else:
+            cursor.execute("SELECT quote FROM quotes_history ORDER BY id DESC LIMIT 500")
         rows = cursor.fetchall()
 
     if not rows:
@@ -131,6 +144,7 @@ def is_quote_duplicate(
 def save_quote(
     quote_data: Dict[str, Any],
     topic: str,
+    channel: str = "saigonbac",
     status: str = "generated",
     custom_path: Optional[str | Path] = None,
 ) -> int:
@@ -140,6 +154,7 @@ def save_quote(
     Args:
         quote_data: Dict chứa các trường 'quote', 'pexels_keywords', 'caption', 'hashtags'.
         topic: Chủ đề (nỗ lực, tiền bạc, điềm tĩnh, chữa lành...).
+        channel: Tên kênh ('saigonbac' hoặc 'kenh_moi').
         status: Trạng thái ban đầu ('generated', 'pending', 'published').
         custom_path: Đường dẫn CSDL tùy chọn.
 
@@ -169,14 +184,14 @@ def save_quote(
         cursor = conn.cursor()
         cursor.execute(
             """
-            INSERT INTO quotes_history (quote, topic, pexels_keywords, caption, hashtags, status, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO quotes_history (quote, topic, pexels_keywords, caption, hashtags, status, created_at, channel)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (quote, topic, keywords_str, caption, hashtags_str, status, created_at),
+            (quote, topic, keywords_str, caption, hashtags_str, status, created_at, channel),
         )
         conn.commit()
         record_id = cursor.lastrowid
-        logger.info(f"Đã lưu quote ID={record_id} vào database.")
+        logger.info(f"Đã lưu quote ID={record_id} cho kênh '{channel}' vào database.")
         return record_id or 0
 
 
@@ -248,23 +263,40 @@ def update_quote_status(
     logger.info(f"Đã cập nhật quote ID={quote_id} -> status={status}")
 
 
-def get_history(limit: int = 100, custom_path: Optional[str | Path] = None) -> List[Dict[str, Any]]:
-    """Lấy danh sách lịch sử tạo video, sắp xếp theo thời gian mới nhất."""
+def get_history(
+    limit: int = 100,
+    channel: Optional[str] = None,
+    custom_path: Optional[str | Path] = None,
+) -> List[Dict[str, Any]]:
+    """Lấy danh sách lịch sử tạo video, sắp xếp theo thời gian mới nhất (hỗ trợ lọc theo channel)."""
     init_db(custom_path)
     db_file = get_db_path(custom_path)
     with sqlite3.connect(db_file) as conn:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT id, quote, topic, pexels_keywords, caption, hashtags,
-                   status, video_path, pexels_video_id, created_at, published_at
-            FROM quotes_history
-            ORDER BY id DESC
-            LIMIT ?
-            """,
-            (limit,),
-        )
+        if channel:
+            cursor.execute(
+                """
+                SELECT id, quote, topic, pexels_keywords, caption, hashtags,
+                       status, video_path, pexels_video_id, created_at, published_at, channel
+                FROM quotes_history
+                WHERE channel = ?
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (channel, limit),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT id, quote, topic, pexels_keywords, caption, hashtags,
+                       status, video_path, pexels_video_id, created_at, published_at, channel
+                FROM quotes_history
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (limit,),
+            )
         rows = cursor.fetchall()
 
     results = []

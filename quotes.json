@@ -1,122 +1,300 @@
-[
-  {
-    "id": 1,
-    "category": "cố gắng nhưng không như ý",
-    "quote": "Không phải mình không nỗ lực, mà là có những chuyện dù cố gắng đến kiệt cùng vẫn chẳng thể như ý muốn.",
-    "keywords": ["night street rain aesthetic", "dark city lonely", "rainy car window"]
-  },
-  {
-    "id": 2,
-    "category": "giấu nỗi buồn",
-    "quote": "Có thể ngoài mặt vẫn cười nói bình thường, nhưng chỉ mình mới biết trong lòng đã vụn vỡ từ lâu.",
-    "keywords": ["subway dark quiet", "foggy morning street", "night walk city"]
-  },
-  {
-    "id": 3,
-    "category": "tự mình chịu đựng",
-    "quote": "Mình có mạnh mẽ đâu. Nhưng ngoài việc tự lau nước mắt rồi bước tiếp, mình còn biết dựa vào ai...",
-    "keywords": ["office night work dark", "rain window moody", "city lights night blurred"]
-  },
-  {
-    "id": 4,
-    "category": "đi dạo một mình buổi tối",
-    "quote": "Sau này khi đã đi qua đủ giông bão, bạn nhớ rằng những tối lang thang một mình chính là lúc lòng ta tĩnh lặng nhất.",
-    "keywords": ["rain on car windshield", "night city drive", "dark parking lot moody"]
-  },
-  {
-    "id": 5,
-    "category": "áp lực tiền bạc và trưởng thành",
-    "quote": "Không phải mình yêu tiền đến mức thực dụng, mà là không có tiền thì ngay cả tư cách bảo vệ người thân cũng không có.",
-    "keywords": ["dark room night lamp", "rain cafe window", "quiet aesthetic corner"]
-  },
-  {
-    "id": 6,
-    "category": "khó tin người",
-    "quote": "Bị phản bội một lần là quá đủ để sau này đối diện với bất kỳ ai, mình cũng phải giữ lại cho mình một lối lui.",
-    "keywords": ["dark rainy street aesthetic", "lonely walking night street", "misty street light"]
-  },
-  {
-    "id": 7,
-    "category": "cha mẹ và gia đình",
-    "quote": "Có thể mình chịu bao nhiêu ấm ức ngoài xã hội cũng được, nhưng chỉ cần nghe giọng mẹ qua điện thoại là khóe mắt lại cay.",
-    "keywords": ["neon lights dark rain", "dark subway station", "city bridge night moody"]
-  },
-  {
-    "id": 8,
-    "category": "cô đơn",
-    "quote": "Mình có thích ở một mình đâu. Nhưng việc phải giải thích nỗi buồn của mình cho người khác còn mệt mỏi hơn gấp vạn lần.",
-    "keywords": ["city skyscraper night moody", "dark luxury minimalist", "night road lights"]
-  },
-  {
-    "id": 9,
-    "category": "chấp nhận buông bỏ",
-    "quote": "Sau này khi nhìn lại, bạn nhớ rằng có những thứ buông tay không phải vì hết thương, mà vì giữ lại chỉ làm cả hai thêm đau.",
-    "keywords": ["dark aesthetic office night", "foggy forest dark moody", "calm ocean night moody"]
-  },
-  {
-    "id": 10,
-    "category": "tự mình chịu đựng",
-    "quote": "Là do bản thân kỳ vọng quá nhiều, hay là do cuộc đời này vốn dĩ chưa từng dịu dàng với mình...",
-    "keywords": ["dark beach waves night", "rain mist forest", "aesthetic night street"]
-  },
-  {
-    "id": 11,
-    "category": "áp lực tiền bạc và trưởng thành",
-    "quote": "Không phải sợ già đi, mà sợ nhất là tốc độ thành công của bản thân không kịp đuổi theo mái tóc bạc của cha mẹ.",
-    "keywords": ["city lights night blurred", "dark office building night", "rain street reflections"]
-  },
-  {
-    "id": 12,
-    "category": "giấu nỗi buồn",
-    "quote": "Có thể người ta thấy anh luôn ổn và điềm tĩnh, nhưng chỉ mình anh biết đã phải trải qua bao đêm thức trắng để học cách im lặng.",
-    "keywords": ["rainy window coffee", "night city drive lights", "quiet aesthetic corner"]
-  },
-  {
-    "id": 13,
-    "category": "cố gắng nhưng không như ý",
-    "quote": "Mình có cam tâm chấp nhận thất bại đâu. Nhưng cố hết sức rồi, đành thở dài mỉm cười cho qua chuyện.",
-    "keywords": ["dark aesthetic office night", "foggy forest dark moody", "rain street reflections"]
-  },
-  {
-    "id": 14,
-    "category": "đi dạo một mình buổi tối",
-    "quote": "Thích nhất những đêm muộn một mình chạy xe ngoài phố. Gió thốc vào mặt, không cần diễn vai một người lớn thành công.",
-    "keywords": ["moody dark street night", "lonely bench park rain", "silhouette night street"]
-  },
-  {
-    "id": 15,
-    "category": "chấp nhận buông bỏ",
-    "quote": "Không phải mình muốn từ bỏ, mà là mình hiểu ra có những cánh cửa cố gõ mãi cũng chỉ là làm phiền người bên trong.",
-    "keywords": ["dark street lamps rainy", "calm water reflections night", "night architecture dark"]
-  },
-  {
-    "id": 16,
-    "category": "khó tin người",
-    "quote": "Có thể ngoài mặt vẫn hòa nhã với tất cả, nhưng để thực sự đặt niềm tin vào ai đó lần nữa, khó lắm...",
-    "keywords": ["dark skyscraper lights", "financial district night moody", "dark street rain"]
-  },
-  {
-    "id": 17,
-    "category": "cô đơn",
-    "quote": "Càng lớn càng nhận ra, sự cô độc đáng sợ nhất không phải là ở một mình, mà là giữa biển người mà chẳng ai hiểu thấu lòng mình.",
-    "keywords": ["foggy river night moody", "dark rainy car window", "lone tree foggy dark"]
-  },
-  {
-    "id": 18,
-    "category": "tự mình chịu đựng",
-    "quote": "Sau này dù cuộc sống có xô ngã bạn bao nhiêu lần, bạn nhớ rằng tự đứng dậy tuy cô đơn nhưng sẽ chẳng bao giờ sợ bị ai bỏ rơi.",
-    "keywords": ["gentle rain ripples dark", "cozy dark room candle", "night city misty street"]
-  },
-  {
-    "id": 19,
-    "category": "cha mẹ và gia đình",
-    "quote": "Mình có muốn xa nhà đâu. Nhưng nếu không đi xa bươn chải, lấy gì lo cho bữa cơm và thuốc thang của bố mẹ những ngày trái gió...",
-    "keywords": ["working late laptop rainy", "aesthetic office night dark", "dark subway station"]
-  },
-  {
-    "id": 20,
-    "category": "chấp nhận buông bỏ",
-    "quote": "Đến một lúc nào đó, im lặng không còn là tức giận nữa, mà là một sự chấp nhận buông bỏ nhẹ nhõm và bình an.",
-    "keywords": ["office night work dark", "city lights night blurred", "rainy car window night"]
-  }
-]
+{
+  "saigonbac": [
+    {
+      "id": 1,
+      "category": "Bữa cơm & Gia đình",
+      "quote": "Có thể mình chịu bao nhiêu ấm ức ngoài xã hội cũng được, nhưng chỉ cần nghe giọng mẹ qua điện thoại là khóe mắt lại cay.",
+      "keywords": ["rainy window night", "lonely street food night", "city lights blur"]
+    },
+    {
+      "id": 2,
+      "category": "Bữa cơm & Gia đình",
+      "quote": "Mình có muốn xa nhà đâu. Nhưng nếu không đi xa bươn chải, lấy gì lo cho bữa cơm và thuốc thang của bố mẹ những ngày trái gió...",
+      "keywords": ["rainy window night", "lonely street food night", "city lights blur"]
+    },
+    {
+      "id": 3,
+      "category": "Đêm muộn Sài Gòn",
+      "quote": "Thích nhất những đêm muộn một mình chạy xe ngoài phố. Gió thốc vào mặt, không cần diễn vai một người lớn thành công.",
+      "keywords": ["night traffic street", "neon street night", "motorcycle night city"]
+    },
+    {
+      "id": 4,
+      "category": "Đêm muộn Sài Gòn",
+      "quote": "Sau này khi đã đi qua đủ giông bão, bạn nhớ rằng những tối lang thang một mình chính là lúc lòng ta tĩnh lặng nhất.",
+      "keywords": ["night traffic street", "neon street night", "motorcycle night city"]
+    },
+    {
+      "id": 5,
+      "category": "Gánh nặng tuổi trưởng thành",
+      "quote": "Không phải mình yêu tiền đến mức thực dụng, mà là không có tiền thì ngay cả tư cách bảo vệ người thân cũng không có.",
+      "keywords": ["empty room night", "silhouette window dusk", "dark moody coffee"]
+    },
+    {
+      "id": 6,
+      "category": "Gánh nặng tuổi trưởng thành",
+      "quote": "Không phải sợ già đi, mà sợ nhất là tốc độ thành công của bản thân không kịp đuổi theo mái tóc bạc của cha mẹ.",
+      "keywords": ["empty room night", "silhouette window dusk", "dark moody coffee"]
+    },
+    {
+      "id": 7,
+      "category": "Vai diễn Người ổn",
+      "quote": "Có thể ngoài mặt vẫn cười nói bình thường, nhưng chỉ mình mới biết trong lòng đã vụn vỡ từ lâu.",
+      "keywords": ["alone on bench night", "dark bedroom window", "rain on glass"]
+    },
+    {
+      "id": 8,
+      "category": "Vai diễn Người ổn",
+      "quote": "Có thể người ta thấy anh luôn ổn và điềm tĩnh, nhưng chỉ mình anh biết đã phải trải qua bao đêm thức trắng để học cách im lặng.",
+      "keywords": ["alone on bench night", "dark bedroom window", "rain on glass"]
+    },
+    {
+      "id": 9,
+      "category": "Vai diễn Người ổn",
+      "quote": "Mình có thích ở một mình đâu. Nhưng việc phải giải thích nỗi buồn của mình cho người khác còn mệt mỏi hơn gấp vạn lần.",
+      "keywords": ["alone on bench night", "dark bedroom window", "rain on glass"]
+    },
+    {
+      "id": 10,
+      "category": "Nỗ lực trong vô định",
+      "quote": "Không phải mình không nỗ lực, mà là có những chuyện dù cố gắng đến kiệt cùng vẫn chẳng thể như ý muốn.",
+      "keywords": ["foggy street night", "lonely bridge dusk", "train window night"]
+    },
+    {
+      "id": 11,
+      "category": "Nỗ lực trong vô định",
+      "quote": "Mình có mạnh mẽ đâu. Nhưng ngoài việc tự lau nước mắt rồi bước tiếp, mình còn biết dựa vào ai...",
+      "keywords": ["foggy street night", "lonely bridge dusk", "train window night"]
+    },
+    {
+      "id": 12,
+      "category": "Nỗ lực trong vô định",
+      "quote": "Là do bản thân kỳ vọng quá nhiều, hay là do cuộc đời này vốn dĩ chưa từng dịu dàng với mình...",
+      "keywords": ["foggy street night", "lonely bridge dusk", "train window night"]
+    },
+    {
+      "id": 13,
+      "category": "Nỗ lực trong vô định",
+      "quote": "Mình có cam tâm chấp nhận thất bại đâu. Nhưng cố hết sức rồi, đành thở dài mỉm cười cho qua chuyện.",
+      "keywords": ["foggy street night", "lonely bridge dusk", "train window night"]
+    },
+    {
+      "id": 14,
+      "category": "Khép lòng sau tổn thương",
+      "quote": "Bị phản bội một lần là quá đủ để sau này đối diện với bất kỳ ai, mình cũng phải giữ lại cho mình một lối lui.",
+      "keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"]
+    },
+    {
+      "id": 15,
+      "category": "Khép lòng sau tổn thương",
+      "quote": "Có thể ngoài mặt vẫn hòa nhã với tất cả, nhưng để thực sự đặt niềm tin vào ai đó lần nữa, khó lắm...",
+      "keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"]
+    },
+    {
+      "id": 16,
+      "category": "Khép lòng sau tổn thương",
+      "quote": "Sau này khi nhìn lại, bạn nhớ rằng có những thứ buông tay không phải vì hết thương, mà vì giữ lại chỉ làm cả hai thêm đau.",
+      "keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"]
+    },
+    {
+      "id": 17,
+      "category": "Khép lòng sau tổn thương",
+      "quote": "Không phải mình muốn từ bỏ, mà là mình hiểu ra có những cánh cửa cố gõ mãi cũng chỉ là làm phiền người bên trong.",
+      "keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"]
+    },
+    {
+      "id": 18,
+      "category": "Khép lòng sau tổn thương",
+      "quote": "Đến một lúc nào đó, im lặng không còn là tức giận nữa, mà là một sự chấp nhận buông bỏ nhẹ nhõm và bình an.",
+      "keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"]
+    },
+    {
+      "id": 19,
+      "category": "Khép lòng sau tổn thương",
+      "quote": "Càng lớn càng nhận ra, sự cô độc đáng sợ nhất không phải là ở một mình, mà là giữa biển người mà chẳng ai hiểu thấu lòng mình.",
+      "keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"]
+    }
+  ],
+  "kenh_moi": [
+    {
+      "id": 21,
+      "category": "Mưu lược Tư Mã Ý (Ẩn nhẫn)",
+      "quote": "Đừng vội nổi giận khi bị xem thường. Lúc chưa có gì trong tay, im lặng làm việc vẫn có ích hơn tranh cãi.",
+      "keywords": ["chess pieces dark", "storm clouds timelapse", "dark ocean waves"]
+    },
+    {
+      "id": 22,
+      "category": "Mưu lược Tư Mã Ý (Ẩn nhẫn)",
+      "quote": "Có những chuyện biết mình đúng cũng không cần nói. Khi chưa đủ vị thế, lời giải thích đôi khi chẳng đáng bằng kết quả.",
+      "keywords": ["chess pieces dark", "storm clouds timelapse", "dark ocean waves"]
+    },
+    {
+      "id": 23,
+      "category": "Mưu lược Tư Mã Ý (Ẩn nhẫn)",
+      "quote": "Khi chưa đủ năng lực, đừng vội thể hiện tham vọng. Hãy học cho vững, làm cho chắc rồi mới tính chuyện đi xa.",
+      "keywords": ["chess pieces dark", "storm clouds timelapse", "dark ocean waves"]
+    },
+    {
+      "id": 24,
+      "category": "Mưu lược Tư Mã Ý (Ẩn nhẫn)",
+      "quote": "Không phải điều gì bạn biết cũng cần nói ra, không phải việc gì bạn làm cũng cần cho người khác nhìn thấy.",
+      "keywords": ["chess pieces dark", "storm clouds timelapse", "dark ocean waves"]
+    },
+    {
+      "id": 25,
+      "category": "Mưu lược Tư Mã Ý (Ẩn nhẫn)",
+      "quote": "Chưa đến thời thì đừng cố tranh phần hơn. Hãy chuẩn bị đủ tốt để khi cơ hội xuất hiện, mình không phải đứng nhìn.",
+      "keywords": ["chess pieces dark", "storm clouds timelapse", "dark ocean waves"]
+    },
+    {
+      "id": 26,
+      "category": "Bản chất của Tiền & Vị thế",
+      "quote": "Đừng thấy người khác mua nhà, đổi xe rồi vội vàng vay mượn để bằng họ. Mỗi người có một xuất phát điểm khác nhau.",
+      "keywords": ["skyscraper night aerial", "luxury watch dark", "city skyline night"]
+    },
+    {
+      "id": 27,
+      "category": "Bản chất của Tiền & Vị thế",
+      "quote": "Khi chưa có vốn, hãy lấy kiến thức làm vốn. Khi chưa có quan hệ, hãy lấy uy tín làm nền để đi đường dài.",
+      "keywords": ["skyscraper night aerial", "luxury watch dark", "city skyline night"]
+    },
+    {
+      "id": 28,
+      "category": "Bản chất của Tiền & Vị thế",
+      "quote": "Đừng tiêu tiền để chứng minh mình thành công. Người thực sự muốn tiến lên sẽ quan tâm mình còn giữ được bao nhiêu nguồn lực.",
+      "keywords": ["skyscraper night aerial", "luxury watch dark", "city skyline night"]
+    },
+    {
+      "id": 29,
+      "category": "Bản chất của Tiền & Vị thế",
+      "quote": "Đi làm đừng chỉ mong hết giờ nhận lương. Hãy học thêm thứ giúp mình có nhiều lựa chọn hơn khi công việc hiện tại không còn phù hợp.",
+      "keywords": ["skyscraper night aerial", "luxury watch dark", "city skyline night"]
+    },
+    {
+      "id": 30,
+      "category": "Bản chất của Tiền & Vị thế",
+      "quote": "Muốn thay đổi cuộc sống, đôi khi phải chấp nhận vài năm sống bình thường để xây nền cho những năm tháng tốt hơn.",
+      "keywords": ["skyscraper night aerial", "luxury watch dark", "city skyline night"]
+    },
+    {
+      "id": 31,
+      "category": "Thuật nhìn người & Mặt nạ",
+      "quote": "Đừng chỉ nghe người khác nói gì về mình. Hãy nhìn cách họ đối xử với bạn khi bạn không còn gì để mang lại cho họ.",
+      "keywords": ["man in suit shadow", "lion walking dark", "smoke abstract black"]
+    },
+    {
+      "id": 32,
+      "category": "Thuật nhìn người & Mặt nạ",
+      "quote": "Có người nhiệt tình khi bạn thành công, có người vẫn ở lại lúc bạn khó khăn. Đừng vội quên mình đã gặp ai trên đường đời.",
+      "keywords": ["man in suit shadow", "lion walking dark", "smoke abstract black"]
+    },
+    {
+      "id": 33,
+      "category": "Thuật nhìn người & Mặt nạ",
+      "quote": "Không cần vạch trần mọi người mình đã nhìn thấu. Giữ khoảng cách đúng lúc đôi khi tốt hơn một cuộc tranh luận.",
+      "keywords": ["man in suit shadow", "lion walking dark", "smoke abstract black"]
+    },
+    {
+      "id": 34,
+      "category": "Thuật nhìn người & Mặt nạ",
+      "quote": "Người khôn không đặt hết niềm tin vào lời hứa. Họ quan sát cách người khác hành động khi lợi ích bắt đầu xuất hiện.",
+      "keywords": ["man in suit shadow", "lion walking dark", "smoke abstract black"]
+    },
+    {
+      "id": 35,
+      "category": "Thuật nhìn người & Mặt nạ",
+      "quote": "Đừng vội xem ai là đối thủ, cũng đừng dễ dàng xem ai là bạn. Thời gian và lợi ích sẽ cho bạn thấy nhiều điều.",
+      "keywords": ["man in suit shadow", "lion walking dark", "smoke abstract black"]
+    },
+    {
+      "id": 36,
+      "category": "Kỷ luật trong cô độc",
+      "quote": "Đừng nói quá nhiều về thứ mình sắp làm. Người thực sự muốn tiến xa thường dành thời gian hoàn thiện bản thân hơn là thuyết phục thiên hạ.",
+      "keywords": ["boxing gym dark", "running night alone", "working late dark office"]
+    },
+    {
+      "id": 37,
+      "category": "Kỷ luật trong cô độc",
+      "quote": "Cứ để người khác nghĩ bạn bình thường. Điều quan trọng không phải họ đánh giá bạn thế nào, mà bạn đang âm thầm tiến đến đâu.",
+      "keywords": ["boxing gym dark", "running night alone", "working late dark office"]
+    },
+    {
+      "id": 38,
+      "category": "Kỷ luật trong cô độc",
+      "quote": "Có những năm tháng chẳng ai chú ý đến bạn. Đừng phí chúng để than thân, hãy dùng chúng để trở thành người khác trước đây.",
+      "keywords": ["boxing gym dark", "running night alone", "working late dark office"]
+    },
+    {
+      "id": 39,
+      "category": "Kỷ luật trong cô độc",
+      "quote": "Người nóng lòng muốn đổi đời thường dễ đánh đổi quá nhiều. Người biết chờ sẽ hiểu cơ hội chỉ có ý nghĩa khi mình đủ sức nắm lấy.",
+      "keywords": ["boxing gym dark", "running night alone", "working late dark office"]
+    },
+    {
+      "id": 40,
+      "category": "Kỷ luật trong cô độc",
+      "quote": "Người có mục tiêu rõ ràng không cần tham gia mọi cuộc tranh hơn thua. Họ biết sức lực của mình nên đặt vào đâu.",
+      "keywords": ["boxing gym dark", "running night alone", "working late dark office"]
+    },
+    {
+      "id": 41,
+      "category": "Kiểm soát cảm xúc",
+      "quote": "Bị người khác lấn lướt một lần không đáng sợ. Đáng sợ là vì tự ái mà đưa ra quyết định khiến mình trả giá.",
+      "keywords": ["calm dark water", "mountain peak fog", "fire flames slow motion"]
+    },
+    {
+      "id": 42,
+      "category": "Kiểm soát cảm xúc",
+      "quote": "Khi chưa đủ mạnh, hãy học cách giữ bình tĩnh. Đừng để một người chẳng quan trọng quyết định hướng đi của bạn.",
+      "keywords": ["calm dark water", "mountain peak fog", "fire flames slow motion"]
+    },
+    {
+      "id": 43,
+      "category": "Kiểm soát cảm xúc",
+      "quote": "Đừng thấy người khác đi trước mà cuống cuồng chạy theo. Có những con đường đi chậm một chút lại tránh được rất nhiều sai lầm.",
+      "keywords": ["calm dark water", "mountain peak fog", "fire flames slow motion"]
+    },
+    {
+      "id": 44,
+      "category": "Kiểm soát cảm xúc",
+      "quote": "Đừng để một lần thất bại khiến mình nóng vội, cũng đừng để một lần thành công khiến mình chủ quan. Đường còn dài lắm.",
+      "keywords": ["calm dark water", "mountain peak fog", "fire flames slow motion"]
+    },
+    {
+      "id": 45,
+      "category": "Kiểm soát cảm xúc",
+      "quote": "Có lúc lùi lại không phải để bỏ cuộc, mà để nhìn rõ con đường phía trước và tránh bước tiếp bằng sự nóng nảy.",
+      "keywords": ["calm dark water", "mountain peak fog", "fire flames slow motion"]
+    },
+    {
+      "id": 46,
+      "category": "Luật chơi của Kẻ mạnh",
+      "quote": "Người khác có thể coi thường bạn hôm nay, nhưng đừng vì thế mà quên mất việc mình cần làm ngày mai.",
+      "keywords": ["eagle flying slow motion", "highway night drive", "chess king piece"]
+    },
+    {
+      "id": 47,
+      "category": "Luật chơi của Kẻ mạnh",
+      "quote": "Không phải cánh cửa nào đóng lại cũng cần phá bằng được. Đôi khi điều khôn ngoan là tích lũy rồi tìm một lối đi khác.",
+      "keywords": ["eagle flying slow motion", "highway night drive", "chess king piece"]
+    },
+    {
+      "id": 48,
+      "category": "Luật chơi của Kẻ mạnh",
+      "quote": "Đừng vì vài năm chưa thành công mà nghĩ mình đã hết cơ hội. Điều đáng lo là thời gian trôi qua mà bản thân chẳng học thêm được gì.",
+      "keywords": ["eagle flying slow motion", "highway night drive", "chess king piece"]
+    },
+    {
+      "id": 49,
+      "category": "Luật chơi của Kẻ mạnh",
+      "quote": "Đừng mong ai cũng hiểu lựa chọn của mình. Chỉ cần biết mình đang làm gì, vì sao làm và có đủ kiên nhẫn theo đến cùng.",
+      "keywords": ["eagle flying slow motion", "highway night drive", "chess king piece"]
+    },
+    {
+      "id": 50,
+      "category": "Luật chơi của Kẻ mạnh",
+      "quote": "Đến cuối cùng, người đi xa chưa chắc là người giỏi nhất lúc bắt đầu, mà thường là người biết sửa sai và không bỏ cuộc quá sớm.",
+      "keywords": ["eagle flying slow motion", "highway night drive", "chess king piece"]
+    }
+  ]
+}

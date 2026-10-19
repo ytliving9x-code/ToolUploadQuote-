@@ -20,66 +20,175 @@ logger = logging.getLogger("tiktok_tool.quote_gen")
 # Tải biến môi trường từ .env
 load_dotenv()
 
-# Danh mục quote mẫu chất lượng cao dự phòng (phong cách buồn một chút, tâm sự chân thật, 15-26 từ)
+# ==============================================================================
+# HỆ THỐNG 6 DANH MỤC ĐỘC QUYỀN & MICRO-SCENARIO CHO TỪNG KÊNH
+# ==============================================================================
+CHANNEL_CATEGORIES: Dict[str, Dict[str, Dict[str, Any]]] = {
+    "saigonbac": {
+        "Bữa cơm & Gia đình": {
+            "scenario": "Ngoài xã hội chịu đủ ấm ức, ăn vội bữa cơm lề đường nhưng gọi về cho mẹ vẫn cười bảo con sống rất tốt.",
+            "visual_keywords": ["rainy window night", "lonely street food night", "city lights blur"],
+        },
+        "Đêm muộn Sài Gòn": {
+            "scenario": "Tan làm muộn không muốn về căn phòng trọ tối đèn, cứ chạy xe máy lòng vòng ngoài đường ngắm dòng người qua lại.",
+            "visual_keywords": ["night traffic street", "neon street night", "motorcycle night city"],
+        },
+        "Gánh nặng tuổi trưởng thành": {
+            "scenario": "Nhìn hóa đơn cuối tháng mà thở dài, sợ tốc độ kiếm tiền của mình không đuổi kịp tốc độ già đi của cha mẹ.",
+            "visual_keywords": ["empty room night", "silhouette window dusk", "dark moody coffee"],
+        },
+        "Vai diễn Người ổn": {
+            "scenario": "Ban ngày cười nói hòa đồng với mọi người, đêm về tháo lớp mặt nạ xuống chỉ thấy rã rời mà chẳng biết gọi cho ai.",
+            "visual_keywords": ["alone on bench night", "dark bedroom window", "rain on glass"],
+        },
+        "Nỗ lực trong vô định": {
+            "scenario": "Đã cố gắng gấp đôi người khác nhưng mọi thứ vẫn dậm chân tại chỗ, cảm giác chênh vênh giữa thành phố lớn.",
+            "visual_keywords": ["foggy street night", "lonely bridge dusk", "train window night"],
+        },
+        "Khép lòng sau tổn thương": {
+            "scenario": "Không còn dám tin vào lời hứa hẹn, thà chọn đi ăn một mình, sống một mình còn hơn đặt cược niềm tin thêm lần nữa.",
+            "visual_keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"],
+        },
+    },
+    "kenh_moi": {
+        "Mưu lược Tư Mã Ý (Ẩn nhẫn)": {
+            "scenario": "Khi chưa có vị thế thì cúi đầu nuốt tự ái, giấu kín tham vọng, mặc kệ kẻ tiểu nhân đắc ý nhất thời để chờ đúng thời cơ.",
+            "visual_keywords": ["chess pieces dark", "storm clouds timelapse", "dark ocean waves"],
+        },
+        "Bản chất của Tiền & Vị thế": {
+            "scenario": "Sự thật tàn nhẫn của xã hội: Không có tiền và thực lực thì lời nói không có trọng lượng, mọi sự tử tế đều cần có vị thế bảo vệ.",
+            "visual_keywords": ["skyscraper night aerial", "luxury watch dark", "city skyline night"],
+        },
+        "Thuật nhìn người & Mặt nạ": {
+            "scenario": "Nhìn thấu kẻ đang diễn kịch, thảo mai hoặc lợi dụng mình nhưng không vạch trần, chỉ mỉm cười giữ khoảng cách.",
+            "visual_keywords": ["man in suit shadow", "lion walking dark", "smoke abstract black"],
+        },
+        "Kỷ luật trong cô độc": {
+            "scenario": "Cắt bỏ những cuộc vui vô bổ và bạn bè xã giao trên bàn tiệc để âm thầm tích lũy tài chính và năng lực.",
+            "visual_keywords": ["boxing gym dark", "running night alone", "working late dark office"],
+        },
+        "Kiểm soát cảm xúc": {
+            "scenario": "Không để cơn nóng giận làm hỏng đại cuộc, không than vãn để lộ điểm yếu, dùng sự im lặng làm vũ khí.",
+            "visual_keywords": ["calm dark water", "mountain peak fog", "fire flames slow motion"],
+        },
+        "Luật chơi của Kẻ mạnh": {
+            "scenario": "Chấp nhận sự bất công của cuộc đời, ngừng trông chờ sự thương hại và tự biến mình thành người nắm quyền chủ động.",
+            "visual_keywords": ["eagle flying slow motion", "highway night drive", "chess king piece"],
+        },
+    },
+}
+
+# Danh mục quote mẫu chất lượng cao dự phòng (đúng độ dài 15-26 từ)
 FALLBACK_QUOTES: Dict[str, List[Dict[str, Any]]] = {
-    "tự mình chịu đựng": [
+    # ☕ Kênh saigonbac
+    "Bữa cơm & Gia đình": [
         {
-            "quote": "Không phải mình không muốn chia sẻ, mà là có những nỗi buồn nói ra chỉ khiến người khác thêm bận lòng.",
-            "pexels_keywords": ["night street rain aesthetic", "lone wolf dark moody", "calm ocean night moody"],
-            "caption": "Tự ôm lấy mình đi qua bão giông. 🌙",
-            "hashtags": ["#buonmotchut", "#tamtrang", "#doithuc", "#tuchan", "#suyngam"],
+            "quote": "Mình chịu bao nhiêu ấm ức ngoài xã hội cũng được, nhưng chỉ cần nghe giọng mẹ qua điện thoại là khóe mắt lại cay.",
+            "pexels_keywords": ["rainy window night", "lonely street food night", "city lights blur"],
+            "caption": "Ngoài kia bao la sóng gió, chỉ muốn về ăn bữa cơm nhà. 🌧️",
+            "hashtags": ["#saigonbac", "#tamtrang", "#giadinh", "#mẹ", "#doithuc"],
         },
         {
-            "quote": "Mình có mạnh mẽ đâu. Nhưng ngoài việc tự lau nước mắt rồi bước tiếp, mình còn biết dựa vào ai...",
-            "pexels_keywords": ["dark rainy street aesthetic", "lonely walking night street", "rainy car window"],
-            "caption": "Là do cuộc sống này quá khó khăn, hay là do mình chưa đủ may mắn...",
-            "hashtags": ["#buonmotchut", "#tamtrang", "#côđơn", "#imlang", "#chill"],
+            "quote": "Mình đâu muốn xa nhà. Nhưng không đi bươn chải, lấy gì lo bữa cơm và thuốc thang cho bố mẹ lúc ốm đau.",
+            "pexels_keywords": ["rainy window night", "lonely street food night", "city lights blur"],
+            "caption": "Nỗi niềm người con xa xứ giữa phố thị hoa lệ. 🥀",
+            "hashtags": ["#saigonbac", "#tamtrang", "#doithuc", "#xanha", "#nhatky"],
         },
     ],
-    "giấu nỗi buồn": [
+    "Đêm muộn Sài Gòn": [
+        {
+            "quote": "Thích nhất những đêm muộn một mình chạy xe ngoài phố. Gió thốc vào mặt, không cần diễn vai một người lớn thành công.",
+            "pexels_keywords": ["night traffic street", "neon street night", "motorcycle night city"],
+            "caption": "Đêm muộn Sài Gòn, cởi bỏ lớp mặt nạ người lớn. 🌙",
+            "hashtags": ["#saigonbac", "#didaodem", "#tamtrang", "#chill", "#saigon"],
+        },
+    ],
+    "Gánh nặng tuổi trưởng thành": [
+        {
+            "quote": "Không phải mình yêu tiền đến mức thực dụng, mà là không có tiền thì ngay cả tư cách bảo vệ người thân cũng không có.",
+            "pexels_keywords": ["empty room night", "silhouette window dusk", "dark moody coffee"],
+            "caption": "Áp lực cơm áo gạo tiền của người trưởng thành. ☕",
+            "hashtags": ["#saigonbac", "#truongthanh", "#tamtrang", "#comao"],
+        },
+    ],
+    "Vai diễn Người ổn": [
         {
             "quote": "Có thể ngoài mặt vẫn cười nói bình thường, nhưng chỉ mình mới biết trong lòng đã vụn vỡ từ lâu.",
-            "pexels_keywords": ["city lights night blurred", "dark office building night", "rain street reflections"],
+            "pexels_keywords": ["alone on bench night", "dark bedroom window", "rain on glass"],
             "caption": "Sau nụ cười là những vết thương không tên. 🥀",
-            "hashtags": ["#buonmotchut", "#giaunoibuon", "#tamtrang", "#gocnhotamhon"],
-        },
-        {
-            "quote": "Người ta thấy mình luôn điềm tĩnh, nhưng chỉ mình mới biết đã phải trải qua bao đêm thức trắng để học cách im lặng.",
-            "pexels_keywords": ["rainy window coffee", "night city drive lights", "quiet aesthetic corner"],
-            "caption": "Trưởng thành là học cách nuốt nước mắt vào trong. ☕",
-            "hashtags": ["#buonmotchut", "#imlang", "#tamtrang", "#nhatky"],
+            "hashtags": ["#saigonbac", "#giaunoibuon", "#tamtrang", "#nguoion"],
         },
     ],
-    "cô đơn": [
-        {
-            "quote": "Mình có thích ở một mình đâu. Nhưng việc phải giải thích nỗi buồn của mình cho người khác còn mệt mỏi hơn gấp vạn lần.",
-            "pexels_keywords": ["foggy forest dark moody", "calm ocean night moody", "aesthetic coffee rain"],
-            "caption": "Đôi khi cô đơn lại là khoảng lặng bình yên nhất. 🍃",
-            "hashtags": ["#buonmotchut", "#codon", "#tamtrang", "#langdong"],
-        },
-    ],
-    "đi dạo một mình buổi tối": [
-        {
-            "quote": "Mình thích cái cảm giác đi lang thang một mình vào buổi tối. Không ai nhìn rõ mình, còn mình có thể nhìn thấu bản thân.",
-            "pexels_keywords": ["night street rain aesthetic", "dark subway quiet", "rainy window coffee"],
-            "caption": "Đêm muộn, đối diện với chính tâm can mình. 🌙",
-            "hashtags": ["#buonmotchut", "#didaodem", "#tamtrang", "#chill"],
-        },
-    ],
-    "cố gắng nhưng không như ý": [
+    "Nỗ lực trong vô định": [
         {
             "quote": "Không phải mình không nỗ lực, mà là có những chuyện dù cố gắng đến kiệt cùng vẫn chẳng thể như ý muốn.",
-            "pexels_keywords": ["dark aesthetic office night", "foggy forest dark moody", "rain street reflections"],
-            "caption": "Cố gắng hết sức rồi, đành buông tay cho nhẹ lòng. 🥀",
-            "hashtags": ["#buonmotchut", "#cogang", "#tamtrang", "#buongbo"],
+            "pexels_keywords": ["foggy street night", "lonely bridge dusk", "train window night"],
+            "caption": "Cố gắng hết sức rồi, đành buông tay cho nhẹ lòng. 🍃",
+            "hashtags": ["#saigonbac", "#cogang", "#tamtrang", "#buongbo"],
         },
     ],
-    "chấp nhận buông bỏ": [
+    "Khép lòng sau tổn thương": [
         {
-            "quote": "Đến một lúc nào đó, im lặng không còn là tức giận nữa, mà là một sự chấp nhận buông bỏ nhẹ nhõm và bình an.",
-            "pexels_keywords": ["dark beach waves night", "rain mist forest", "aesthetic night street"],
-            "caption": "Buông tay để tìm lại bình yên cho chính mình. 🤍",
-            "hashtags": ["#buonmotchut", "#buongbo", "#tamtrang", "#binhyen"],
+            "quote": "Bị phản bội một lần là đủ để sau này đối diện với bất kỳ ai, mình cũng tự giữ lấy một lối lui.",
+            "pexels_keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"],
+            "caption": "Khép lòng lại sau những vết thương chưa lành. 🌧️",
+            "hashtags": ["#saigonbac", "#tonthuong", "#tamtrang", "#khoctin"],
+        },
+    ],
+
+    # 🎬 Kênh Mới (Tư Mã Ý, Luật Ngầm & Bản Lĩnh)
+    "Mưu lược Tư Mã Ý (Ẩn nhẫn)": [
+        {
+            "quote": "Đừng vội nổi giận khi bị xem thường. Lúc chưa có gì trong tay, im lặng làm việc vẫn có ích hơn tranh cãi.",
+            "pexels_keywords": ["chess pieces dark", "storm clouds timelapse", "dark ocean waves"],
+            "caption": "Nhẫn để nhìn thấu, chậm để đi xa. ⛰️",
+            "hashtags": ["#nhannhin", "#chothoi", "#trietly", "#tumay", "#banlinh"],
+        },
+        {
+            "quote": "Có những chuyện biết mình đúng cũng không cần nói. Khi chưa đủ vị thế, lời giải thích đôi khi chẳng đáng bằng kết quả.",
+            "pexels_keywords": ["chess pieces dark", "storm clouds timelapse", "dark ocean waves"],
+            "caption": "Kết quả là câu trả lời đanh thép nhất. ♟️",
+            "hashtags": ["#trietly", "#banlinh", "#vithe", "#suyngam"],
+        },
+    ],
+    "Bản chất của Tiền & Vị thế": [
+        {
+            "quote": "Khi chưa có vốn, hãy lấy kiến thức làm vốn. Khi chưa có quan hệ, hãy lấy uy tín làm nền để đi đường dài.",
+            "pexels_keywords": ["skyscraper night aerial", "luxury watch dark", "city skyline night"],
+            "caption": "Tích lũy thực lực để tự tạo chỗ đứng. 🏛️",
+            "hashtags": ["#tienbac", "#vithe", "#trietly", "#thanhcong"],
+        },
+    ],
+    "Thuật nhìn người & Mặt nạ": [
+        {
+            "quote": "Đừng chỉ nghe người khác nói. Hãy nhìn cách họ đối xử với bạn khi bạn không còn gì để mang lại cho họ.",
+            "pexels_keywords": ["man in suit shadow", "lion walking dark", "smoke abstract black"],
+            "caption": "Thời gian và lợi ích sẽ cho thấy bản chất lòng người. 🎭",
+            "hashtags": ["#nhinnguoi", "#doithuc", "#trietly", "#suyngam"],
+        },
+    ],
+    "Kỷ luật trong cô độc": [
+        {
+            "quote": "Bị người khác lấn lướt một lần không đáng sợ. Đáng sợ là vì tự ái mà đưa ra quyết định khiến mình trả giá.",
+            "pexels_keywords": ["boxing gym dark", "running night alone", "working late dark office"],
+            "caption": "Âm thầm tích lũy, đợi đúng thời cơ. 🐺",
+            "hashtags": ["#kyluat", "#giautai", "#trietly", "#dongluc"],
+        },
+    ],
+    "Kiểm soát cảm xúc": [
+        {
+            "quote": "Khi chưa đủ mạnh, hãy học cách giữ bình tĩnh. Đừng để một người chẳng quan trọng quyết định hướng đi của bạn.",
+            "pexels_keywords": ["calm dark water", "mountain peak fog", "fire flames slow motion"],
+            "caption": "Tâm bất biến giữa dòng đời vạn biến. 🌊",
+            "hashtags": ["#kiemsoatcamxuc", "#tamthe", "#banlinh", "#trietly"],
+        },
+    ],
+    "Luật chơi của Kẻ mạnh": [
+        {
+            "quote": "Người khác có thể coi thường bạn hôm nay, nhưng đừng vì thế mà quên mất việc mình cần làm ngày mai.",
+            "pexels_keywords": ["eagle flying slow motion", "highway night drive", "chess king piece"],
+            "caption": "Bản lĩnh của người làm chủ cuộc chơi. 🦅",
+            "hashtags": ["#luatke manh", "#banlinh", "#quyenluc", "#thanhcong"],
         },
     ],
 }
@@ -135,7 +244,6 @@ def clean_and_parse_json(raw_text: str) -> Dict[str, Any]:
     # Nếu không phải JSON, nghĩa là AI đã tuân thủ prompt xuất DUY NHẤT 1 CÂU QUOTE VĂN BẢN
     cleaned_quote = text.strip().strip('"').strip("'").strip("`").strip()
     lines = [line.strip().strip('"').strip("'") for line in cleaned_quote.split("\n") if line.strip()]
-    # Ghép các dòng lại thành câu hoàn chỉnh (nếu có xuống dòng)
     final_quote = " ".join(lines) if lines else cleaned_quote
 
     return {
@@ -146,52 +254,102 @@ def clean_and_parse_json(raw_text: str) -> Dict[str, Any]:
     }
 
 
+def build_system_prompt(
+    topic: str = "buồn một chút",
+    recent_quotes: Optional[List[str]] = None,
+    style: str = "sad_introspective",
+    channel: str = "saigonbac",
+) -> str:
+    """
+    Xây dựng prompt chuyên biệt định hình phong cách đối lập 100% DNA:
+    - 'saigonbac' (sad_introspective): Trạm Dừng Cảm Xúc (Chữa lành & Đồng cảm).
+      Độc thoại nội tâm xưng 'mình' hoặc khuyết chủ ngữ. CẤM dạy đời, cấm dùng 'bạn' để lên lớp.
+    - 'kenh_moi' (deep_philosophical): Luật Ngầm & Bản Lĩnh (Tư duy sắc lạnh & Thực tế, hình tượng Tư Mã Ý).
+      Ngôi thứ 3 hoặc 'bạn' đanh thép. CẤM than nghèo kể khổ, cấm ủy mị cô đơn.
+    """
+    # Đồng bộ style và channel nếu có sự sai lệch
+    if channel == "kenh_moi" or style == "deep_philosophical":
+        channel = "kenh_moi"
+        style = "deep_philosophical"
+    else:
+        channel = "saigonbac"
+        style = "sad_introspective"
 
-def build_system_prompt(topic: str = "buồn một chút", recent_quotes: Optional[List[str]] = None) -> str:
-    """
-    Xây dựng prompt chuyên biệt định hình:
-    Người viết quote 'buồn một chút' cho video TikTok tiếng Việt.
-    Giọng tâm sự, chân thật, buồn nhẹ, trầm lắng, không sến, không kêu gào.
-    """
     recent_quotes_section = ""
     if recent_quotes:
         quotes_list_str = "\n".join(f"  + \"{q}\"" for q in recent_quotes[-15:])
         recent_quotes_section = f"""- TRÁNH LẶP Ý HOẶC CÂU CHỮ VỚI CÁC CÂU GẦN ĐÂY:
 {quotes_list_str}"""
 
-    topic_str = topic if topic and topic.strip() else "tự mình chịu đựng"
+    topic_str = topic if topic and topic.strip() else "Bữa cơm & Gia đình"
 
-    return f"""Bạn là người viết quote "buồn một chút" cho video TikTok tiếng Việt.
+    # Lấy micro-scenario tương ứng nếu có
+    scenario_info = ""
+    channel_cats = CHANNEL_CATEGORIES.get(channel, {})
+    if topic in channel_cats:
+        scenario = channel_cats[topic].get("scenario", "")
+        if scenario:
+            scenario_info = f"\nTình huống cụ thể (Micro-Scenario): \"{scenario}\""
 
-PHONG CÁCH:
-- Giọng tâm sự, chân thật, buồn nhẹ, trầm lắng, không sến và không kêu gào.
-- Xưng "mình" (tự sự) hoặc "bạn" (nói với người xem). Thỉnh thoảng dùng "anh" như một lời tự thú.
-- Mỗi quote 1-2 câu ngắn, TỔNG ĐỘ DÀI TỪ 15 ĐẾN 26 TỪ (tuyệt đối không vượt quá 28 từ).
-- Ngắn gọn, có chiều sâu, từ ngữ đắt giá, có thể ngắt thành 2 vế ngắn đối chiếu.
-- Văn nói đời thường, không dùng từ hoa mỹ hay sáo rỗng.
+    if channel == "kenh_moi":
+        return f"""Bạn là một người từng trải, điềm tĩnh như Tư Mã Ý, nhìn cuộc đời và các mối quan hệ như một bàn cờ lợi ích.
+Bạn viết quote sắc lạnh, bản lĩnh, mưu lược cho video TikTok B-Roll điện ảnh của KÊNH MỚI.
 
-CHỦ ĐỀ ĐANG YÊU CẦU:
-"{topic_str}"
-(Các chủ đề xoay vòng thường gặp: giấu nỗi buồn không cho ai thấy, tự mình chịu đựng, cô đơn, áp lực tiền bạc và trưởng thành, cha mẹ và gia đình, bị phản bội rồi khó tin người, cố gắng nhưng không được như ý, chấp nhận buông bỏ, đi dạo một mình buổi tối).
+KHÓA RANH GIỚI KÊNH (BẮT BUỘC TUÂN THỦ 100%):
+- TUYỆT ĐỐI KHÔNG viết giọng than thân trách phận, không than nghèo kể khổ, không ủy mị, không kể lể nỗi buồn cá nhân hay nhớ mẹ cay mắt.
+- Viết như một quy luật sắc lạnh đúc kết từ thực tế thương trường và cuộc sống: Lạnh lùng, thực tế, nhìn thấu quy luật lòng người.
 
-CẤU TRÚC (linh hoạt áp dụng đa dạng một trong các dạng sau):
-1. "Không phải X, mà là Y."
-2. "Có thể A, nhưng chỉ mình mới biết B."
-3. Mở đầu bằng câu phủ định nhẹ rồi nói điều thật lòng ("Mình có hạnh phúc đâu. Nhưng...")
-4. Kết bằng câu hỏi tu từ hoặc dấu "..." để lửng.
-5. "Sau này... bạn nhớ rằng..."
+PHONG CÁCH & NGÔI XƯNG:
+- Dùng ngôi thứ 3 ("Người khôn ngoan...", "Kẻ có bản lĩnh...", "Người có thực lực...") hoặc xưng "bạn" với giọng đanh thép, dứt khoát. CẤM xưng "mình" kể khổ.
+- Mục đích: Để người xem "Tỉnh ngộ và Mạnh mẽ hơn" — như một gáo nước lạnh giúp tỉnh táo trước lòng người và xã hội.
+- Mỗi quote 1-2 câu ngắn, TỔNG ĐỘ DÀI TỪ 15 ĐẾN 26 TỪ (tuyệt đối không quá 28 từ).
+- Câu từ sắc bén, đắt giá, phù hợp chạy trên nền video B-Roll chuyển động tông tối điện ảnh (Dark luxury / Cinematic).
 
-VÍ DỤ TIÊU BIỂU VỀ VĂN PHONG (THAM KHẢO, KHÔNG ĐƯỢC CHÉP LẠI):
-- "Thứ khiến con người ta buồn nhất không phải là mất mát, mà là đã cố gắng rất nhiều nhưng mọi chuyện chẳng như mong muốn." (24 từ)
-- "Mình thích cái cảm giác đi lang thang một mình vào buổi tối. Không ai nhìn rõ mình, còn mình có thể nhìn thấu bản thân." (25 từ)
-- "Là do cuộc sống này quá khó khăn, hay là do mình chưa được may mắn..." (14 từ)
-- "Mình có hạnh phúc đâu. Nhưng mình không muốn để người khác thấy mình khổ." (15 từ)
+CHỦ ĐỀ & TÌNH HUỐNG YÊU CẦU:
+- Danh mục: "{topic_str}"{scenario_info}
 
-RÀNG BUỘC AN TOÀN & NỘI DUNG:
-- Tuyệt đối không nhắc tự tử, tự hại hay phương pháp làm đau bản thân.
-- Buồn nhưng vẫn giữ chút ấm áp hoặc chấp nhận ở cuối.
-- Không sến súa, không giật gân, không rao giảng đạo lý.
-- ĐỘ DÀI BẮT BUỘC: từ 15 đến 26 từ. Câu quá 28 từ bị coi là không hợp lệ.
+VÍ DỤ VĂN PHONG ĐẠT CHUẨN (THAM KHẢO, KHÔNG CHÉP LẠI):
+- "Cạn túi một lần chính là cái giá rẻ nhất để nhìn thấu lòng người. Đừng oán trách kẻ rời đi, vì bản chất của xã giao vốn là trao đổi giá trị." (29 từ -> Rút gọn: "Cạn túi là cách rẻ nhất để nhìn thấu lòng người. Đừng oán trách kẻ rời đi, vì bản chất xã giao vốn là trao đổi giá trị.")
+- "Đừng vội nổi giận khi bị xem thường. Lúc chưa có gì trong tay, im lặng làm việc vẫn có ích hơn tranh cãi." (23 từ)
+- "Có những chuyện biết mình đúng cũng không cần nói. Khi chưa đủ vị thế, lời giải thích đôi khi chẳng đáng bằng kết quả." (24 từ)
+- "Khi chưa có vốn, hãy lấy kiến thức làm vốn. Khi chưa có quan hệ, hãy lấy uy tín làm nền để đi đường dài." (24 từ)
+
+RÀNG BUỘC KỸ THUẬT:
+- ĐỘ DÀI BẮT BUỘC: từ 15 đến 26 từ.
+- Không hô khẩu hiệu rẻ tiền, không sáo rỗng.
+{recent_quotes_section}
+
+ĐỊNH DẠNG ĐẦU RA (BẮT BUỘC):
+- Trả về đúng 1 câu quote duy nhất (có thể ngắt 1-2 dòng ngắn).
+- KHÔNG dùng dấu ngoặc kép (""), KHÔNG viết lời chào/lời dẫn, KHÔNG giải thích, KHÔNG kèm hashtag."""
+
+    # Mặc định: saigonbac
+    return f"""Bạn là một người trẻ bình thường đang chật vật mưu sinh ở Sài Gòn, biết buồn, biết tủi thân, nhớ nhà lúc đêm muộn.
+Bạn viết quote tâm sự đêm cho kênh TikTok saigonbac (Trạm Dừng Cảm Xúc).
+
+KHÓA RANH GIỚI KÊNH (BẮT BUỘC TUÂN THỦ 100%):
+- TUYỆT ĐỐI KHÔNG viết giọng triết lý dạy đời, không bàn chuyện mưu lược, thắng thua hay đắc nhân tâm.
+- CẤM dùng từ "bạn" để lên lớp dạy bảo người khác. Cấm hô khẩu hiệu hay nói đạo lý làm giàu.
+- Chỉ viết như lời tự sự thầm kín trong nhật ký, bộc bạch nỗi lòng đời thường lúc 22h đêm - 2h sáng.
+
+PHONG CÁCH & NGÔI XƯNG:
+- BẮT BUỘC xưng "mình" (độc thoại nội tâm) hoặc viết câu khuyết chủ ngữ.
+- Mục đích: Để người xem thấy "Có người hiểu nỗi lòng của mình" — được phép yếu lòng sau một ngày dài đóng kịch ngoài xã hội.
+- Giọng tâm sự, chân thật, buồn nhẹ, trầm lắng, nghẹn ngào, không sến súa.
+- Mỗi quote 1-2 câu ngắn, TỔNG ĐỘ DÀI TỪ 15 ĐẾN 26 TỪ (tuyệt đối không quá 28 từ).
+
+CHỦ ĐỀ & TÌNH HUỐNG YÊU CẦU:
+- Danh mục: "{topic_str}"{scenario_info}
+
+VÍ DỤ VĂN PHONG ĐẠT CHUẨN (THAM KHẢO, KHÔNG CHÉP LẠI):
+- "Lúc túi còn rủng rỉnh thì cuộc vui nào cũng có mặt, đến ngày hỏi vay vài trăm ngàn mới nhận ra danh bạ toàn người dưng." (26 từ)
+- "Có thể mình chịu bao nhiêu ấm ức ngoài xã hội cũng được, nhưng chỉ cần nghe giọng mẹ qua điện thoại là khóe mắt lại cay." (26 từ)
+- "Thích nhất những đêm muộn một mình chạy xe ngoài phố. Gió thốc vào mặt, không cần diễn vai một người lớn thành công." (23 từ)
+- "Không phải mình yêu tiền đến mức thực dụng, mà là không có tiền thì ngay cả tư cách bảo vệ người thân cũng không có." (24 từ)
+
+RÀNG BUỘC KỸ THUẬT:
+- Tuyệt đối không nhắc tự tử, tự hại.
+- ĐỘ DÀI BẮT BUỘC: từ 15 đến 26 từ.
 {recent_quotes_section}
 
 ĐỊNH DẠNG ĐẦU RA (BẮT BUỘC):
@@ -277,25 +435,37 @@ def call_openai(prompt: str, model_name: str = "gpt-4o-mini", api_key: Optional[
 
 
 def generate_quote(
-    topic: str = "trưởng thành",
+    topic: str = "Bữa cơm & Gia đình",
     config: Optional[Dict[str, Any]] = None,
     max_retries: int = 3,
     check_duplicate: bool = True,
     custom_db_path: Optional[str | Path] = None,
+    style: str = "sad_introspective",
+    channel: str = "saigonbac",
 ) -> Dict[str, Any]:
     """
-    Sinh quote hoàn chỉnh theo chủ đề, kiểm tra chống trùng lặp và lưu vào database.
+    Sinh quote hoàn chỉnh theo chủ đề và kênh độc lập, kiểm tra chống trùng lặp và lưu vào database.
 
     Args:
-        topic: Chủ đề (nỗ lực, tiền bạc, điềm tĩnh, chữa lành...).
+        topic: Chủ đề (danh mục của kênh).
         config: Cấu hình từ config.json.
         max_retries: Số lần thử lại tối đa nếu JSON lỗi hoặc quote bị trùng lặp.
         check_duplicate: Có kiểm tra trùng lặp trong SQLite hay không.
         custom_db_path: Đường dẫn CSDL tùy chọn (dùng khi chạy test).
+        style: Phong cách quote ('sad_introspective' cho saigonbac, 'deep_philosophical' cho kenh_moi).
+        channel: Kênh ('saigonbac' hoặc 'kenh_moi').
 
     Returns:
-        Dict chứa 'quote', 'pexels_keywords', 'caption', 'hashtags', 'topic', 'quote_id'.
+        Dict chứa 'quote', 'pexels_keywords', 'caption', 'hashtags', 'topic', 'quote_id', 'channel'.
     """
+    # Đồng bộ channel và style
+    if channel == "kenh_moi" or style == "deep_philosophical":
+        channel = "kenh_moi"
+        style = "deep_philosophical"
+    else:
+        channel = "saigonbac"
+        style = "sad_introspective"
+
     # Nạp cấu hình nếu không truyền vào
     if config is None:
         config_path = Path("config.json")
@@ -310,21 +480,23 @@ def generate_quote(
     openai_model = config.get("openai_model", "gpt-4o-mini")
     similarity_thresh = config.get("anti_duplicate", {}).get("similarity_threshold", 0.70)
 
-    # Lấy recent_quotes từ lịch sử để AI tránh lặp ý tưởng / mô thức
+    # Lấy recent_quotes từ lịch sử ĐÚNG KÊNH để AI tránh lặp ý tưởng
     recent_quotes: List[str] = []
     try:
         from modules.history_db import get_history
-        history_items = get_history(limit=15, custom_path=custom_db_path)
+        history_items = get_history(limit=15, channel=channel, custom_path=custom_db_path)
         recent_quotes = [item["quote"] for item in history_items if item.get("quote")]
     except Exception as e:
-        logger.debug(f"Không thể lấy recent_quotes từ CSDL: {e}")
+        logger.debug(f"Không thể lấy recent_quotes từ CSDL cho kênh {channel}: {e}")
 
-    prompt = build_system_prompt(topic, recent_quotes=recent_quotes)
+    prompt = build_system_prompt(topic, recent_quotes=recent_quotes, style=style, channel=channel)
+
+    # Lấy visual keywords mặc định cho category nếu có
+    cat_info = CHANNEL_CATEGORIES.get(channel, {}).get(topic, {})
+    default_keywords = cat_info.get("keywords", ["night street rain aesthetic", "dark city lonely"])
 
     for attempt in range(1, max_retries + 1):
-
-
-        logger.info(f"Đang sinh quote cho chủ đề '{topic}' (Lần thử {attempt}/{max_retries}, Provider={provider})...")
+        logger.info(f"Đang sinh quote cho kênh [{channel}] - chủ đề '{topic}' (Lần {attempt}/{max_retries}, Provider={provider})...")
         try:
             # Gọi LLM tương ứng
             if provider == "openai":
@@ -335,21 +507,26 @@ def generate_quote(
             parsed = clean_and_parse_json(raw_response)
             quote_text = parsed["quote"]
 
-            # Kiểm tra chống trùng lặp
+            # Bổ sung visual keywords chuẩn từ category nếu LLM trả về rỗng hoặc generic
+            if not parsed.get("pexels_keywords") or parsed.get("pexels_keywords") == ["night street rain aesthetic", "dark city lonely"]:
+                parsed["pexels_keywords"] = default_keywords
+
+            # Kiểm tra chống trùng lặp theo đúng kênh
             if check_duplicate:
                 is_dup, ratio, matched = is_quote_duplicate(
-                    quote_text, threshold=similarity_thresh, custom_path=custom_db_path
+                    quote_text, threshold=similarity_thresh, channel=channel, custom_path=custom_db_path
                 )
                 if is_dup:
                     logger.warning(
-                        f"Quote bị trùng lặp với quote cũ (độ tương đồng {ratio:.1%}): '{matched}'. Đang thử lại..."
+                        f"Quote bị trùng lặp với quote cũ trong kênh [{channel}] (độ tương đồng {ratio:.1%}): '{matched}'. Đang thử lại..."
                     )
                     continue
 
-            # Lưu vào CSDL
-            quote_id = save_quote(parsed, topic=topic, custom_path=custom_db_path)
+            # Lưu vào CSDL kèm channel
+            quote_id = save_quote(parsed, topic=topic, channel=channel, custom_path=custom_db_path)
             parsed["topic"] = topic
             parsed["quote_id"] = quote_id
+            parsed["channel"] = channel
             parsed["is_ai_generated"] = True
             return parsed
 
@@ -357,29 +534,175 @@ def generate_quote(
             # Nếu chưa có API key, hỗ trợ fallback sang bộ dữ liệu mẫu có sẵn để kiểm thử
             err_msg = str(ve)
             if "Chưa cấu hình" in err_msg or "API_KEY" in err_msg:
-                logger.warning(f"{err_msg}. Sử dụng quote mẫu dự phòng cho chủ đề '{topic}'.")
-                return get_fallback_quote(topic, custom_db_path=custom_db_path)
+                logger.warning(f"{err_msg}. Sử dụng quote mẫu dự phòng cho chủ đề '{topic}' kênh [{channel}].")
+                return get_fallback_quote(topic, channel=channel, custom_db_path=custom_db_path)
             logger.warning(f"Lỗi parse JSON ở lần {attempt}: {ve}")
         except Exception as e:
             logger.error(f"Lỗi gọi API ở lần {attempt}: {e}")
 
     # Nếu sau max_retries vẫn lỗi, dùng fallback an toàn
     logger.warning("Đã hết số lần thử sinh quote qua API. Đang sử dụng quote mẫu fallback an toàn.")
-    return get_fallback_quote(topic, custom_db_path=custom_db_path)
+    return get_fallback_quote(topic, channel=channel, custom_db_path=custom_db_path)
 
 
-def get_fallback_quote(topic: str, custom_db_path: Optional[str | Path] = None) -> Dict[str, Any]:
-    """Lấy quote mẫu có sẵn khi chưa có API key hoặc mạng gián đoạn."""
+def get_fallback_quote(topic: str, channel: str = "saigonbac", custom_db_path: Optional[str | Path] = None) -> Dict[str, Any]:
+    """Lấy quote mẫu có sẵn khi chưa có API key hoặc mạng gián đoạn, đúng channel."""
     import random
 
-    topic_key = topic.lower().strip()
-    fallback_default = next(iter(FALLBACK_QUOTES.values()))
-    quote_list = FALLBACK_QUOTES.get(topic_key, fallback_default)
+    topic_key = topic.strip()
+    if topic_key not in FALLBACK_QUOTES:
+        # Tìm chủ đề mặc định theo channel
+        if channel == "kenh_moi":
+            fallback_default = FALLBACK_QUOTES.get("Mưu lược Tư Mã Ý (Ẩn nhẫn)")
+        else:
+            fallback_default = FALLBACK_QUOTES.get("Bữa cơm & Gia đình")
+        if not fallback_default:
+            fallback_default = next(iter(FALLBACK_QUOTES.values()))
+        quote_list = fallback_default
+    else:
+        quote_list = FALLBACK_QUOTES[topic_key]
+
     chosen = random.choice(quote_list).copy()
 
-    # Lưu vào CSDL
-    quote_id = save_quote(chosen, topic=topic, custom_path=custom_db_path)
+    # Lưu vào CSDL kèm channel
+    quote_id = save_quote(chosen, topic=topic, channel=channel, custom_path=custom_db_path)
     chosen["topic"] = topic
     chosen["quote_id"] = quote_id
+    chosen["channel"] = channel
     chosen["is_ai_generated"] = False
     return chosen
+
+
+def review_viral_potential(
+    quote: str,
+    channel_style: str = "sad_introspective",
+    channel: Optional[str] = None,
+    config: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    Thẩm định (AI Review) tiềm năng viral của câu quote trên TikTok:
+    - Điểm số: 0 - 100
+    - Nhận định: 🌟 Rất tiềm năng viral / 🔥 Khá cuốn, chạm cảm xúc / ⚠️ Cần gọt giũa thêm
+    - Phân tích điểm mạnh
+    - Gợi ý tối ưu
+    - Phiên bản viết lại bén hơn (improved_quote) nếu cần cải thiện
+    """
+    clean_q = quote.strip().strip('"').strip("'")
+    if not clean_q:
+        return {
+            "score": 0,
+            "verdict": "⚠️ Quote trống",
+            "word_count": 0,
+            "strengths": "Chưa có nội dung câu quote.",
+            "suggestions": "Vui lòng nhập câu quote trước khi review.",
+            "improved_quote": None,
+        }
+
+    words = clean_q.split()
+    word_count = len(words)
+
+    if channel:
+        if channel == "kenh_moi":
+            channel_style = "deep_philosophical"
+        else:
+            channel_style = "sad_introspective"
+
+    if config is None:
+        cfg_p = Path("config.json")
+        if cfg_p.exists():
+            try:
+                with open(cfg_p, "r", encoding="utf-8") as f:
+                    config = json.load(f)
+            except Exception:
+                config = {}
+        else:
+            config = {}
+
+    provider = config.get("llm_provider", "gemini").lower()
+    gemini_model = config.get("gemini_model", "gemini-3.8-flash")
+    openai_model = config.get("openai_model", "gpt-4o-mini")
+
+    if channel_style == "deep_philosophical":
+        style_desc = (
+            "Kênh Mới (Luật Ngầm & Bản Lĩnh): Hình tượng Tư Mã Ý, nhìn đời như bàn cờ lợi ích, tư duy sắc lạnh, "
+            "thực tế, đanh thép. Dùng ngôi thứ 3 hoặc 'bạn' đanh thép. CẤM than nghèo kể khổ, cấm ủy mị cô đơn. "
+            "Mục đích: Tỉnh ngộ và mạnh mẽ hơn như một gáo nước lạnh."
+        )
+    else:
+        style_desc = (
+            "Kênh saigonbac (Trạm Dừng Cảm Xúc): Một người trẻ bình thường chật vật mưu sinh, biết buồn, biết tủi thân lúc đêm muộn. "
+            "Xưng 'mình' hoặc khuyết chủ ngữ. CẤM dạy đời, cấm dùng 'bạn' để lên lớp đạo lý hay mưu lược. "
+            "Mục đích: Đồng cảm, được phép yếu lòng sau ngày dài đóng kịch."
+        )
+
+    prompt = f"""Bạn là chuyên gia phân tích nội dung TikTok (TikTok Content & Viral Strategist hàng đầu).
+Nhiệm vụ của bạn là thẩm định và đánh giá (Review) tiềm năng VIRAL của câu quote sau:
+
+CÂU QUOTE CẦN ĐÁNH GIÁ:
+"{clean_q}"
+(Số lượng từ hiện tại: {word_count} từ)
+
+ĐỊNH VỊ PHONG CÁCH KÊNH ĐỐI LẬP (DNA RIÊNG):
+{style_desc}
+
+HÃY ĐÁNH GIÁ DỰA TRÊN 4 TIÊU CHÍ CỐT LÕI CỦA THUẬT TOÁN TIKTOK:
+1. Hook & Giữ chân (3s đầu): Có khiến người xem dừng lướt ngay lập tức không?
+2. Độ chuẩn DNA kênh: Câu quote có vi phạm điều cấm của kênh không? (saigonbac cấm dạy đời/xưng bạn; Kênh Mới cấm than thở kể khổ).
+3. Độ dài & Nhịp điệu: Có nằm trong khung vàng 15 đến 26 từ không?
+4. Đề xuất phiên bản tối ưu hơn (improved_quote): Viết lại câu quote này một cách sắc bén hơn, chuẩn phong cách kênh hơn (độ dài 15 - 26 từ).
+
+ĐỊNH DẠNG ĐẦU RA BẮT BUỘC (DUY NHẤT 1 JSON OBJECT HỢP LỆ, KHÔNG KÈM GIẢI THÍCH):
+{{
+  "score": <số nguyên từ 50 đến 99>,
+  "verdict": "<🌟 Rất tiềm năng viral | 🔥 Khá tốt, chạm cảm xúc | ⚠️ Cần gọt giũa thêm>",
+  "strengths": "<Điểm mạnh nổi bật nhất của câu quote>",
+  "suggestions": "<Nhận xét cụ thể để câu này dễ bùng nổ tương tác hơn>",
+  "improved_quote": "<Phiên bản viết lại bén hơn, chuẩn phong cách kênh hơn (15-26 từ)>"
+}}
+"""
+
+    try:
+        if provider == "openai":
+            raw_res = call_openai(prompt, model_name=openai_model)
+        else:
+            raw_res = call_gemini(prompt, model_name=gemini_model)
+
+        parsed = {}
+        first_b = raw_res.find("{")
+        last_b = raw_res.rfind("}")
+        if first_b != -1 and last_b != -1 and last_b > first_b:
+            parsed = json.loads(raw_res[first_b : last_b + 1])
+
+        score = int(parsed.get("score", 82))
+        verdict = parsed.get("verdict", "🔥 Khá tốt, chạm cảm xúc")
+        strengths = parsed.get("strengths", "Câu từ tự nhiên, đúng định vị phong cách.")
+        suggestions = parsed.get("suggestions", "Có thể gọt giũa thêm để câu ngắn gọn và đắt giá hơn.")
+        improved_quote = parsed.get("improved_quote")
+
+        return {
+            "score": max(50, min(100, score)),
+            "verdict": verdict,
+            "word_count": word_count,
+            "strengths": strengths,
+            "suggestions": suggestions,
+            "improved_quote": improved_quote,
+        }
+
+    except Exception as e:
+        logger.warning(f"Lỗi khi gọi AI review quote ({e}), sử dụng bộ đánh giá nội bộ fallback.")
+        score = 80
+        if 15 <= word_count <= 26:
+            score += 8
+        elif word_count < 10 or word_count > 30:
+            score -= 15
+
+        verdict = "🔥 Khá tốt, chạm cảm xúc" if score >= 80 else "⚠️ Cần gọt giũa thêm"
+        return {
+            "score": score,
+            "verdict": verdict,
+            "word_count": word_count,
+            "strengths": "Câu từ mạch lạc, thể hiện rõ phong cách kênh.",
+            "suggestions": "Đảm bảo độ dài trong khoảng 15-26 từ để người xem kịp đọc trọn vẹn trong video ngắn.",
+            "improved_quote": None,
+        }
+

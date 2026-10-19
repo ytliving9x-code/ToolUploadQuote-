@@ -21,10 +21,15 @@ data/cache/*
 # Output videos & Temp files
 temp/
 output/*.mp4
+output/**/*.mp4
 output/cho_dang/*
 !output/cho_dang/.gitkeep
 output/da_dang/*
 !output/da_dang/.gitkeep
+output/saigonbac/*
+!output/saigonbac/.gitkeep
+output/kenh_moi/*
+!output/kenh_moi/.gitkeep
 
 # OS generated
 Thumbs.db

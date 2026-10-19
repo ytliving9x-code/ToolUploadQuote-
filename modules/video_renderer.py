@@ -227,3 +227,121 @@ def render_18s_video(
 
     logger.info(f"Render video 18s thành công: {out_file} ({out_file.stat().st_size} bytes)")
     return out_file
+
+
+def render_video_from_footage(
+    footage_path: Path | str,
+    quote: str,
+    output_path: Path | str = Path("output/tiktok_video_ready.mp4"),
+    duration: Optional[float] = None,
+    overlay_opacity: float = 0.25,
+    signature: Optional[str] = "saigonbac",
+) -> Path:
+    """
+    Render video TikTok hoàn chỉnh từ footage b-roll và câu quote typography:
+    - Scale & Center-Crop về đúng chuẩn dọc 1080x1920 (9:16).
+    - Phủ lớp tối nhẹ (overlay_opacity) để chữ trắng luôn nổi bật, sắc nét.
+    - Ghép typography tiếng Việt và chữ ký thương hiệu.
+    - Tắt hoàn toàn audio stream (-an).
+    - Xuất video H.264 30fps chuẩn TikTok.
+    """
+    vid_file = Path(footage_path)
+    if not vid_file.exists():
+        raise FileNotFoundError(f"Không tìm thấy video footage: {vid_file}")
+
+    out_file = Path(output_path)
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # 1. Đo độ dài footage
+    from modules.video_engine import probe_video_metadata
+    meta = probe_video_metadata(vid_file)
+    orig_dur = meta.get("duration", 0.0)
+
+    # Xác định thời lượng video xuất ra:
+    if duration and duration > 0:
+        actual_duration = duration if orig_dur <= 0 else min(duration, orig_dur)
+    else:
+        # Mặc định lấy theo thời lượng footage (tối thiểu 6s, tối đa 60s)
+        actual_duration = max(6.0, min(orig_dur if orig_dur > 0 else 10.0, 60.0))
+
+    # 2. Tạo ảnh chữ PNG tạm thời kèm chữ ký
+    overlay_img = create_quote_overlay(quote=quote, signature=signature)
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_png:
+        tmp_png_path = Path(tmp_png.name)
+    overlay_img.save(tmp_png_path, format="PNG")
+
+    # 3. Filter FFmpeg
+    if overlay_opacity > 0:
+        dark_box = f",drawbox=x=0:y=0:w=iw:h=ih:color=black@{overlay_opacity:.2f}:t=fill"
+    else:
+        dark_box = ""
+
+    filter_complex = (
+        f"[0:v]trim=0:{actual_duration},setpts=PTS-STARTPTS,"
+        f"scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
+        f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,fps=30"
+        f"{dark_box}[bg];"
+        f"[1:v]format=rgba[text];"
+        f"[bg][text]overlay=0:0:shortest=1[outv]"
+    )
+
+    cmd = [
+        FFMPEG_EXE,
+        "-y",
+        "-i", str(vid_file),
+        "-loop", "1",
+        "-i", str(tmp_png_path),
+        "-filter_complex", filter_complex,
+        "-map", "[outv]",
+        "-c:v", "libx264",
+        "-preset", "slow",
+        "-crf", "17",
+        "-pix_fmt", "yuv420p",
+        "-r", "30",
+        "-t", str(actual_duration),
+        "-an",
+        str(out_file),
+    ]
+
+    try:
+        logger.info(f"Đang render quote lên video footage -> {out_file.name} ({actual_duration}s)...")
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if proc.returncode != 0:
+            logger.error(f"Lỗi FFmpeg:\n{proc.stderr}")
+            raise RuntimeError(f"Lỗi FFmpeg khi render video từ footage: {proc.stderr[:300]}")
+    finally:
+        if tmp_png_path.exists():
+            tmp_png_path.unlink()
+
+    logger.info(f"Render video footage thành công: {out_file} ({out_file.stat().st_size} bytes)")
+    return out_file
+
+
+def render_any_media_quote(
+    media_path: Path | str,
+    quote: str,
+    output_path: Path | str = Path("output/tiktok_ready.mp4"),
+    duration: float = 18.0,
+    signature: Optional[str] = "saigonbac",
+) -> Path:
+    """
+    Hàm tự động nhận diện định dạng ảnh tĩnh hay video để gọi hàm render phù hợp.
+    """
+    p = Path(media_path)
+    video_exts = {".mp4", ".mov", ".webm", ".avi", ".mkv"}
+    if p.suffix.lower() in video_exts:
+        return render_video_from_footage(
+            footage_path=p,
+            quote=quote,
+            output_path=output_path,
+            duration=duration,
+            signature=signature,
+        )
+    return render_18s_video(
+        image_path=p,
+        quote=quote,
+        output_path=output_path,
+        duration=duration,
+        signature=signature,
+    )
+

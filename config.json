@@ -4,17 +4,14 @@
   "gemini_model": "gemini-3.8-flash",
   "openai_model": "gpt-4o-mini",
   "topics": [
-    "tự mình chịu đựng",
-    "giấu nỗi buồn",
-    "cô đơn",
-    "áp lực tiền bạc và trưởng thành",
-    "cha mẹ và gia đình",
-    "khó tin người",
-    "cố gắng nhưng không như ý",
-    "chấp nhận buông bỏ",
-    "đi dạo một mình buổi tối"
+    "Bữa cơm & Gia đình",
+    "Đêm muộn Sài Gòn",
+    "Gánh nặng tuổi trưởng thành",
+    "Vai diễn Người ổn",
+    "Nỗ lực trong vô định",
+    "Khép lòng sau tổn thương"
   ],
-  "default_topic": "tự mình chịu đựng",
+  "default_topic": "Bữa cơm & Gia đình",
   "video": {
     "width": 1080,
     "height": 1920,
@@ -62,5 +59,39 @@
   "branding": {
     "signature": "saigonbac",
     "signature_font_size": 24
+  },
+  "channels": {
+    "saigonbac": {
+      "channel_name": "Sài Gòn Bạc",
+      "signature": "saigonbac",
+      "signature_font_size": 24,
+      "format": "photo_18s",
+      "output_folder": "output/saigonbac",
+      "style": "sad_introspective",
+      "topics": [
+        "Bữa cơm & Gia đình",
+        "Đêm muộn Sài Gòn",
+        "Gánh nặng tuổi trưởng thành",
+        "Vai diễn Người ổn",
+        "Nỗ lực trong vô định",
+        "Khép lòng sau tổn thương"
+      ]
+    },
+    "new_channel": {
+      "channel_name": "Kênh Mới (B-Roll Motion)",
+      "signature": "saigonchill",
+      "signature_font_size": 24,
+      "format": "video_broll",
+      "output_folder": "output/kenh_moi",
+      "style": "deep_philosophical",
+      "topics": [
+        "Mưu lược Tư Mã Ý (Ẩn nhẫn)",
+        "Bản chất của Tiền & Vị thế",
+        "Thuật nhìn người & Mặt nạ",
+        "Kỷ luật trong cô độc",
+        "Kiểm soát cảm xúc",
+        "Luật chơi của Kẻ mạnh"
+      ]
+    }
   }
 }

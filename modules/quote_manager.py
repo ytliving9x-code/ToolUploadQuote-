@@ -15,40 +15,57 @@ logger = logging.getLogger("tiktok_tool.quote_manager")
 QUOTES_FILE = Path("quotes.json")
 
 
-def load_all_quotes() -> List[Dict[str, Any]]:
-    """Đọc toàn bộ danh sách quotes từ file quotes.json."""
+def load_all_quotes(channel: Optional[str] = None) -> List[Dict[str, Any]]:
+    """
+    Đọc danh sách quotes từ file quotes.json.
+    Hỗ trợ cấu trúc phân nhánh theo 2 kênh:
+    { "saigonbac": [...], "kenh_moi": [...] }
+    Nếu truyền channel ('saigonbac' hoặc 'kenh_moi') thì chỉ lấy danh sách của kênh đó.
+    """
     if not QUOTES_FILE.exists():
         logger.warning(f"Không tìm thấy file {QUOTES_FILE}, khởi tạo danh sách mặc định.")
         return [
             {
                 "id": 1,
-                "category": "cố gắng nhưng không như ý",
-                "quote": "Không phải mình không nỗ lực, mà là có những chuyện dù cố gắng đến kiệt cùng vẫn chẳng thể như ý muốn.",
-                "keywords": ["night street rain aesthetic", "dark city lonely", "rainy car window"],
+                "category": "Bữa cơm & Gia đình",
+                "quote": "Có thể mình chịu bao nhiêu ấm ức ngoài xã hội cũng được, nhưng chỉ cần nghe giọng mẹ qua điện thoại là khóe mắt lại cay.",
+                "keywords": ["rainy window night", "lonely street food night"],
             }
         ]
 
     try:
         with open(QUOTES_FILE, "r", encoding="utf-8") as f:
-            quotes = json.load(f)
-            return quotes if isinstance(quotes, list) else []
+            data = json.load(f)
+
+        if isinstance(data, dict):
+            if channel and channel in data:
+                return data[channel] if isinstance(data[channel], list) else []
+            # Nếu không chỉ định channel, gộp tất cả các kênh lại
+            all_list = []
+            for ch_key, ch_items in data.items():
+                if isinstance(ch_items, list):
+                    all_list.extend(ch_items)
+            return all_list
+
+        return data if isinstance(data, list) else []
     except Exception as e:
         logger.error(f"Lỗi khi đọc file {QUOTES_FILE}: {e}")
         return []
 
 
-def get_random_quote(category: Optional[str] = None) -> Dict[str, Any]:
+def get_random_quote(category: Optional[str] = None, channel: Optional[str] = None) -> Dict[str, Any]:
     """
     Lấy ngẫu nhiên 1 câu quote.
     Nếu có truyền category thì lọc theo category đó.
+    Nếu có truyền channel thì lọc theo channel đó.
     """
-    quotes = load_all_quotes()
+    quotes = load_all_quotes(channel=channel)
     if not quotes:
         return {
             "id": 0,
-            "category": "cố gắng nhưng không như ý",
-            "quote": "Không phải mình không nỗ lực, mà là có những chuyện dù cố gắng đến kiệt cùng vẫn chẳng thể như ý muốn.",
-            "keywords": ["night street rain aesthetic"],
+            "category": "Đời thường",
+            "quote": "Có những ngày mệt nhoài chỉ muốn về nhà, được ăn bữa cơm nóng cùng gia đình.",
+            "keywords": ["rainy window night"],
         }
 
     if category and category != "Tất cả":
@@ -59,9 +76,9 @@ def get_random_quote(category: Optional[str] = None) -> Dict[str, Any]:
     return random.choice(quotes)
 
 
-def get_all_categories() -> List[str]:
-    """Lấy danh sách các thể loại quote có sẵn."""
-    quotes = load_all_quotes()
+def get_all_categories(channel: Optional[str] = None) -> List[str]:
+    """Lấy danh sách các thể loại quote có sẵn theo kênh."""
+    quotes = load_all_quotes(channel=channel)
     categories = sorted(list(set(q.get("category", "khác") for q in quotes if "category" in q)))
     return ["Tất cả"] + categories
 
