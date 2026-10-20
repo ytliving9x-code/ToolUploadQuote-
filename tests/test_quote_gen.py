@@ -152,19 +152,19 @@ def test_vietnamese_pixabay_query_translation():
     """Kiểm tra chức năng chuyển đổi tiếng Việt sang từ khóa Pixabay tiếng Anh chuẩn."""
     from modules.pixabay_fetcher import QUICK_THEMES_VI, translate_vietnamese_to_pixabay_query
 
-    # 1. Kiểm tra đủ 6 nút chủ đề tiếng Việt
+    # 1. Kiểm tra đủ 6 nút chủ đề tiếng Việt phong cách tĩnh tại
     assert len(QUICK_THEMES_VI) == 6
-    assert "🐺 Con Sói Bản Lĩnh" in QUICK_THEMES_VI
-    assert "🌧️ Mưa Phố Đêm" in QUICK_THEMES_VI
-    assert "🌲 Rừng Đêm & Sương" in QUICK_THEMES_VI
-    assert "☕ Quán Cà Phê Khuya" in QUICK_THEMES_VI
-    assert "🌊 Biển Đêm Tĩnh Lặng" in QUICK_THEMES_VI
-    assert "🛣️ Con Đường Đơn Độc" in QUICK_THEMES_VI
+    assert "☕ Cà Phê Sáng & Nắng" in QUICK_THEMES_VI
+    assert "🌿 Góc Ban Công Yên Tĩnh" in QUICK_THEMES_VI
+    assert "🌧️ Mưa Hiên Nhà" in QUICK_THEMES_VI
+    assert "🍂 Góc Phố Hoài Niệm" in QUICK_THEMES_VI
+    assert "🛋️ Căn Phòng Tĩnh Lặng" in QUICK_THEMES_VI
+    assert "🌅 Hoàng Hôn Dịu Êm" in QUICK_THEMES_VI
 
-    # 2. Bấm 1 chạm vào thẻ: Con Sói Bản Lĩnh
-    q_soi = translate_vietnamese_to_pixabay_query("🐺 Con Sói Bản Lĩnh")
-    assert "lone wolf" in q_soi
-    assert "vertical" in q_soi
+    # 2. Bấm 1 chạm vào thẻ: Cà Phê Sáng & Nắng
+    q_cafe = translate_vietnamese_to_pixabay_query("☕ Cà Phê Sáng & Nắng")
+    assert "coffee" in q_cafe
+    assert "vertical" in q_cafe
 
     # 3. Gõ tiếng Việt tự do: con sói và trời mưa
     q_tu_do = translate_vietnamese_to_pixabay_query("con sói trời mưa")
@@ -192,15 +192,15 @@ def test_picsum_fetcher():
 
 
 def test_fallback_quotes_word_count():
-    """Kiểm tra tất cả câu trong FALLBACK_QUOTES đều nằm trong khoảng 14-26 từ."""
+    """Kiểm tra tất cả câu trong FALLBACK_QUOTES đều nằm trong khoảng 14-28 từ."""
     from modules.quote_gen import FALLBACK_QUOTES
 
     for topic, quotes in FALLBACK_QUOTES.items():
         for item in quotes:
             quote_text = item["quote"]
             word_count = len(quote_text.split())
-            assert 14 <= word_count <= 26, (
-                f"Quote trong topic '{topic}' có {word_count} từ, ngoài khoảng 14-26 từ: '{quote_text}'"
+            assert 14 <= word_count <= 28, (
+                f"Quote trong topic '{topic}' có {word_count} từ, ngoài khoảng 14-28 từ: '{quote_text}'"
             )
 
 

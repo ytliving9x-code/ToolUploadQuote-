@@ -2,117 +2,147 @@
   "saigonbac": [
     {
       "id": 1,
-      "category": "Bữa cơm & Gia đình",
-      "quote": "Có thể mình chịu bao nhiêu ấm ức ngoài xã hội cũng được, nhưng chỉ cần nghe giọng mẹ qua điện thoại là khóe mắt lại cay.",
-      "keywords": ["rainy window night", "lonely street food night", "city lights blur"]
+      "category": "Tĩnh Tại & Chữa Lành",
+      "quote": "Đi qua những ngày mưa bão mới hiểu được, hóa ra bình yên lớn nhất chính là một buổi sáng thảnh thơi ngồi ngắm nắng lên.",
+      "keywords": ["morning coffee", "sunlit window", "cozy room", "balcony plants"]
     },
     {
       "id": 2,
-      "category": "Bữa cơm & Gia đình",
-      "quote": "Mình có muốn xa nhà đâu. Nhưng nếu không đi xa bươn chải, lấy gì lo cho bữa cơm và thuốc thang của bố mẹ những ngày trái gió...",
-      "keywords": ["rainy window night", "lonely street food night", "city lights blur"]
+      "category": "Tĩnh Tại & Chữa Lành",
+      "quote": "Càng trưởng thành càng nhận ra, hạnh phúc đôi khi chỉ giản đơn là một ngày trôi qua êm ả, không muộn phiền, không vướng bận.",
+      "keywords": ["morning coffee", "sunlit window", "cozy room", "balcony plants"]
     },
     {
       "id": 3,
-      "category": "Đêm muộn Sài Gòn",
-      "quote": "Thích nhất những đêm muộn một mình chạy xe ngoài phố. Gió thốc vào mặt, không cần diễn vai một người lớn thành công.",
-      "keywords": ["night traffic street", "neon street night", "motorcycle night city"]
+      "category": "Tĩnh Tại & Chữa Lành",
+      "quote": "Học cách bao dung với chính mình. Những chuyện đã qua cứ để trôi đi, giữ lại cho lòng một góc nhỏ an yên là đủ.",
+      "keywords": ["morning coffee", "sunlit window", "cozy room", "balcony plants"]
     },
     {
       "id": 4,
-      "category": "Đêm muộn Sài Gòn",
-      "quote": "Sau này khi đã đi qua đủ giông bão, bạn nhớ rằng những tối lang thang một mình chính là lúc lòng ta tĩnh lặng nhất.",
-      "keywords": ["night traffic street", "neon street night", "motorcycle night city"]
+      "category": "Tĩnh Tại & Chữa Lành",
+      "quote": "Sau tất cả những bon chen vội vã, điều mình trân quý nhất lúc này chỉ là một góc ban công tĩnh lặng và tách cà phê ấm.",
+      "keywords": ["morning coffee", "sunlit window", "cozy room", "balcony plants"]
     },
     {
       "id": 5,
-      "category": "Gánh nặng tuổi trưởng thành",
-      "quote": "Không phải mình yêu tiền đến mức thực dụng, mà là không có tiền thì ngay cả tư cách bảo vệ người thân cũng không có.",
-      "keywords": ["empty room night", "silhouette window dusk", "dark moody coffee"]
+      "category": "Cô Độc Kiêu Hãnh",
+      "quote": "Không phải mình lạnh nhạt với thế giới, mà là đã học được cách trân trọng sự tĩnh lặng và sống vừa vặn với chính mình.",
+      "keywords": ["rainy window", "cafe corner", "reading book", "lonely street"]
     },
     {
       "id": 6,
-      "category": "Gánh nặng tuổi trưởng thành",
-      "quote": "Không phải sợ già đi, mà sợ nhất là tốc độ thành công của bản thân không kịp đuổi theo mái tóc bạc của cha mẹ.",
-      "keywords": ["empty room night", "silhouette window dusk", "dark moody coffee"]
+      "category": "Cô Độc Kiêu Hãnh",
+      "quote": "Một mình không hề đáng sợ. Đáng sợ nhất là ở giữa biển người nhưng vẫn cảm thấy cô đơn đến kiệt cùng.",
+      "keywords": ["rainy window", "cafe corner", "reading book", "lonely street"]
     },
     {
       "id": 7,
-      "category": "Vai diễn Người ổn",
-      "quote": "Có thể ngoài mặt vẫn cười nói bình thường, nhưng chỉ mình mới biết trong lòng đã vụn vỡ từ lâu.",
-      "keywords": ["alone on bench night", "dark bedroom window", "rain on glass"]
+      "category": "Cô Độc Kiêu Hãnh",
+      "quote": "Học cách bầu bạn với chính mình lúc hoàng hôn buông xuống, không cần cố gượng cười để làm hài lòng bất kỳ ai.",
+      "keywords": ["rainy window", "cafe corner", "reading book", "lonely street"]
     },
     {
       "id": 8,
-      "category": "Vai diễn Người ổn",
-      "quote": "Có thể người ta thấy anh luôn ổn và điềm tĩnh, nhưng chỉ mình anh biết đã phải trải qua bao đêm thức trắng để học cách im lặng.",
-      "keywords": ["alone on bench night", "dark bedroom window", "rain on glass"]
+      "category": "Cô Độc Kiêu Hãnh",
+      "quote": "Có những ngày chỉ muốn khép cửa, lắng nghe tiếng mưa rơi bên hiên và tận hưởng sự cô độc yên ả của riêng mình.",
+      "keywords": ["rainy window", "cafe corner", "reading book", "lonely street"]
     },
     {
       "id": 9,
-      "category": "Vai diễn Người ổn",
-      "quote": "Mình có thích ở một mình đâu. Nhưng việc phải giải thích nỗi buồn của mình cho người khác còn mệt mỏi hơn gấp vạn lần.",
-      "keywords": ["alone on bench night", "dark bedroom window", "rain on glass"]
+      "category": "Người Cũ & Góc Phố",
+      "quote": "Thành phố này rộng lớn biết bao, nhưng đi qua góc phố quán cũ năm nào lòng vẫn bất giác chùng xuống một nhịp.",
+      "keywords": ["vintage street", "night rain umbrella", "old cafe", "city dusk"]
     },
     {
       "id": 10,
-      "category": "Nỗ lực trong vô định",
-      "quote": "Không phải mình không nỗ lực, mà là có những chuyện dù cố gắng đến kiệt cùng vẫn chẳng thể như ý muốn.",
-      "keywords": ["foggy street night", "lonely bridge dusk", "train window night"]
+      "category": "Người Cũ & Góc Phố",
+      "quote": "Có những người chỉ đi cùng mình một đoạn đường ngắn, nhưng ký ức để lại thì đi mòn cả thanh xuân vẫn chưa thể quên.",
+      "keywords": ["vintage street", "night rain umbrella", "old cafe", "city dusk"]
     },
     {
       "id": 11,
-      "category": "Nỗ lực trong vô định",
-      "quote": "Mình có mạnh mẽ đâu. Nhưng ngoài việc tự lau nước mắt rồi bước tiếp, mình còn biết dựa vào ai...",
-      "keywords": ["foggy street night", "lonely bridge dusk", "train window night"]
+      "category": "Người Cũ & Góc Phố",
+      "quote": "Không còn đau lòng hay oán trách, chỉ là mỗi khi trời đổ mưa lại vô thức nhớ về một người từng thương hết lòng.",
+      "keywords": ["vintage street", "night rain umbrella", "old cafe", "city dusk"]
     },
     {
       "id": 12,
-      "category": "Nỗ lực trong vô định",
-      "quote": "Là do bản thân kỳ vọng quá nhiều, hay là do cuộc đời này vốn dĩ chưa từng dịu dàng với mình...",
-      "keywords": ["foggy street night", "lonely bridge dusk", "train window night"]
+      "category": "Người Cũ & Góc Phố",
+      "quote": "Phố quen người cũ cảnh vẫn vậy, chỉ có lời hứa năm xưa đã theo gió mây bay đi mất từ bao giờ.",
+      "keywords": ["vintage street", "night rain umbrella", "old cafe", "city dusk"]
     },
     {
       "id": 13,
-      "category": "Nỗ lực trong vô định",
-      "quote": "Mình có cam tâm chấp nhận thất bại đâu. Nhưng cố hết sức rồi, đành thở dài mỉm cười cho qua chuyện.",
-      "keywords": ["foggy street night", "lonely bridge dusk", "train window night"]
+      "category": "Rời Xa Trong Im Lặng",
+      "quote": "Người trưởng thành rời xa nhau thường rất khẽ khàng, không một lời trách móc, chỉ lặng lẽ rút lui khỏi cuộc đời nhau.",
+      "keywords": ["sunset silhouette", "train window", "empty bench", "raindrops glass"]
     },
     {
       "id": 14,
-      "category": "Khép lòng sau tổn thương",
-      "quote": "Bị phản bội một lần là quá đủ để sau này đối diện với bất kỳ ai, mình cũng phải giữ lại cho mình một lối lui.",
-      "keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"]
+      "category": "Rời Xa Trong Im Lặng",
+      "quote": "Sự im lặng chính là lời từ biệt tàn nhẫn nhất, không một lời giải thích, nhưng cả hai đều ngầm hiểu rằng đã kết thúc.",
+      "keywords": ["sunset silhouette", "train window", "empty bench", "raindrops glass"]
     },
     {
       "id": 15,
-      "category": "Khép lòng sau tổn thương",
-      "quote": "Có thể ngoài mặt vẫn hòa nhã với tất cả, nhưng để thực sự đặt niềm tin vào ai đó lần nữa, khó lắm...",
-      "keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"]
+      "category": "Rời Xa Trong Im Lặng",
+      "quote": "Hóa ra cách buông tay nhẹ nhàng nhất không phải là cãi vã, mà là chấp nhận không làm phiền cuộc sống của nhau nữa.",
+      "keywords": ["sunset silhouette", "train window", "empty bench", "raindrops glass"]
     },
     {
       "id": 16,
-      "category": "Khép lòng sau tổn thương",
-      "quote": "Sau này khi nhìn lại, bạn nhớ rằng có những thứ buông tay không phải vì hết thương, mà vì giữ lại chỉ làm cả hai thêm đau.",
-      "keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"]
+      "category": "Rời Xa Trong Im Lặng",
+      "quote": "Có những cuộc chia ly diễn ra trong im lặng, không ai nói câu tạm biệt nhưng vĩnh viễn chẳng còn ngày gặp lại.",
+      "keywords": ["sunset silhouette", "train window", "empty bench", "raindrops glass"]
     },
     {
       "id": 17,
-      "category": "Khép lòng sau tổn thương",
-      "quote": "Không phải mình muốn từ bỏ, mà là mình hiểu ra có những cánh cửa cố gõ mãi cũng chỉ là làm phiền người bên trong.",
-      "keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"]
+      "category": "Bạn Cũ & Thời Gian",
+      "quote": "Từng là những người thức trắng đêm tâm sự cùng nhau, giờ lướt qua tên nhau trên mạng cũng chỉ biết ngập ngừng rồi thôi.",
+      "keywords": ["street lamp night", "city lights blur", "autumn walk", "dark cafe"]
     },
     {
       "id": 18,
-      "category": "Khép lòng sau tổn thương",
-      "quote": "Đến một lúc nào đó, im lặng không còn là tức giận nữa, mà là một sự chấp nhận buông bỏ nhẹ nhõm và bình an.",
-      "keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"]
+      "category": "Bạn Cũ & Thời Gian",
+      "quote": "Thời gian là phép thử tàn nhẫn nhất, nó nhẹ nhàng sàng lọc và chỉ giữ lại những ai thực sự chân thành bên đời.",
+      "keywords": ["street lamp night", "city lights blur", "autumn walk", "dark cafe"]
     },
     {
       "id": 19,
-      "category": "Khép lòng sau tổn thương",
-      "quote": "Càng lớn càng nhận ra, sự cô độc đáng sợ nhất không phải là ở một mình, mà là giữa biển người mà chẳng ai hiểu thấu lòng mình.",
-      "keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"]
+      "category": "Bạn Cũ & Thời Gian",
+      "quote": "Không có mâu thuẫn hay xích mích nào, chỉ là khoảng cách và năm tháng cứ thế đẩy chúng ta về hai ngã rẽ khác nhau.",
+      "keywords": ["street lamp night", "city lights blur", "autumn walk", "dark cafe"]
+    },
+    {
+      "id": 20,
+      "category": "Bạn Cũ & Thời Gian",
+      "quote": "Nhìn vào danh bạ cũ chợt nhận ra, rất nhiều người từng thân thiết giờ đã trở thành những người quen từng quen.",
+      "keywords": ["street lamp night", "city lights blur", "autumn walk", "dark cafe"]
+    },
+    {
+      "id": 21,
+      "category": "Khoảng Lặng Vô Thanh",
+      "quote": "Có những mối quan hệ chết dần không phải vì phản bội, mà vì những tin nhắn soạn dở rồi lại lặng lẽ xóa đi.",
+      "keywords": ["foggy bridge", "quiet alley night", "dark window", "rain night"]
+    },
+    {
+      "id": 22,
+      "category": "Khoảng Lặng Vô Thanh",
+      "quote": "Khoảng lặng đáng sợ nhất là khi người kia không còn muốn chia sẻ, và mình cũng chẳng còn muốn hỏi thêm điều gì.",
+      "keywords": ["foggy bridge", "quiet alley night", "dark window", "rain night"]
+    },
+    {
+      "id": 23,
+      "category": "Khoảng Lặng Vô Thanh",
+      "quote": "Đôi khi sự im lặng không có nghĩa là buông xuôi, mà là vì thấu hiểu có nói ra cũng chẳng còn ý nghĩa gì nữa.",
+      "keywords": ["foggy bridge", "quiet alley night", "dark window", "rain night"]
+    },
+    {
+      "id": 24,
+      "category": "Khoảng Lặng Vô Thanh",
+      "quote": "Những thở dài trong bóng tối không cần ai thấu cảm, chỉ cần sau đêm nay lòng lại nhẹ nhõm đón ánh bình minh.",
+      "keywords": ["foggy bridge", "quiet alley night", "dark window", "rain night"]
     }
   ],
   "kenh_moi": [

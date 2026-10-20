@@ -33,7 +33,7 @@ def test_config_channels_structure():
     assert "saigonbac" in sg["output_folder"]
     assert len(sg["topics"]) == 6
     assert "nhẫn nhịn và chờ thời" not in sg["topics"]
-    assert "Bữa cơm & Gia đình" in sg["topics"]
+    assert "Tĩnh Tại & Chữa Lành" in sg["topics"]
 
     # Kiểm tra kênh mới
     new_ch = channels["new_channel"]
@@ -45,11 +45,12 @@ def test_config_channels_structure():
 
 def test_quote_styles_prompt_differentiation():
     """Kiểm tra prompt sinh quote được phân hóa và khóa ranh giới 100% DNA giữa 2 kênh."""
-    prompt_sg = build_system_prompt(topic="Bữa cơm & Gia đình", channel="saigonbac")
+    prompt_sg = build_system_prompt(topic="Tĩnh Tại & Chữa Lành", channel="saigonbac")
     assert "saigonbac" in prompt_sg or "Trạm Dừng Cảm Xúc" in prompt_sg
-    assert "TUYỆT ĐỐI KHÔNG viết giọng triết lý dạy đời" in prompt_sg
-    assert 'CẤM dùng từ "bạn"' in prompt_sg
-    assert "Bữa cơm & Gia đình" in prompt_sg
+    assert "CẤM dạy đời" in prompt_sg
+    assert 'cấm dùng từ "bạn"' in prompt_sg or 'CẤM dùng từ "bạn"' in prompt_sg
+    assert "CẤM dùng các từ ngữ sến súa" in prompt_sg
+    assert "Tĩnh Tại & Chữa Lành" in prompt_sg
 
     prompt_new = build_system_prompt(topic="Mưu lược Tư Mã Ý (Ẩn nhẫn)", channel="kenh_moi")
     assert "Tư Mã Ý" in prompt_new
@@ -64,10 +65,11 @@ def test_quotes_json_and_channel_isolation():
     
     # 1. Kênh saigonbac
     sg_quotes = load_all_quotes(channel="saigonbac")
-    assert len(sg_quotes) == 19
+    assert len(sg_quotes) == 24
     sg_cats = get_all_categories(channel="saigonbac")
     assert "nhẫn nhịn và chờ thời" not in sg_cats
-    assert "Bữa cơm & Gia đình" in sg_cats
+    assert "Tĩnh Tại & Chữa Lành" in sg_cats
+    assert "Khoảng Lặng Vô Thanh" in sg_cats
 
     # 2. Kênh Mới (Tư Mã Ý)
     km_quotes = load_all_quotes(channel="kenh_moi")
@@ -80,7 +82,7 @@ def test_quotes_json_and_channel_isolation():
 def test_generate_quote_with_styles(tmp_path: Path):
     """Kiểm tra sinh quote fallback theo từng chủ đề và channel của 2 kênh."""
     # Kênh saigonbac
-    q_sg = get_fallback_quote("Bữa cơm & Gia đình", channel="saigonbac", custom_db_path=tmp_path / "hist.db")
+    q_sg = get_fallback_quote("Tĩnh Tại & Chữa Lành", channel="saigonbac", custom_db_path=tmp_path / "hist.db")
     assert q_sg["quote"] != ""
     assert q_sg["channel"] == "saigonbac"
 

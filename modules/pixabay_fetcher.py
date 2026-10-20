@@ -21,14 +21,14 @@ from PIL import Image
 
 logger = logging.getLogger("tiktok_tool.pixabay_fetcher")
 
-# 6 Thẻ chủ đề tiếng Việt chọn nhanh (Bấm 1 chạm)
+# 6 Thẻ chủ đề tiếng Việt chọn nhanh phong cách Tĩnh tại & Hoài niệm (Bấm 1 chạm)
 QUICK_THEMES_VI = {
-    "🐺 Con Sói Bản Lĩnh": "lone wolf dark moody winter",
-    "🌧️ Mưa Phố Đêm": "night city rain street dark moody",
-    "🌲 Rừng Đêm & Sương": "foggy dark forest mist landscape",
-    "☕ Quán Cà Phê Khuya": "dark moody cafe coffee lonely night",
-    "🌊 Biển Đêm Tĩnh Lặng": "dark calm sea ocean night misty",
-    "🛣️ Con Đường Đơn Độc": "empty road dark night cinematic",
+    "☕ Cà Phê Sáng & Nắng": "morning coffee sunlit window",
+    "🌿 Góc Ban Công Yên Tĩnh": "balcony plants warm sunlight",
+    "🌧️ Mưa Hiên Nhà": "rainy window drops cozy",
+    "🍂 Góc Phố Hoài Niệm": "vintage street corner dusk",
+    "🛋️ Căn Phòng Tĩnh Lặng": "cozy room warm aesthetic",
+    "🌅 Hoàng Hôn Dịu Êm": "sunset silhouette calm dusk",
 }
 
 # Từ điển chuyển đổi tiếng Việt sang từ khóa tìm kiếm Pixabay tiếng Anh

@@ -27,29 +27,29 @@ load_dotenv()
 # ==============================================================================
 CHANNEL_CATEGORIES: Dict[str, Dict[str, Dict[str, Any]]] = {
     "saigonbac": {
-        "Bữa cơm & Gia đình": {
-            "scenario": "Ngoài xã hội chịu đủ ấm ức, ăn vội bữa cơm lề đường nhưng gọi về cho mẹ vẫn cười bảo con sống rất tốt.",
-            "visual_keywords": ["rainy window night", "lonely street food night", "city lights blur"],
+        "Tĩnh Tại & Chữa Lành": {
+            "scenario": "Đi qua giông bão, giờ chỉ thèm một buổi tối không ai làm phiền, pha ly cà phê sáng nhìn nắng lên thảnh thơi.",
+            "visual_keywords": ["morning coffee", "sunlit window", "cozy room", "balcony plants"],
         },
-        "Đêm muộn Sài Gòn": {
-            "scenario": "Tan làm muộn không muốn về căn phòng trọ tối đèn, cứ chạy xe máy lòng vòng ngoài đường ngắm dòng người qua lại.",
-            "visual_keywords": ["night traffic street", "neon street night", "motorcycle night city"],
+        "Cô Độc Kiêu Hãnh": {
+            "scenario": "Không lạnh nhạt với thế giới, chỉ thu lòng lại để sống cuộc đời vừa vặn với chính mình, không chạy theo kỳ vọng ai khác.",
+            "visual_keywords": ["rainy window", "cafe corner", "reading book", "lonely street"],
         },
-        "Gánh nặng tuổi trưởng thành": {
-            "scenario": "Nhìn hóa đơn cuối tháng mà thở dài, sợ tốc độ kiếm tiền của mình không đuổi kịp tốc độ già đi của cha mẹ.",
-            "visual_keywords": ["empty room night", "silhouette window dusk", "dark moody coffee"],
+        "Người Cũ & Góc Phố": {
+            "scenario": "Thành phố lớn nhưng sợ nhất vô tình đi qua góc phố cũ in bóng người từng thương hết lòng; nỗi nhớ âm ỉ không thể gọi tên.",
+            "visual_keywords": ["vintage street", "night rain umbrella", "old cafe", "city dusk"],
         },
-        "Vai diễn Người ổn": {
-            "scenario": "Ban ngày cười nói hòa đồng với mọi người, đêm về tháo lớp mặt nạ xuống chỉ thấy rã rời mà chẳng biết gọi cho ai.",
-            "visual_keywords": ["alone on bench night", "dark bedroom window", "rain on glass"],
+        "Rời Xa Trong Im Lặng": {
+            "scenario": "Cách người trưởng thành rời xa nhau không cãi vã hay trách móc, chỉ lặng lẽ không làm phiền nhau nữa nhưng đau dai dẳng.",
+            "visual_keywords": ["sunset silhouette", "train window", "empty bench", "raindrops glass"],
         },
-        "Nỗ lực trong vô định": {
-            "scenario": "Đã cố gắng gấp đôi người khác nhưng mọi thứ vẫn dậm chân tại chỗ, cảm giác chênh vênh giữa thành phố lớn.",
-            "visual_keywords": ["foggy street night", "lonely bridge dusk", "train window night"],
+        "Bạn Cũ & Thời Gian": {
+            "scenario": "Từng thức trắng đêm tâm sự, giờ thấy tên nhau chỉ lướt qua; hiểu rằng thời gian đang thanh lọc những người thực sự ở lại.",
+            "visual_keywords": ["street lamp night", "city lights blur", "autumn walk", "dark cafe"],
         },
-        "Khép lòng sau tổn thương": {
-            "scenario": "Không còn dám tin vào lời hứa hẹn, thà chọn đi ăn một mình, sống một mình còn hơn đặt cược niềm tin thêm lần nữa.",
-            "visual_keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"],
+        "Khoảng Lặng Vô Thanh": {
+            "scenario": "Những mối quan hệ không hỏng vì xung đột, mà chết dần trong những lần soạn tin nhắn rồi lại lặng lẽ xóa đi.",
+            "visual_keywords": ["foggy bridge", "quiet alley night", "dark window", "rain night"],
         },
     },
     "kenh_moi": {
@@ -83,58 +83,88 @@ CHANNEL_CATEGORIES: Dict[str, Dict[str, Dict[str, Any]]] = {
 # Danh mục quote mẫu chất lượng cao dự phòng (đúng độ dài 15-26 từ)
 FALLBACK_QUOTES: Dict[str, List[Dict[str, Any]]] = {
     # ☕ Kênh saigonbac
-    "Bữa cơm & Gia đình": [
+    "Tĩnh Tại & Chữa Lành": [
         {
-            "quote": "Mình chịu bao nhiêu ấm ức ngoài xã hội cũng được, nhưng chỉ cần nghe giọng mẹ qua điện thoại là khóe mắt lại cay.",
-            "pexels_keywords": ["rainy window night", "lonely street food night", "city lights blur"],
-            "caption": "Ngoài kia bao la sóng gió, chỉ muốn về ăn bữa cơm nhà. 🌧️",
-            "hashtags": ["#saigonbac", "#tamtrang", "#giadinh", "#mẹ", "#doithuc"],
+            "quote": "Đi qua những ngày mưa bão mới hiểu được, hóa ra bình yên lớn nhất chính là một buổi sáng thảnh thơi ngồi ngắm nắng lên.",
+            "pexels_keywords": ["morning coffee", "sunlit window", "cozy room", "balcony plants"],
+            "caption": "Bình yên là khi tâm hồn không còn nổi sóng gió. ☕🌿",
+            "hashtags": ["#saigonbac", "#tinhtai", "#chualanh", "#binhyen", "#songcham"],
         },
         {
-            "quote": "Mình đâu muốn xa nhà. Nhưng không đi bươn chải, lấy gì lo bữa cơm và thuốc thang cho bố mẹ lúc ốm đau.",
-            "pexels_keywords": ["rainy window night", "lonely street food night", "city lights blur"],
-            "caption": "Nỗi niềm người con xa xứ giữa phố thị hoa lệ. 🥀",
-            "hashtags": ["#saigonbac", "#tamtrang", "#doithuc", "#xanha", "#nhatky"],
-        },
-    ],
-    "Đêm muộn Sài Gòn": [
-        {
-            "quote": "Thích nhất những đêm muộn một mình chạy xe ngoài phố. Gió thốc vào mặt, không cần diễn vai một người lớn thành công.",
-            "pexels_keywords": ["night traffic street", "neon street night", "motorcycle night city"],
-            "caption": "Đêm muộn Sài Gòn, cởi bỏ lớp mặt nạ người lớn. 🌙",
-            "hashtags": ["#saigonbac", "#didaodem", "#tamtrang", "#chill", "#saigon"],
+            "quote": "Càng trưởng thành càng nhận ra, hạnh phúc đôi khi chỉ giản đơn là một ngày trôi qua êm ả, không muộn phiền, không vướng bận.",
+            "pexels_keywords": ["morning coffee", "sunlit window", "cozy room", "balcony plants"],
+            "caption": "Một ngày an yên trôi qua dịu dàng. ☀️",
+            "hashtags": ["#saigonbac", "#binhyen", "#chualanh", "#truongthanh"],
         },
     ],
-    "Gánh nặng tuổi trưởng thành": [
+    "Cô Độc Kiêu Hãnh": [
         {
-            "quote": "Không phải mình yêu tiền đến mức thực dụng, mà là không có tiền thì ngay cả tư cách bảo vệ người thân cũng không có.",
-            "pexels_keywords": ["empty room night", "silhouette window dusk", "dark moody coffee"],
-            "caption": "Áp lực cơm áo gạo tiền của người trưởng thành. ☕",
-            "hashtags": ["#saigonbac", "#truongthanh", "#tamtrang", "#comao"],
+            "quote": "Không phải mình lạnh nhạt với thế giới, mà là đã học được cách trân trọng sự tĩnh lặng và sống vừa vặn với chính mình.",
+            "pexels_keywords": ["rainy window", "cafe corner", "reading book", "lonely street"],
+            "caption": "Sống cuộc đời vừa vặn với chính mình. 🛋️",
+            "hashtags": ["#saigonbac", "#codoc", "#kieuhanh", "#tinhtai", "#nhatky"],
+        },
+        {
+            "quote": "Học cách bầu bạn với chính mình lúc hoàng hôn buông xuống, không cần cố gượng cười để làm hài lòng bất kỳ ai.",
+            "pexels_keywords": ["rainy window", "cafe corner", "reading book", "lonely street"],
+            "caption": "Bầu bạn với chính mình trong tĩnh lặng. 🌆",
+            "hashtags": ["#saigonbac", "#codoc", "#binhyen", "#suyngam"],
         },
     ],
-    "Vai diễn Người ổn": [
+    "Người Cũ & Góc Phố": [
         {
-            "quote": "Có thể ngoài mặt vẫn cười nói bình thường, nhưng chỉ mình mới biết trong lòng đã vụn vỡ từ lâu.",
-            "pexels_keywords": ["alone on bench night", "dark bedroom window", "rain on glass"],
-            "caption": "Sau nụ cười là những vết thương không tên. 🥀",
-            "hashtags": ["#saigonbac", "#giaunoibuon", "#tamtrang", "#nguoion"],
+            "quote": "Thành phố này rộng lớn biết bao, nhưng đi qua góc phố quán cũ năm nào lòng vẫn bất giác chùng xuống một nhịp.",
+            "pexels_keywords": ["vintage street", "night rain umbrella", "old cafe", "city dusk"],
+            "caption": "Góc phố cũ in hằn những hoài niệm không tên. 🍂",
+            "hashtags": ["#saigonbac", "#nguoicu", "#gocpho", "#hoainiem", "#tamtrang"],
+        },
+        {
+            "quote": "Có những người chỉ đi cùng mình một đoạn đường ngắn, nhưng ký ức để lại thì đi mòn cả thanh xuân vẫn chưa thể quên.",
+            "pexels_keywords": ["vintage street", "night rain umbrella", "old cafe", "city dusk"],
+            "caption": "Ký ức thanh xuân gửi lại góc phố xưa. 🌧️",
+            "hashtags": ["#saigonbac", "#thanhxuan", "#hoainiem", "#tamtrang"],
         },
     ],
-    "Nỗ lực trong vô định": [
+    "Rời Xa Trong Im Lặng": [
         {
-            "quote": "Không phải mình không nỗ lực, mà là có những chuyện dù cố gắng đến kiệt cùng vẫn chẳng thể như ý muốn.",
-            "pexels_keywords": ["foggy street night", "lonely bridge dusk", "train window night"],
-            "caption": "Cố gắng hết sức rồi, đành buông tay cho nhẹ lòng. 🍃",
-            "hashtags": ["#saigonbac", "#cogang", "#tamtrang", "#buongbo"],
+            "quote": "Người trưởng thành rời xa nhau thường rất khẽ khàng, không một lời trách móc, chỉ lặng lẽ rút lui khỏi cuộc đời nhau.",
+            "pexels_keywords": ["sunset silhouette", "train window", "empty bench", "raindrops glass"],
+            "caption": "Lời chia tay im lặng của người trưởng thành. 🥀",
+            "hashtags": ["#saigonbac", "#roixa", "#imlang", "#truongthanh", "#tamtrang"],
+        },
+        {
+            "quote": "Sự im lặng chính là lời từ biệt tàn nhẫn nhất, không một lời giải thích, nhưng cả hai đều ngầm hiểu rằng đã kết thúc.",
+            "pexels_keywords": ["sunset silhouette", "train window", "empty bench", "raindrops glass"],
+            "caption": "Rời xa trong im lặng, không oán trách. 🍂",
+            "hashtags": ["#saigonbac", "#imlang", "#roixa", "#buongbo"],
         },
     ],
-    "Khép lòng sau tổn thương": [
+    "Bạn Cũ & Thời Gian": [
         {
-            "quote": "Bị phản bội một lần là đủ để sau này đối diện với bất kỳ ai, mình cũng tự giữ lấy một lối lui.",
-            "pexels_keywords": ["empty cafe night", "walking alone rain", "shadow street lamp"],
-            "caption": "Khép lòng lại sau những vết thương chưa lành. 🌧️",
-            "hashtags": ["#saigonbac", "#tonthuong", "#tamtrang", "#khoctin"],
+            "quote": "Từng là những người thức trắng đêm tâm sự cùng nhau, giờ lướt qua tên nhau trên mạng cũng chỉ biết ngập ngừng rồi thôi.",
+            "pexels_keywords": ["street lamp night", "city lights blur", "autumn walk", "dark cafe"],
+            "caption": "Thời gian lặng lẽ đổi thay những mối quan hệ. ⏳",
+            "hashtags": ["#saigonbac", "#bancu", "#thoigian", "#suyngam", "#longnguoi"],
+        },
+        {
+            "quote": "Thời gian là phép thử tàn nhẫn nhất, nó nhẹ nhàng sàng lọc và chỉ giữ lại những ai thực sự chân thành bên đời.",
+            "pexels_keywords": ["street lamp night", "city lights blur", "autumn walk", "dark cafe"],
+            "caption": "Thời gian sàng lọc chân tình. 🌙",
+            "hashtags": ["#saigonbac", "#thoigian", "#longnguoi", "#triky"],
+        },
+    ],
+    "Khoảng Lặng Vô Thanh": [
+        {
+            "quote": "Có những mối quan hệ chết dần không phải vì phản bội, mà vì những tin nhắn soạn dở rồi lại lặng lẽ xóa đi.",
+            "pexels_keywords": ["foggy bridge", "quiet alley night", "dark window", "rain night"],
+            "caption": "Khoảng lặng giữa hai người dần xa. 🌧️",
+            "hashtags": ["#saigonbac", "#khoanglang", "#imlang", "#longnguoi", "#tamtrang"],
+        },
+        {
+            "quote": "Đôi khi sự im lặng không có nghĩa là buông xuôi, mà là vì thấu hiểu có nói ra cũng chẳng còn ý nghĩa gì nữa.",
+            "pexels_keywords": ["foggy bridge", "quiet alley night", "dark window", "rain night"],
+            "caption": "Khi thấu hiểu đủ nhiều, người ta chọn im lặng. 🌫️",
+            "hashtags": ["#saigonbac", "#imlang", "#thaucan", "#tinhtai"],
         },
     ],
 
@@ -325,29 +355,34 @@ RÀNG BUỘC KỸ THUẬT:
 - Trả về đúng 1 câu quote duy nhất (có thể ngắt 1-2 dòng ngắn).
 - KHÔNG dùng dấu ngoặc kép (""), KHÔNG viết lời chào/lời dẫn, KHÔNG giải thích, KHÔNG kèm hashtag."""
 
-    # Mặc định: saigonbac
-    return f"""Bạn là một người trẻ bình thường đang chật vật mưu sinh ở Sài Gòn, biết buồn, biết tủi thân, nhớ nhà lúc đêm muộn.
-Bạn viết quote tâm sự đêm cho kênh TikTok saigonbac (Trạm Dừng Cảm Xúc).
+    # Mặc định: saigonbac (Trạm Dừng Cảm Xúc - Tĩnh Tại, Hoài Niệm & Lòng Người)
+    return f"""Bạn là một người trưởng thành sâu sắc, điềm đạm, đã đi qua đủ thăng trầm giông bão cuộc đời.
+Bạn không còn than thở trách móc số phận, mà nhìn mọi chuyện xảy đến với sự bao dung, tĩnh lặng và hoài niệm.
+Bạn viết quote tâm sự đêm cho kênh TikTok saigonbac (Trạm Dừng Cảm Xúc: Tĩnh Tại, Hoài Niệm & Lòng Người).
 
-KHÓA RANH GIỚI KÊNH (BẮT BUỘC TUÂN THỦ 100%):
-- TUYỆT ĐỐI KHÔNG viết giọng triết lý dạy đời, không bàn chuyện mưu lược, thắng thua hay đắc nhân tâm.
-- CẤM dùng từ "bạn" để lên lớp dạy bảo người khác. Cấm hô khẩu hiệu hay nói đạo lý làm giàu.
-- Chỉ viết như lời tự sự thầm kín trong nhật ký, bộc bạch nỗi lòng đời thường lúc 22h đêm - 2h sáng.
+KHÓA RANH GIỚI KÊNH & DANH SÁCH TỪ CẤM (BẮT BUỘC TUÂN THỦ 100%):
+- ❌ CẤM than nghèo kể khổ, cấm nhắc đến áp lực tiền bạc, hóa đơn cuối tháng hay cơm áo gạo tiền.
+- ❌ CẤM dạy đời, cấm dùng từ "bạn" để lên lớp đạo lý, mưu lược hay dạy khôn người khác.
+- ❌ CẤM bi lụy, khóc lóc, tự hại; nỗi buồn phải có chiều sâu, giữ lại nét thanh thản, dịu dàng và an yên ở cuối câu.
+- ❌ CẤM dùng các từ ngữ sến súa, kịch tính hóa như: "trái tim rỉ máu", "nước mắt tuôn rơi", "số phận nghiệt ngã", "vụn vỡ", "đớn đau tột cùng".
+- Giữ chất trầm tĩnh, sang và tinh tế, không trượt sang văn phong tiểu thuyết bi lụy.
 
 PHONG CÁCH & NGÔI XƯNG:
 - BẮT BUỘC xưng "mình" (độc thoại nội tâm) hoặc viết câu khuyết chủ ngữ.
-- Mục đích: Để người xem thấy "Có người hiểu nỗi lòng của mình" — được phép yếu lòng sau một ngày dài đóng kịch ngoài xã hội.
-- Giọng tâm sự, chân thật, buồn nhẹ, trầm lắng, nghẹn ngào, không sến súa.
+- Mục đích: Để người xem tìm thấy "Khoảng lặng chữa lành và hoài niệm bình yên" — một trạm dừng chân tĩnh tại giữa thành phố vội vã.
+- Giọng văn: Điềm đạm, sâu sắc, tĩnh tại, hoài niệm tinh tế, bao dung với chính mình và cuộc đời.
 - Mỗi quote 1-2 câu ngắn, TỔNG ĐỘ DÀI TỪ 15 ĐẾN 26 TỪ (tuyệt đối không quá 28 từ).
 
 CHỦ ĐỀ & TÌNH HUỐNG YÊU CẦU:
 - Danh mục: "{topic_str}"{scenario_info}
 
 VÍ DỤ VĂN PHONG ĐẠT CHUẨN (THAM KHẢO, KHÔNG CHÉP LẠI):
-- "Lúc túi còn rủng rỉnh thì cuộc vui nào cũng có mặt, đến ngày hỏi vay vài trăm ngàn mới nhận ra danh bạ toàn người dưng." (26 từ)
-- "Có thể mình chịu bao nhiêu ấm ức ngoài xã hội cũng được, nhưng chỉ cần nghe giọng mẹ qua điện thoại là khóe mắt lại cay." (26 từ)
-- "Thích nhất những đêm muộn một mình chạy xe ngoài phố. Gió thốc vào mặt, không cần diễn vai một người lớn thành công." (23 từ)
-- "Không phải mình yêu tiền đến mức thực dụng, mà là không có tiền thì ngay cả tư cách bảo vệ người thân cũng không có." (24 từ)
+- "Đi qua những ngày mưa bão mới hiểu được, hóa ra bình yên lớn nhất chính là một buổi sáng thảnh thơi ngồi ngắm nắng lên." (24 từ)
+- "Không phải mình lạnh nhạt với thế giới, mà là đã học được cách trân trọng sự tĩnh lặng và sống vừa vặn với chính mình." (24 từ)
+- "Thành phố này rộng lớn biết bao, nhưng đi qua góc phố quán cũ năm nào lòng vẫn bất giác chùng xuống một nhịp." (22 từ)
+- "Người trưởng thành rời xa nhau thường rất khẽ khàng, không một lời trách móc, chỉ lặng lẽ rút lui khỏi cuộc đời nhau." (22 từ)
+- "Từng là những người thức trắng đêm tâm sự cùng nhau, giờ lướt qua tên nhau trên mạng cũng chỉ biết ngập ngừng rồi thôi." (24 từ)
+- "Có những mối quan hệ chết dần không phải vì phản bội, mà vì những tin nhắn soạn dở rồi lại lặng lẽ xóa đi." (23 từ)
 
 RÀNG BUỘC KỸ THUẬT:
 - Tuyệt đối không nhắc tự tử, tự hại.

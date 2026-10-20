@@ -243,7 +243,7 @@ ch_new_cfg = config.get("channels", {}).get("new_channel", {})
 # ==============================================================================
 if "sg_quote_text" not in st.session_state:
     sample_q = get_random_quote(channel="saigonbac")
-    st.session_state.sg_quote_text = sample_q.get("quote", "Có thể mình chịu bao nhiêu ấm ức ngoài xã hội cũng được, nhưng chỉ cần nghe giọng mẹ qua điện thoại là khóe mắt lại cay.")
+    st.session_state.sg_quote_text = sample_q.get("quote", "Đi qua những ngày mưa bão mới hiểu được, hóa ra bình yên lớn nhất chính là một buổi sáng thảnh thơi ngồi ngắm nắng lên.")
 
 if "sg_quote_text_area" not in st.session_state:
     st.session_state.sg_quote_text_area = st.session_state.sg_quote_text
@@ -329,7 +329,7 @@ with tab_ch_saigonbac:
     st.markdown(
         """
         <div class="channel-banner channel-banner-sg">
-            ☕ <b>Kênh saigonbac</b>: Video tĩnh chuẩn <b>18.0 giây</b> từ Ảnh Aesthetic tối màu + Typography tâm sự đêm "buồn một chút", chữ ký nhận diện <code>saigonbac</code>. File xuất tự động lưu vào <code>output/saigonbac/</code>.
+            ☕ <b>Trạm Dừng Cảm Xúc (saigonbac)</b>: Video tĩnh 18s từ Ảnh Aesthetic Tĩnh Tại + Typography Hoài Niệm, Chữa Lành & Lòng Người, chữ ký nhận diện <code>saigonbac</code>. File xuất tự động lưu vào <code>output/saigonbac/</code>.
         </div>
         """,
         unsafe_allow_html=True,
@@ -339,11 +339,11 @@ with tab_ch_saigonbac:
 
     with sg_col_input:
         # 1. Quản lý quote saigonbac
-        st.subheader("1. Chọn Hoặc Sinh Quote Tâm Sự (saigonbac)")
+        st.subheader("1. Chọn Hoặc Sinh Quote Tĩnh Tại & Chữa Lành (saigonbac)")
 
         sg_quote_mode = st.radio(
             "Phương thức chọn Quote:",
-            options=["🤖 Dùng AI sinh quote tâm sự buồn", "📜 Dùng quote có sẵn trong kho", "✍️ Tự gõ quote theo ý bạn"],
+            options=["🤖 Dùng AI sinh quote tĩnh tại & hoài niệm", "📜 Dùng quote có sẵn trong kho", "✍️ Tự gõ quote theo ý bạn"],
             index=0,
             horizontal=True,
             key="sg_quote_mode_radio",
@@ -351,10 +351,10 @@ with tab_ch_saigonbac:
 
         sg_topics = ch_sg_cfg.get("topics", list(CHANNEL_CATEGORIES.get("saigonbac", {}).keys()))
 
-        if sg_quote_mode == "🤖 Dùng AI sinh quote tâm sự buồn":
-            sg_sel_topic = st.selectbox("Chọn chủ đề tâm sự:", options=sg_topics, index=0, key="sg_topic_sel")
-            if st.button("✨ Sinh Quote Mới (Phong Cách Buồn Một Chút)", type="primary", use_container_width=True, key="sg_btn_ai_gen"):
-                with st.spinner(f"AI đang viết câu quote tâm sự theo chủ đề '{sg_sel_topic}'..."):
+        if sg_quote_mode == "🤖 Dùng AI sinh quote tĩnh tại & hoài niệm":
+            sg_sel_topic = st.selectbox("Chọn chủ đề cảm xúc:", options=sg_topics, index=0, key="sg_topic_sel")
+            if st.button("✨ Sinh Quote Mới (Phong Cách Tĩnh Tại & Chữa Lành)", type="primary", use_container_width=True, key="sg_btn_ai_gen"):
+                with st.spinner(f"AI đang viết câu quote tĩnh tại theo chủ đề '{sg_sel_topic}'..."):
                     try:
                         ai_res = generate_quote(topic=sg_sel_topic, config=config, style="sad_introspective", channel="saigonbac")
                         new_q = ai_res["quote"]

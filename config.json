@@ -4,14 +4,14 @@
   "gemini_model": "gemini-3.8-flash",
   "openai_model": "gpt-4o-mini",
   "topics": [
-    "Bữa cơm & Gia đình",
-    "Đêm muộn Sài Gòn",
-    "Gánh nặng tuổi trưởng thành",
-    "Vai diễn Người ổn",
-    "Nỗ lực trong vô định",
-    "Khép lòng sau tổn thương"
+    "Tĩnh Tại & Chữa Lành",
+    "Cô Độc Kiêu Hãnh",
+    "Người Cũ & Góc Phố",
+    "Rời Xa Trong Im Lặng",
+    "Bạn Cũ & Thời Gian",
+    "Khoảng Lặng Vô Thanh"
   ],
-  "default_topic": "Bữa cơm & Gia đình",
+  "default_topic": "Tĩnh Tại & Chữa Lành",
   "video": {
     "width": 1080,
     "height": 1920,
@@ -69,12 +69,12 @@
       "output_folder": "output/saigonbac",
       "style": "sad_introspective",
       "topics": [
-        "Bữa cơm & Gia đình",
-        "Đêm muộn Sài Gòn",
-        "Gánh nặng tuổi trưởng thành",
-        "Vai diễn Người ổn",
-        "Nỗ lực trong vô định",
-        "Khép lòng sau tổn thương"
+        "Tĩnh Tại & Chữa Lành",
+        "Cô Độc Kiêu Hãnh",
+        "Người Cũ & Góc Phố",
+        "Rời Xa Trong Im Lặng",
+        "Bạn Cũ & Thời Gian",
+        "Khoảng Lặng Vô Thanh"
       ]
     },
     "new_channel": {
