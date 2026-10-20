@@ -168,7 +168,7 @@ FALLBACK_QUOTES: Dict[str, List[Dict[str, Any]]] = {
         },
     ],
 
-    # 🎬 Kênh Mới (Tư Mã Ý, Luật Ngầm & Bản Lĩnh)
+    # 🎬 Kênh Lặng (Tư Mã Ý, Luật Ngầm & Bản Lĩnh)
     "Mưu lược Tư Mã Ý (Ẩn nhẫn)": [
         {
             "quote": "Đừng vội nổi giận khi bị xem thường. Lúc chưa có gì trong tay, im lặng làm việc vẫn có ích hơn tranh cãi.",
@@ -325,7 +325,7 @@ def build_system_prompt(
 
     if channel == "kenh_moi":
         return f"""Bạn là một người từng trải, điềm tĩnh như Tư Mã Ý, nhìn cuộc đời và các mối quan hệ như một bàn cờ lợi ích.
-Bạn viết quote sắc lạnh, bản lĩnh, mưu lược cho video TikTok B-Roll điện ảnh của KÊNH MỚI.
+Bạn viết quote sắc lạnh, bản lĩnh, mưu lược cho video TikTok B-Roll điện ảnh của kênh LẶNG.
 
 KHÓA RANH GIỚI KÊNH (BẮT BUỘC TUÂN THỦ 100%):
 - TUYỆT ĐỐI KHÔNG viết giọng than thân trách phận, không than nghèo kể khổ, không ủy mị, không kể lể nỗi buồn cá nhân hay nhớ mẹ cay mắt.
@@ -661,15 +661,15 @@ def review_viral_potential(
 
     if channel_style == "deep_philosophical":
         style_desc = (
-            "Kênh Mới (Luật Ngầm & Bản Lĩnh): Hình tượng Tư Mã Ý, nhìn đời như bàn cờ lợi ích, tư duy sắc lạnh, "
+            "Kênh Lặng (Luật Ngầm & Bản Lĩnh): Hình tượng Tư Mã Ý, nhìn đời như bàn cờ lợi ích, tư duy sắc lạnh, "
             "thực tế, đanh thép. Dùng ngôi thứ 3 hoặc 'bạn' đanh thép. CẤM than nghèo kể khổ, cấm ủy mị cô đơn. "
             "Mục đích: Tỉnh ngộ và mạnh mẽ hơn như một gáo nước lạnh."
         )
     else:
         style_desc = (
-            "Kênh saigonbac (Trạm Dừng Cảm Xúc): Một người trẻ bình thường chật vật mưu sinh, biết buồn, biết tủi thân lúc đêm muộn. "
-            "Xưng 'mình' hoặc khuyết chủ ngữ. CẤM dạy đời, cấm dùng 'bạn' để lên lớp đạo lý hay mưu lược. "
-            "Mục đích: Đồng cảm, được phép yếu lòng sau ngày dài đóng kịch."
+            "Kênh saigonbac (Trạm Dừng Cảm Xúc): Một người trưởng thành sâu sắc, điềm đạm, nhìn đời bao dung tĩnh lặng và hoài niệm. "
+            "Xưng 'mình' hoặc khuyết chủ ngữ. CẤM than nghèo kể khổ, cấm dạy đời, cấm dùng 'bạn' để lên lớp đạo lý, cấm sến súa kịch tính. "
+            "Mục đích: Khoảng lặng chữa lành và hoài niệm bình yên."
         )
 
     prompt = f"""Bạn là chuyên gia phân tích nội dung TikTok (TikTok Content & Viral Strategist hàng đầu).
@@ -684,7 +684,7 @@ CÂU QUOTE CẦN ĐÁNH GIÁ:
 
 HÃY ĐÁNH GIÁ DỰA TRÊN 4 TIÊU CHÍ CỐT LÕI CỦA THUẬT TOÁN TIKTOK:
 1. Hook & Giữ chân (3s đầu): Có khiến người xem dừng lướt ngay lập tức không?
-2. Độ chuẩn DNA kênh: Câu quote có vi phạm điều cấm của kênh không? (saigonbac cấm dạy đời/xưng bạn; Kênh Mới cấm than thở kể khổ).
+2. Độ chuẩn DNA kênh: Câu quote có vi phạm điều cấm của kênh không? (saigonbac cấm dạy đời/xưng bạn; Kênh Lặng cấm than thở kể khổ).
 3. Độ dài & Nhịp điệu: Có nằm trong khung vàng 15 đến 26 từ không?
 4. Đề xuất phiên bản tối ưu hơn (improved_quote): Viết lại câu quote này một cách sắc bén hơn, chuẩn phong cách kênh hơn (độ dài 15 - 26 từ).
 

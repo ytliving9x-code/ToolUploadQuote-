@@ -35,12 +35,13 @@ def test_config_channels_structure():
     assert "nhẫn nhịn và chờ thời" not in sg["topics"]
     assert "Tĩnh Tại & Chữa Lành" in sg["topics"]
 
-    # Kiểm tra kênh mới
+    # Kiểm tra kênh Lặng
     new_ch = channels["new_channel"]
     assert new_ch["format"] == "video_broll"
     assert "kenh_moi" in new_ch["output_folder"]
     assert len(new_ch["topics"]) == 6
     assert "Mưu lược Tư Mã Ý (Ẩn nhẫn)" in new_ch["topics"]
+    assert "Lặng" in new_ch["channel_name"]
 
 
 def test_quote_styles_prompt_differentiation():

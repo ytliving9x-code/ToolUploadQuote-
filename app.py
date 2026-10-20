@@ -3,8 +3,8 @@ from __future__ import annotations
 """
 Ứng dụng Web Streamlit: TikTok Multi-Channel Studio (app.py)
 Phân tách độc lập 2 kênh TikTok:
-1. Kênh 1 (saigonbac): Video tĩnh 18s từ Ảnh Aesthetic + Typography tâm sự đêm "buồn một chút", chữ ký saigonbac, lưu tại output/saigonbac/.
-2. Kênh 2 (Kênh mới): Video chuyển động từ Video B-Roll + Typography triết lý / bản lĩnh / động lực, chữ ký tùy chỉnh, lưu tại output/kenh_moi/.
+1. Kênh 1 (saigonbac): Video tĩnh 18s từ Ảnh Aesthetic + Typography tâm sự hoài niệm, chữa lành & lòng người, chữ ký saigonbac, lưu tại output/saigonbac/.
+2. Kênh 2 (Lặng): Video chuyển động từ Video B-Roll + Typography triết lý / bản lĩnh / kỷ luật, chữ ký lang, lưu tại output/kenh_moi/.
 """
 
 import json
@@ -63,7 +63,7 @@ logger = logging.getLogger("TikTok_MultiChannel_Tool")
 
 # Cấu hình trang Streamlit
 st.set_page_config(
-    page_title="TikTok Multi-Channel Studio (saigonbac & Kênh Mới)",
+    page_title="TikTok Multi-Channel Studio (saigonbac & Lặng)",
     page_icon="🎬",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -274,7 +274,7 @@ if "sg_pix_gallery" not in st.session_state:
     st.session_state["sg_pix_gallery"] = []
 
 # ==============================================================================
-# KHỞI TẠO SESSION STATE CHO KÊNH 2 (Kênh Mới - Video B-Roll)
+# KHỞI TẠO SESSION STATE CHO KÊNH 2 (Lặng - Video B-Roll)
 # ==============================================================================
 if "new_quote_text" not in st.session_state:
     sample_q_new = get_random_quote(channel="kenh_moi")
@@ -294,7 +294,7 @@ if "new_rendered_video" not in st.session_state:
     st.session_state.new_rendered_video = None
 
 if "new_signature" not in st.session_state:
-    st.session_state.new_signature = ch_new_cfg.get("signature", "saigonchill")
+    st.session_state.new_signature = ch_new_cfg.get("signature", "lang")
 
 if "new_vid_theme_input" not in st.session_state:
     st.session_state["new_vid_theme_input"] = "🌧️ Mưa Phố Đêm"
@@ -311,14 +311,14 @@ if "new_vid_page" not in st.session_state:
 # ==============================================================================
 st.markdown('<div class="main-header">TikTok Multi-Channel Studio</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="sub-header">Phân tách độc lập 2 kênh TikTok: Kênh 1 saigonbac (Ảnh tĩnh 18s) & Kênh 2 (Video b-roll chuyển động).</div>',
+    '<div class="sub-header">Phân tách độc lập 2 kênh TikTok: Kênh 1 saigonbac (Ảnh tĩnh 18s) & Kênh 2 Lặng (Video b-roll chuyển động).</div>',
     unsafe_allow_html=True,
 )
 
 # Phân tách 2 kênh tại cấp độ cao nhất của ứng dụng
 tab_ch_saigonbac, tab_ch_new = st.tabs([
     "☕ KÊNH 1: SAIGONBAC (Ảnh Tĩnh 18s)",
-    "🎬 KÊNH 2: KÊNH MỚI (Video B-Roll Chuyển Động)",
+    "🎬 KÊNH 2: LẶNG (Video B-Roll Chuyển Động)",
 ])
 
 
@@ -658,13 +658,13 @@ with tab_ch_saigonbac:
 
 
 # ==============================================================================
-# WORKSPACE KÊNH 2: KÊNH MỚI (VIDEO B-ROLL CHUYỂN ĐỘNG)
+# WORKSPACE KÊNH 2: LẶNG (VIDEO B-ROLL CHUYỂN ĐỘNG)
 # ==============================================================================
 with tab_ch_new:
     st.markdown(
         """
         <div class="channel-banner channel-banner-new">
-            🎬 <b>Kênh Mới (Motion B-Roll)</b>: Video b-roll chuyển động điện ảnh + Typography triết lý, bản lĩnh, kỷ luật bản thân. Chữ ký nhận diện riêng tùy chỉnh. File xuất tự động lưu vào <code>output/kenh_moi/</code>.
+            🎬 <b>Kênh Lặng (Motion B-Roll)</b>: Video b-roll chuyển động điện ảnh + Typography triết lý, bản lĩnh, kỷ luật bản thân. Chữ ký nhận diện <code>lang</code> tùy chỉnh. File xuất tự động lưu vào <code>output/kenh_moi/</code>.
         </div>
         """,
         unsafe_allow_html=True,
@@ -673,16 +673,16 @@ with tab_ch_new:
     new_col_input, new_col_preview = st.columns([1.4, 1.0], gap="large")
 
     with new_col_input:
-        # Cài đặt thương hiệu Kênh Mới
-        st.subheader("1. Cài Đặt Nhận Diện & Quote Kênh Mới")
+        # Cài đặt thương hiệu Kênh Lặng
+        st.subheader("1. Cài Đặt Nhận Diện & Quote Kênh Lặng")
 
         col_sig, col_save_sig = st.columns([2.0, 1.0])
         with col_sig:
             st.session_state.new_signature = st.text_input(
-                "Chữ ký thương hiệu Kênh Mới:",
+                "Chữ ký thương hiệu Kênh Lặng:",
                 value=st.session_state.new_signature,
                 key="new_sig_input",
-                help="Ví dụ: saigonchill, bando.tamtrang, trietly.cuocsong...",
+                help="Ví dụ: lang, lang.official, trietly.cuocsong...",
             ).strip()
         with col_save_sig:
             st.write("")
@@ -751,7 +751,7 @@ with tab_ch_new:
                 st.session_state.new_rendered_video = None
 
         new_edited_text = st.text_area(
-            "Nội dung Quote (Kênh Mới):",
+            "Nội dung Quote (Kênh Lặng):",
             value=st.session_state.new_quote_text,
             height=80,
             key="new_quote_text_area",
@@ -761,10 +761,10 @@ with tab_ch_new:
             st.session_state["new_viral_review"] = None
             st.session_state.new_rendered_video = None
 
-        # Bước AI Review Viral cho Kênh Mới
+        # Bước AI Review Viral cho Kênh Lặng
         col_new_rv1, col_new_rv2 = st.columns([1.8, 1.2])
         with col_new_rv1:
-            btn_new_review_viral = st.button("🎯 AI Thẩm Định Độ Viral (Kênh Mới)", use_container_width=True, key="new_btn_review_viral")
+            btn_new_review_viral = st.button("🎯 AI Thẩm Định Độ Viral (Kênh Lặng)", use_container_width=True, key="new_btn_review_viral")
         with col_new_rv2:
             st.caption("AI phân tích Hook, bản lĩnh & độ dài")
 
@@ -990,7 +990,7 @@ with tab_ch_new:
             st.markdown(
                 """
                 <div style="border: 2px dashed #475569; border-radius: 12px; height: 400px; display: flex; align-items: center; justify-content: center; color: #94A3B8; text-align: center; padding: 1.5rem;">
-                    <div><div style="font-size: 2.2rem; margin-bottom: 0.6rem;">🎬</div><b>Khung xem trước Kênh Mới</b><br>Video b-roll sẽ phát tại đây.</div>
+                    <div><div style="font-size: 2.2rem; margin-bottom: 0.6rem;">🎬</div><b>Khung xem trước Kênh Lặng</b><br>Video b-roll sẽ phát tại đây.</div>
                 </div>
                 """,
                 unsafe_allow_html=True,

@@ -78,8 +78,8 @@
       ]
     },
     "new_channel": {
-      "channel_name": "Kênh Mới (B-Roll Motion)",
-      "signature": "saigonchill",
+      "channel_name": "Lặng",
+      "signature": "lang",
       "signature_font_size": 24,
       "format": "video_broll",
       "output_folder": "output/kenh_moi",
