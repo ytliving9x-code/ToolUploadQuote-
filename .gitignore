@@ -20,6 +20,7 @@ data/cache/*
 
 # Output videos & Temp files
 temp/
+generated_media/
 output/*.mp4
 output/**/*.mp4
 output/cho_dang/*

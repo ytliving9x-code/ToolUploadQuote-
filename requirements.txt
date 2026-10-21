@@ -27,3 +27,4 @@ python-dotenv==1.2.4
 requests==2.34.2
 streamlit==1.66.0
 tqdm==4.70.1
+pinterest-dl==1.3.0

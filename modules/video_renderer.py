@@ -78,15 +78,19 @@ def create_quote_overlay(
     font_size: int = 42,      # Cỡ chữ nhỏ gọn, tinh tế hơn (42px)
     signature: Optional[str] = "saigonbac",
     signature_font_size: int = 24,
+    enable_gradient_scrim: bool = True,
+    scrim_max_alpha: int = 145,
+    shadow_blur_radius: float = 3.5,
+    stroke_width: int = 1,
 ) -> Image.Image:
     """
-    Tạo lớp ảnh chữ trong suốt RGBA (1080x1920) chứa câu quote và chữ ký nhỏ:
-    - Font chữ nhỏ hơn, tinh tế, sang trọng (42px).
-    - Canh lề trái (x = 90px), nằm ở góc dưới bên trái (cách đáy 420px an toàn).
-    - Tránh hoàn toàn khu vực nút Like/Share/Comment bên phải và thanh nhạc TikTok ở đáy.
-    - Chữ trắng tinh #FFFFFF nguyên bản.
-    - Kèm chữ ký nhỏ (saigonbac) ngay dưới câu quote.
+    Tạo lớp ảnh chữ trong suốt RGBA (1080x1920) chứa câu quote và chữ ký nhỏ.
+    Tích hợp bộ 3 cơ chế chống loá (Anti-Glare / High Contrast):
+    - Lớp Bottom Gradient Scrim chuyển mờ êm ái ở đáy.
+    - Lớp Soft Blurred Drop Shadow giúp chữ tách khỏi nền phức tạp / nền sáng.
+    - Nét viền siêu mảnh (Subtle Micro Stroke) chống tán xạ ánh sáng (anti-halation).
     """
+    width, height = canvas_size
     img = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
     max_text_width = canvas_size[0] - margin_left - margin_right
 
@@ -127,20 +131,61 @@ def create_quote_overlay(
     start_y = canvas_size[1] - margin_bottom - total_text_h
     start_x = margin_left
 
-    # Vẽ chữ trắng tinh khiết nguyên bản (#FFFFFF)
+    # 1. Lớp Gradient Scrim chuyển tối êm ái ở khu vực chữ (chống loá nền sáng)
+    if enable_gradient_scrim and scrim_max_alpha > 0:
+        scrim_start_y = max(0, start_y - 180)
+        scrim_draw = ImageDraw.Draw(img)
+        for y in range(scrim_start_y, height):
+            progress = (y - scrim_start_y) / (height - scrim_start_y)
+            alpha = int(scrim_max_alpha * (progress ** 1.35))
+            scrim_draw.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
+
+    # 2. Lớp Soft Blurred Shadow (đổ bóng mờ điện ảnh)
+    if shadow_blur_radius > 0:
+        shadow_layer = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
+        s_draw = ImageDraw.Draw(shadow_layer)
+
+        curr_y = start_y
+        for line, w, h in line_metrics:
+            s_draw.text((start_x + 2, curr_y + 3), line, font=font, fill=(0, 0, 0, 220))
+            curr_y += h + line_spacing
+
+        if signature and sig_font:
+            curr_y += (sig_spacing - line_spacing) if lines else 0
+            sig_w = sig_bbox[2] - sig_bbox[0]
+            sig_x = (canvas_size[0] - margin_right) - sig_w
+            s_draw.text((sig_x + 2, curr_y + 3), signature, font=sig_font, fill=(0, 0, 0, 190))
+
+        blurred_shadow = shadow_layer.filter(ImageFilter.GaussianBlur(radius=shadow_blur_radius))
+        img = Image.alpha_composite(img, blurred_shadow)
+
+    # 3. Vẽ chữ trắng chính có viền nét siêu mảnh chống loá
     draw = ImageDraw.Draw(img)
     curr_y = start_y
     for line, w, h in line_metrics:
-        draw.text((start_x, curr_y), line, font=font, fill=(255, 255, 255, 255))
+        draw.text(
+            (start_x, curr_y),
+            line,
+            font=font,
+            fill=(255, 255, 255, 255),
+            stroke_width=stroke_width,
+            stroke_fill=(0, 0, 0, 85),
+        )
         curr_y += h + line_spacing
 
-    # Vẽ chữ ký nhỏ bên dưới câu quote, canh lề phải theo khung quote (tránh che cụm nút TikTok)
+    # 4. Vẽ chữ ký nhỏ bên dưới câu quote
     if signature and sig_font:
         curr_y += (sig_spacing - line_spacing) if lines else 0
-        sig_bbox = draw_dummy.textbbox((0, 0), signature, font=sig_font)
         sig_w = sig_bbox[2] - sig_bbox[0]
         sig_x = (canvas_size[0] - margin_right) - sig_w
-        draw.text((sig_x, curr_y), signature, font=sig_font, fill=(255, 255, 255, 190))
+        draw.text(
+            (sig_x, curr_y),
+            signature,
+            font=sig_font,
+            fill=(255, 255, 255, 210),
+            stroke_width=max(0, stroke_width - 1),
+            stroke_fill=(0, 0, 0, 85),
+        )
 
     return img
 
@@ -152,6 +197,10 @@ def render_18s_video(
     duration: float = 18.0,
     overlay_opacity: float = 0.30,
     signature: Optional[str] = "saigonbac",
+    enable_gradient_scrim: bool = True,
+    scrim_max_alpha: int = 145,
+    shadow_blur_radius: float = 3.5,
+    stroke_width: int = 1,
 ) -> Path:
     """
     Render video TikTok chuẩn 18 giây, tỷ lệ 9:16 (1080x1920), không có âm thanh.
@@ -163,6 +212,10 @@ def render_18s_video(
         duration: Thời lượng video (cố định 18.0s).
         overlay_opacity: Độ tối lớp phủ đen (mặc định 30% = 0.30).
         signature: Chữ ký thương hiệu nhỏ (mặc định 'saigonbac').
+        enable_gradient_scrim: Bật lớp gradient scrim ở đáy chống loá cho nền sáng.
+        scrim_max_alpha: Độ sâu tối đa của lớp gradient scrim (0-255).
+        shadow_blur_radius: Độ mờ của quầng bóng chữ (Gaussian blur).
+        stroke_width: Nét viền siêu mảnh chống loá (1px).
 
     Returns:
         Path dẫn tới video thành phẩm.
@@ -174,8 +227,15 @@ def render_18s_video(
     out_file = Path(output_path)
     out_file.parent.mkdir(parents=True, exist_ok=True)
 
-    # 1. Tạo ảnh chữ PNG tạm thời kèm chữ ký
-    overlay_img = create_quote_overlay(quote=quote, signature=signature)
+    # 1. Tạo ảnh chữ PNG tạm thời kèm chữ ký (áp dụng bộ 3 chống loá)
+    overlay_img = create_quote_overlay(
+        quote=quote,
+        signature=signature,
+        enable_gradient_scrim=enable_gradient_scrim,
+        scrim_max_alpha=scrim_max_alpha,
+        shadow_blur_radius=shadow_blur_radius,
+        stroke_width=stroke_width,
+    )
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_png:
         tmp_png_path = Path(tmp_png.name)
     overlay_img.save(tmp_png_path, format="PNG")

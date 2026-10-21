@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import shutil
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 logger = logging.getLogger("tiktok_tool.video_engine")
 
@@ -103,22 +103,30 @@ def create_text_overlay_image(
     canvas_size: Tuple[int, int] = (1080, 1920),
     line_spacing: int = 18,
     font_color: Tuple[int, int, int, int] = (255, 255, 255, 255),
-    shadow_color: Tuple[int, int, int, int] = (0, 0, 0, 230),
-    shadow_offset: Tuple[int, int] = (3, 3),
+    shadow_color: Tuple[int, int, int, int] = (0, 0, 0, 220),
+    shadow_offset: Tuple[int, int] = (2, 3),
     margin_left: int = 90,
     margin_right: int = 180,
     margin_bottom: int = 420,
     signature: Optional[str] = "saigonbac",
     signature_font_size: int = 24,
+    enable_gradient_scrim: bool = True,
+    scrim_max_alpha: int = 145,
+    shadow_blur_radius: float = 3.5,
+    stroke_width: int = 1,
+    stroke_fill: Tuple[int, int, int, int] = (0, 0, 0, 85),
 ) -> Image.Image:
     """
     Vẽ typography quote lên khung ảnh trong suốt RGBA (1080x1920).
     Chữ nhỏ gọn, canh lề trái (x=90), góc dưới cách đáy 420px tránh che UI TikTok.
     Kèm chữ ký nhỏ saigonbac ngay bên dưới câu quote.
+    Tích hợp bộ 3 cơ chế chống loá (Anti-Glare / High Contrast):
+    1. Lớp Gradient Scrim chuyển tối êm ái ở vùng quote (nửa trên giữ nguyên độ sáng).
+    2. Lớp Soft Blurred Drop Shadow giúp chữ tách khỏi nền phức tạp / nền sáng.
+    3. Nét viền siêu mảnh (Subtle Micro Stroke) chống tán xạ ánh sáng (anti-halation).
     """
     width, height = canvas_size
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
 
     # Tính toán kích thước của từng dòng
     line_sizes = []
@@ -146,19 +154,59 @@ def create_text_overlay_image(
     start_y = height - margin_bottom - total_height
     start_x = margin_left
 
+    # 1. Lớp Gradient Scrim chuyển tối êm ái ở khu vực chữ (chống loá nền sáng)
+    if enable_gradient_scrim and scrim_max_alpha > 0:
+        scrim_start_y = max(0, start_y - 180)
+        scrim_draw = ImageDraw.Draw(img)
+        for y in range(scrim_start_y, height):
+            progress = (y - scrim_start_y) / (height - scrim_start_y)
+            alpha = int(scrim_max_alpha * (progress ** 1.35))
+            scrim_draw.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
+
+    # 2. Lớp Soft Blurred Shadow (đổ bóng mờ điện ảnh)
+    if shadow_blur_radius > 0:
+        shadow_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        s_draw = ImageDraw.Draw(shadow_layer)
+
+        curr_y = start_y
+        for i, line in enumerate(lines):
+            s_draw.text(
+                (start_x + shadow_offset[0], curr_y + shadow_offset[1]),
+                line,
+                font=font,
+                fill=shadow_color,
+            )
+            curr_y += line_sizes[i][1] + line_spacing
+
+        if signature and sig_font:
+            curr_y += (sig_spacing - line_spacing) if lines else 0
+            sig_w = sig_bbox[2] - sig_bbox[0]
+            sig_x = (width - margin_right) - sig_w
+            s_draw.text(
+                (sig_x + shadow_offset[0], curr_y + shadow_offset[1]),
+                signature,
+                font=sig_font,
+                fill=(0, 0, 0, 190),
+            )
+
+        blurred_shadow = shadow_layer.filter(ImageFilter.GaussianBlur(radius=shadow_blur_radius))
+        img = Image.alpha_composite(img, blurred_shadow)
+
+    # 3. Vẽ chữ trắng chính có nét viền siêu mảnh chống loá
+    draw = ImageDraw.Draw(img)
     current_y = start_y
     for i, line in enumerate(lines):
-        # Vẽ chữ trắng chính nguyên bản, không bóng
         draw.text(
             (start_x, current_y),
             line,
             font=font,
             fill=font_color,
+            stroke_width=stroke_width,
+            stroke_fill=stroke_fill,
         )
-
         current_y += line_sizes[i][1] + line_spacing
 
-    # Vẽ chữ ký nhỏ bên dưới quote
+    # 4. Vẽ chữ ký nhỏ bên dưới quote
     if signature and sig_font:
         current_y += (sig_spacing - line_spacing) if lines else 0
         sig_w = sig_bbox[2] - sig_bbox[0]
@@ -167,7 +215,9 @@ def create_text_overlay_image(
             (sig_x, current_y),
             signature,
             font=sig_font,
-            fill=(255, 255, 255, 190),
+            fill=(255, 255, 255, 210),
+            stroke_width=max(0, stroke_width - 1),
+            stroke_fill=stroke_fill,
         )
 
     return img
@@ -228,6 +278,12 @@ def generate_quote_preview_image(
     signature = config.get("branding", {}).get("signature", "saigonbac")
     signature_font_size = config.get("branding", {}).get("signature_font_size", 24)
 
+    typo_cfg = config.get("typography", {})
+    enable_scrim = typo_cfg.get("enable_gradient_scrim", True)
+    scrim_max_alpha = int(typo_cfg.get("scrim_max_alpha", 145))
+    shadow_blur_radius = float(typo_cfg.get("shadow_blur_radius", 3.5))
+    stroke_width = int(typo_cfg.get("stroke_width", 1))
+
     overlay_img = create_text_overlay_image(
         lines=lines,
         font=font,
@@ -235,6 +291,10 @@ def generate_quote_preview_image(
         line_spacing=line_spacing,
         signature=signature,
         signature_font_size=signature_font_size,
+        enable_gradient_scrim=enable_scrim,
+        scrim_max_alpha=scrim_max_alpha,
+        shadow_blur_radius=shadow_blur_radius,
+        stroke_width=stroke_width,
     )
 
     final_img = Image.alpha_composite(bg_composite, overlay_img)
@@ -243,6 +303,226 @@ def generate_quote_preview_image(
     out_p = Path(output_path) if output_path else Path("temp/preview_composite.jpg")
     out_p.parent.mkdir(parents=True, exist_ok=True)
     final_rgb.save(out_p, format="JPEG", quality=92)
+    return out_p
+
+
+def create_retro_comic_text_overlay(
+    lines: List[str],
+    font: ImageFont.FreeTypeFont,
+    canvas_size: Tuple[int, int] = (1080, 1920),
+    line_spacing: int = 24,
+    font_color: Tuple[int, int, int, int] = (245, 245, 240, 255),
+    shadow_color: Tuple[int, int, int, int] = (0, 0, 0, 150),
+    shadow_offset: Tuple[int, int] = (2, 2),
+    position: str = "upper_center",
+    margin_top: int = 340,
+    margin_bottom: int = 420,
+    margin_left: int = 90,
+    margin_right: int = 90,
+    signature: Optional[str] = "— LẶNG —",
+    signature_font_size: int = 28,
+    signature_font: Optional[ImageFont.FreeTypeFont] = None,
+) -> Image.Image:
+    """
+    Vẽ Typography phong cách Retro Comic / Graphic Novel chuẩn TikTok Photo Mode.
+    - Màu chữ trắng kem hoài niệm #F5F5F0
+    - Bóng mờ tinh tế êm dịu
+    - Căn giữa (hoặc theo position), đặt ở vùng âm (bầu trời/tường phía trên)
+    - Kèm chữ ký thương hiệu Kênh Lặng
+    """
+    width, height = canvas_size
+    img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    line_sizes = []
+    total_text_height = 0
+    for line in lines:
+        if not line:
+            empty_h = int(font.size * 0.4)
+            line_sizes.append((0, empty_h))
+            total_text_height += empty_h
+            continue
+        bbox = font.getbbox(line)
+        w = bbox[2] - bbox[0]
+        h = bbox[3] - bbox[1]
+        line_sizes.append((w, h))
+        total_text_height += h
+
+    total_text_height += line_spacing * max(0, len(lines) - 1)
+
+    # Chữ ký
+    sig_font = signature_font or font
+    sig_h = 0
+    sig_spacing = 30
+    if signature:
+        sig_bbox = sig_font.getbbox(signature)
+        sig_h = sig_bbox[3] - sig_bbox[1]
+        total_text_height += sig_spacing + sig_h
+
+    # Xác định start_y theo position
+    if position == "center":
+        start_y = (height - total_text_height) // 2
+    elif position == "lower_left":
+        start_y = height - margin_bottom - total_text_height
+    else:  # "upper_center" (mặc định)
+        start_y = margin_top
+
+    current_y = start_y
+    for i, line in enumerate(lines):
+        if not line:
+            current_y += line_sizes[i][1] + line_spacing
+            continue
+
+        w, h = line_sizes[i]
+        if position in ["upper_center", "center"]:
+            x = (width - w) // 2
+        else:
+            x = margin_left
+
+        # Đổ bóng mềm
+        draw.text(
+            (x + shadow_offset[0], current_y + shadow_offset[1]),
+            line,
+            font=font,
+            fill=shadow_color,
+        )
+        # Chữ chính trắng kem
+        draw.text(
+            (x, current_y),
+            line,
+            font=font,
+            fill=font_color,
+        )
+        current_y += h + line_spacing
+
+    # Vẽ chữ ký
+    if signature and sig_font:
+        current_y += (sig_spacing - line_spacing) if lines else 0
+        sig_w = sig_bbox[2] - sig_bbox[0]
+        if position in ["upper_center", "center"]:
+            sig_x = (width - sig_w) // 2
+        else:
+            sig_x = (width - margin_right) - sig_w
+
+        draw.text(
+            (sig_x + 1, current_y + 1),
+            signature,
+            font=sig_font,
+            fill=(0, 0, 0, 120),
+        )
+        draw.text(
+            (sig_x, current_y),
+            signature,
+            font=sig_font,
+            fill=(220, 220, 215, 200),
+        )
+
+    return img
+
+
+def generate_retro_comic_slide(
+    image_path: Path | str,
+    quote: str,
+    output_path: Optional[Path | str] = None,
+    font_family: str = "PatrickHand-Regular.ttf",
+    font_size: int = 54,
+    position: str = "upper_center",
+    all_caps: bool = True,
+    signature: str = "— LẶNG —",
+    dim_opacity: float = 0.12,
+) -> Path:
+    """
+    Tạo ảnh hoàn chỉnh 1080x1920 (9:16) phong cách TikTok Photo Slide (Retro Comic).
+    Ghép chữ typography viết tay hoài niệm lên tranh minh họa Retro Comic.
+    """
+    img_in = Path(image_path)
+    if not img_in.exists():
+        raise FileNotFoundError(f"Không tìm thấy ảnh nền: {img_in}")
+
+    with Image.open(img_in) as raw_bg:
+        raw_bg = raw_bg.convert("RGBA")
+        target_w, target_h = 1080, 1920
+        w, h = raw_bg.size
+        scale = max(target_w / w, target_h / h)
+        new_w, new_h = int(w * scale), int(h * scale)
+        resized = raw_bg.resize((new_w, new_h), Image.Resampling.LANCZOS)
+        left = (new_w - target_w) // 2
+        top = (new_h - target_h) // 2
+        bg_cropped = resized.crop((left, top, left + target_w, top + target_h))
+
+    # Lớp phủ mờ tối nhẹ nếu cần
+    if dim_opacity > 0:
+        dim = Image.new("RGBA", (1080, 1920), (0, 0, 0, int(255 * dim_opacity)))
+        bg_composite = Image.alpha_composite(bg_cropped, dim)
+    else:
+        bg_composite = bg_cropped
+
+    # Nạp font
+    font_path = Path("assets/fonts") / font_family
+    if not font_path.exists():
+        font_path = FONT_PATH_DEFAULT
+    font = get_font(font_path, font_size)
+
+    # Xử lý text
+    display_quote = quote.upper() if all_caps else quote
+    if "\n" in display_quote:
+        lines = [line.strip() for line in display_quote.split("\n")]
+    else:
+        lines = wrap_text_to_lines(display_quote, font, max_width=900, max_lines=6)
+
+    # Chữ ký
+    sig_font = get_font(font_path, max(24, int(font_size * 0.55)))
+
+    overlay = create_retro_comic_text_overlay(
+        lines=lines,
+        font=font,
+        canvas_size=(1080, 1920),
+        line_spacing=24,
+        position=position,
+        signature=signature,
+        signature_font_size=max(24, int(font_size * 0.55)),
+        signature_font=sig_font,
+    )
+
+    final_img = Image.alpha_composite(bg_composite, overlay).convert("RGB")
+    out_p = Path(output_path) if output_path else Path("output/kenh_moi") / "retro_slide_ready.jpg"
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    final_img.save(out_p, format="JPEG", quality=95)
+    return out_p
+
+
+def render_retro_comic_video(
+    slide_image_path: Path | str,
+    output_path: Path | str,
+    duration: float = 10.0,
+    fps: int = 30,
+) -> Path:
+    """
+    Render video MP4 độ phân giải 1080x1920 từ slide ảnh Retro Comic,
+    có hiệu ứng zoom siêu chậm tinh tế (Ken Burns 1.0 -> 1.05) tạo cảm giác sống động.
+    """
+    img_p = Path(slide_image_path)
+    if not img_p.exists():
+        raise FileNotFoundError(f"Không tìm thấy ảnh slide: {img_p}")
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+
+    frames = int(duration * fps)
+    cmd = [
+        FFMPEG_EXE,
+        "-y",
+        "-loop", "1",
+        "-i", str(img_p),
+        "-vf", f"scale=1080:1920,zoompan=z='min(zoom+0.00015,1.05)':d={frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps={fps}",
+        "-t", str(duration),
+        "-c:v", "libx264",
+        "-pix_fmt", "yuv420p",
+        "-r", str(fps),
+        "-an",
+        str(out_p),
+    ]
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return out_p
 
 
@@ -423,6 +703,12 @@ def build_video(
     signature = config.get("branding", {}).get("signature", "saigonbac")
     signature_font_size = config.get("branding", {}).get("signature_font_size", 24)
 
+    typo_cfg = config.get("typography", {})
+    enable_scrim = typo_cfg.get("enable_gradient_scrim", True)
+    scrim_max_alpha = int(typo_cfg.get("scrim_max_alpha", 145))
+    shadow_blur_radius = float(typo_cfg.get("shadow_blur_radius", 3.5))
+    stroke_width = int(typo_cfg.get("stroke_width", 1))
+
     overlay_img = create_text_overlay_image(
         lines=lines,
         font=font,
@@ -430,6 +716,10 @@ def build_video(
         line_spacing=line_spacing,
         signature=signature,
         signature_font_size=signature_font_size,
+        enable_gradient_scrim=enable_scrim,
+        scrim_max_alpha=scrim_max_alpha,
+        shadow_blur_radius=shadow_blur_radius,
+        stroke_width=stroke_width,
     )
 
     # Lưu ảnh chữ RGBA vào file tạm

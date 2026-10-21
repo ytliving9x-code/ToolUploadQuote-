@@ -413,7 +413,7 @@ def call_gemini(prompt: str, model_name: str = "gemini-3.8-flash", api_key: Opti
     from google import genai
     client = genai.Client(api_key=key)
 
-    candidate_models = [model_name, "gemini-3.8-flash", "gemini-3.5-flash-lite"]
+    candidate_models = [model_name, "gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.8-flash"]
     # Loại bỏ model trùng lặp nhưng giữ thứ tự ưu tiên
     seen = set()
     models_to_try = [m for m in candidate_models if not (m in seen or seen.add(m))]
@@ -513,7 +513,7 @@ def generate_quote(
             config = {}
 
     provider = config.get("llm_provider", "gemini").lower()
-    gemini_model = config.get("gemini_model", "gemini-2.5-flash")
+    gemini_model = config.get("gemini_model", "gemini-3.5-flash-lite")
     openai_model = config.get("openai_model", "gpt-4o-mini")
     similarity_thresh = config.get("anti_duplicate", {}).get("similarity_threshold", 0.70)
 

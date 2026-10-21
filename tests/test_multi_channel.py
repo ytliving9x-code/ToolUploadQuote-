@@ -154,3 +154,22 @@ def test_review_viral_potential():
     assert "verdict" in review_new
     assert len(review_new["strengths"]) > 0
     assert len(review_new["suggestions"]) > 0
+
+
+def test_retro_comic_slide_generation(tmp_path: Path):
+    """Kiểm tra tạo slide ảnh Retro Comic 1080x1920 cho TikTok Photo Mode của Kênh Lặng."""
+    from modules.video_engine import generate_retro_comic_slide
+    sample_img = Path("assets/samples/retro_comic/sample_stoic_man.jpg")
+    out_slide = tmp_path / "test_slide.jpg"
+    res = generate_retro_comic_slide(
+        image_path=sample_img,
+        quote="Cạn túi một lần để nhìn thấu lòng người.",
+        output_path=out_slide,
+        font_family="PatrickHand-Regular.ttf",
+        font_size=52,
+        position="upper_center",
+        all_caps=True,
+        signature="— LẶNG —",
+    )
+    assert res.exists()
+    assert res.stat().st_size > 10000
