@@ -12,10 +12,54 @@ import json
 import logging
 import random
 import re
+import urllib.parse
+import urllib.request
+import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from PIL import Image
 
 logger = logging.getLogger("tiktok_tool.viral_research")
+
+# ==============================================================================
+# KHO ẢNH THẬT 35MM ĐIỆN ẢNH TUYỂN CHỌN (UNSPLASH 1080x1920 CHUẨN OUTLIER)
+# ==============================================================================
+REAL_35MM_CURATED_PHOTOS = {
+    "🌧️ Mưa Đêm Phố Thị": "https://images.unsplash.com/photo-1514565131-fce0801e5785?q=80&w=1080&auto=format&fit=crop",
+    "☕ Cafe Đêm & Khói Mờ": "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1080&auto=format&fit=crop",
+    "🚶 Phố Vắng & Bước Chân": "https://images.unsplash.com/photo-1477959858617-67f30bc75b82?q=80&w=1080&auto=format&fit=crop",
+    "🚇 Ga Tàu Đêm & Vệt Sáng": "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1080&auto=format&fit=crop",
+    "🌆 Hoàng Hôn Tầng Cao": "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?q=80&w=1080&auto=format&fit=crop",
+    "♟️ Bàn Cờ & Góc Tối (Tư Mã Ý)": "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?q=80&w=1080&auto=format&fit=crop",
+    "🏢 Cao Ốc Đêm Thành Phố": "https://images.unsplash.com/photo-1519501025264-65ba15a82390?q=80&w=1080&auto=format&fit=crop",
+    "🌊 Biển Đêm Sóng Lớn": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1080&auto=format&fit=crop",
+}
+
+
+def download_curated_35mm_photo(photo_url: str, dest_path: Optional[Path | str] = None) -> Path:
+    """Tải và crop chuẩn dọc 1080x1920 cho ảnh thật 35mm nghệ thuật."""
+    target = Path(dest_path) if dest_path else Path("temp") / f"curated_35mm_{uuid.uuid4().hex[:6]}.jpg"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    req = urllib.request.Request(photo_url, headers={
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    })
+    with urllib.request.urlopen(req, timeout=20) as resp:
+        data = resp.read()
+        with open(target, "wb") as f:
+            f.write(data)
+    with Image.open(target) as img:
+        img = img.convert("RGB")
+        target_w, target_h = 1080, 1920
+        w, h = img.size
+        scale = max(target_w / w, target_h / h)
+        new_w, new_h = int(w * scale), int(h * scale)
+        resized = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+        left = (new_w - target_w) // 2
+        top = (new_h - target_h) // 2
+        cropped = resized.crop((left, top, left + target_w, top + target_h))
+        cropped.save(target, "JPEG", quality=95)
+    return target
+
 
 # ==============================================================================
 # THƯ VIỆN OUTLIER HOOK TEMPLATES (ĐÃ KIỂM CHỨNG TRIỆU VIEW TRÊN TIKTOK)

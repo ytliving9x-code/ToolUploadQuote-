@@ -39,12 +39,10 @@ for _m_name in ["modules.ai_image_gen", "modules.pinterest_fetcher", "modules.vi
 
 from modules.viral_research import (
     VIRAL_HOOK_PATTERNS,
-    HIGH_RETENTION_VISUALS,
-    OUTLIER_VISUAL_TEMPLATES,
-    get_random_outlier_hooks,
+    REAL_35MM_CURATED_PHOTOS,
+    download_curated_35mm_photo,
     score_hook_strength,
     boost_quote_with_ai,
-    build_ai_visual_prompt_from_quote,
 )
 
 from modules.pixabay_fetcher import (
@@ -378,11 +376,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Phân tách các không gian làm việc chuyên sâu
-tab_ch_saigonbac, tab_ch_new, tab_viral_lab = st.tabs([
-    "☕ KÊNH 1: SAIGONBAC (Ảnh Tĩnh 18s)",
+# 2 Không gian làm việc riêng biệt chuẩn hóa 3 bước (1-2-3)
+tab_ch_saigonbac, tab_ch_new = st.tabs([
+    "☕ KÊNH 1: SAIGONBAC (Ảnh Thật 35mm 18s)",
     "🎬 KÊNH 2: LẶNG (Video B-Roll Chuyển Động)",
-    "🔥 LAB HOOK VIRAL & KÉO VIEW TIKTOK",
 ])
 
 
@@ -466,48 +463,54 @@ with tab_ch_saigonbac:
             st.session_state["sg_viral_review"] = None
             st.session_state.sg_rendered_video = None
 
-        # Bước AI Review Viral cho kênh saigonbac
-        col_sg_rv1, col_sg_rv2 = st.columns([1.8, 1.2])
+        # Bước 1B: Tối ưu Hook 3s Viral trực tiếp tại chỗ
+        col_sg_rv1, col_sg_rv2 = st.columns([1.5, 1.0])
         with col_sg_rv1:
-            btn_sg_review_viral = st.button("🎯 AI Thẩm Định Độ Viral (saigonbac)", width='stretch', key="sg_btn_review_viral")
+            btn_sg_boost = st.button("⚡ AI 'Độ' Hook 3s Viral (Tăng View)", type="secondary", width='stretch', key="sg_btn_boost_hook")
         with col_sg_rv2:
-            st.caption("AI phân tích Hook, cảm xúc & độ dài")
+            btn_sg_audit = st.button("📊 Đo Điểm Hook 3s", width='stretch', key="sg_btn_audit_hook")
 
-        if btn_sg_review_viral:
-            with st.spinner("AI đang thẩm định tiềm năng viral trên TikTok..."):
-                st.session_state["sg_viral_review"] = review_viral_potential(
-                    quote=st.session_state.sg_quote_text,
-                    channel_style="sad_introspective",
-                    channel="saigonbac",
-                    config=config,
-                )
+        if btn_sg_audit:
+            with st.spinner("Đang phân tích 3 giây đầu..."):
+                audit_res = score_hook_strength(st.session_state.sg_quote_text)
+                st.session_state["sg_last_audit"] = audit_res
 
-        sg_review_res = st.session_state.get("sg_viral_review")
-        if sg_review_res:
-            score = sg_review_res.get("score", 80)
-            score_color = "#10B981" if score >= 85 else ("#F59E0B" if score >= 70 else "#EF4444")
+        if "sg_last_audit" in st.session_state and st.session_state["sg_last_audit"]:
+            res = st.session_state["sg_last_audit"]
             st.markdown(
                 f"""
-                <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid {score_color}; border-radius: 12px; padding: 0.9rem; margin-top: 0.5rem; margin-bottom: 0.8rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                        <span style="font-size: 1.15rem; font-weight: 800; color: {score_color};">🎯 Điểm Viral: {score}/100</span>
-                        <span style="font-weight: 600; font-size: 0.9rem;">{sg_review_res.get('verdict', '')}</span>
-                    </div>
-                    <div style="font-size: 0.85rem; color: #CBD5E1; margin-bottom: 0.3rem;"><b>💪 Điểm mạnh:</b> {sg_review_res.get('strengths', '')}</div>
-                    <div style="font-size: 0.85rem; color: #94A3B8;"><b>💡 Góp ý:</b> {sg_review_res.get('suggestions', '')} (Hiện có: {sg_review_res.get('word_count', 0)} từ)</div>
+                <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid #38BDF8; border-radius: 10px; padding: 0.8rem; margin: 0.5rem 0;">
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #38BDF8;">Điểm Níu Chân: {res['score']}/100 — {res['grade']}</div>
+                    <div style="font-size: 0.82rem; color: #94A3B8;">3s đầu đọc: <i>"{res['first_hook_words']}..."</i> ({res['word_count']} từ)</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
-            imp_q = sg_review_res.get("improved_quote")
-            if imp_q and imp_q.strip() and imp_q.strip() != st.session_state.sg_quote_text.strip():
-                st.markdown(f"**✨ Gợi ý bản viết lại bén hơn:** *\"{imp_q}\"*")
-                if st.button("✍️ Áp Dụng Câu Viết Lại Này", key="sg_btn_apply_improved", width='stretch'):
-                    st.session_state.sg_quote_text = imp_q
-                    st.session_state["sg_viral_review"] = None
-                    st.session_state.sg_rendered_video = None
-                    st.toast("Đã áp dụng câu quote tối ưu!", icon="✨")
-                    st.rerun()
+
+        if btn_sg_boost:
+            with st.spinner("AI đang tạo 3 biến thể Hook giữ chân..."):
+                try:
+                    b_res = boost_quote_with_ai(st.session_state.sg_quote_text, channel="saigonbac", config=config)
+                    st.session_state["sg_boost_variants"] = b_res
+                    st.toast("Đã tạo 3 phiên bản Hook triệu view!", icon="🔥")
+                except Exception as ex:
+                    st.error(f"Lỗi AI: {ex}")
+
+        if "sg_boost_variants" in st.session_state and st.session_state["sg_boost_variants"]:
+            st.markdown("🎯 **Chọn phiên bản Hook Outlier để áp dụng ngay:**")
+            for k_var, v_item in st.session_state["sg_boost_variants"].items():
+                if isinstance(v_item, dict):
+                    col_v_txt, col_v_act = st.columns([3.5, 1])
+                    with col_v_txt:
+                        st.markdown(f"• <b>{v_item.get('hook_type', '')}:</b> \"{v_item.get('quote', '')}\"", unsafe_allow_html=True)
+                    with col_v_act:
+                        if st.button("Chọn", key=f"sg_pick_v_{k_var}", width='stretch'):
+                            st.session_state.sg_quote_text = v_item.get("quote", "")
+                            st.session_state["sg_boost_variants"] = None
+                            st.session_state["sg_last_audit"] = None
+                            st.session_state.sg_rendered_video = None
+                            st.toast("Đã áp dụng Hook triệu view!", icon="✨")
+                            st.rerun()
 
         st.session_state.sg_signature = st.text_input(
             "Chữ ký nhận diện thương hiệu:",
@@ -530,122 +533,93 @@ with tab_ch_saigonbac:
 
         st.divider()
 
-        # 2. Chọn Nguồn Ảnh Nền saigonbac
-        st.subheader("2. Chọn Nguồn Ảnh Nền (Photo Khổ Dọc 9:16)")
+        # 2. Chọn Nền Ảnh Thật 35mm Điện Ảnh (saigonbac)
+        st.subheader("2. Chọn Nền Ảnh Thật 35mm Điện Ảnh (Khổ Dọc 9:16)")
+        st.markdown("📸 **Tuyển chọn ảnh chụp thật 35mm chất lượng cao (1-Chạm là đổi ảnh ngay):**")
 
-        sg_tab_pix, sg_tab_ai, sg_tab_up = st.tabs([
-            "🌐 Pixabay Photo (Kho Ảnh Gốc)",
-            "🎨 AI Vẽ Ảnh Độc Bản",
-            "📤 Tải Ảnh Từ Máy Tính",
-        ])
-
-        with sg_tab_pix:
-            st.markdown("🎯 **Chọn nhanh chủ đề ảnh tối màu (1 Chạm):**")
-            themes_list = list(QUICK_THEMES_VI.keys())
-            row_cols = st.columns(2)
-            for t_idx, theme_label in enumerate(themes_list):
-                with row_cols[t_idx % 2]:
-                    if st.button(theme_label, key=f"sg_btn_theme_{t_idx}", width='stretch'):
-                        st.session_state["sg_pix_theme_input"] = theme_label
-                        st.toast(f"Đã chọn: {theme_label}", icon="✨")
-                        st.rerun()
-
-            st.write("")
-            st.text_input("Nhập chủ đề ảnh tùy ý:", key="sg_pix_theme_input", placeholder="con sói, ga tàu, trời mưa...")
-
-            c_act1, c_act2 = st.columns(2)
-            with c_act1:
-                btn_sg_search_img = st.button("🔍 Tìm & Chọn 4 Ảnh", type="primary", width='stretch', key="sg_btn_search_img")
-            with c_act2:
-                btn_sg_rnd_img = st.button("🎲 1 Ảnh Ngẫu Nhiên", type="secondary", width='stretch', key="sg_btn_rnd_img")
-
-            c_pic1, c_pic2 = st.columns(2)
-            with c_pic1:
-                btn_sg_picsum_one = st.button("📸 1 Ảnh Thật Picsum (0 Key)", width='stretch', key="sg_btn_picsum_1")
-            with c_pic2:
-                btn_sg_picsum_gallery = st.button("🖼️ Xem 4 Ảnh Picsum Khác", width='stretch', key="sg_btn_picsum_4")
-
-            if btn_sg_search_img:
-                curr_q = st.session_state.get("sg_pix_theme_input", "mưa đêm")
-                st.session_state["sg_pix_page"] = (st.session_state.get("sg_pix_page", 1) % 8) + 1
-                curr_p = st.session_state["sg_pix_page"]
-                with st.spinner(f"Đang tìm 4 ảnh từ Pixabay (Trang {curr_p})..."):
-                    st.session_state["sg_pix_gallery"] = search_pixabay_images(
-                        query=curr_q,
-                        api_key=config.get("pixabay_api_key"),
-                        per_page=4,
-                        page=curr_p,
-                    )
-
-            if btn_sg_rnd_img:
-                curr_q = st.session_state.get("sg_pix_theme_input", "mưa đêm")
-                with st.spinner("Đang tải 1 ảnh ngẫu nhiên từ Pixabay..."):
-                    try:
-                        fetched = fetch_pixabay_image(curr_q, config.get("pixabay_api_key"), Path("temp/background_sg.jpg"))
-                        st.session_state.sg_bg_image = str(fetched)
+        p_items = list(REAL_35MM_CURATED_PHOTOS.items())
+        r1_cols = st.columns(4)
+        for i in range(min(4, len(p_items))):
+            p_name, p_link = p_items[i]
+            with r1_cols[i]:
+                if st.button(p_name, key=f"btn_p_r1_{i}", width='stretch'):
+                    with st.spinner(f"Đang nạp ảnh {p_name}..."):
+                        saved = download_curated_35mm_photo(p_link, Path("temp/background_sg.jpg"))
+                        st.session_state.sg_bg_image = str(saved)
                         st.session_state.sg_rendered_video = None
-                        st.toast("Đã chọn ảnh Pixabay thành công!", icon="🎨")
+                        st.toast(f"Đã chọn ảnh: {p_name}!", icon="📸")
                         st.rerun()
-                    except Exception as e:
-                        st.error(f"Lỗi: {e}")
 
-            if btn_sg_picsum_one:
-                with st.spinner("Đang tải ảnh nghệ thuật từ Picsum Photos..."):
-                    try:
-                        p_img = fetch_picsum_image(Path("temp/background_sg.jpg"))
-                        st.session_state.sg_bg_image = str(p_img)
+        r2_cols = st.columns(4)
+        for i in range(4, min(8, len(p_items))):
+            p_name, p_link = p_items[i]
+            with r2_cols[i - 4]:
+                if st.button(p_name, key=f"btn_p_r2_{i}", width='stretch'):
+                    with st.spinner(f"Đang nạp ảnh {p_name}..."):
+                        saved = download_curated_35mm_photo(p_link, Path("temp/background_sg.jpg"))
+                        st.session_state.sg_bg_image = str(saved)
                         st.session_state.sg_rendered_video = None
-                        st.toast("Đã tải ảnh Picsum thành công!", icon="📸")
+                        st.toast(f"Đã chọn ảnh: {p_name}!", icon="📸")
                         st.rerun()
-                    except Exception as e:
-                        st.error(f"Lỗi: {e}")
 
-            if btn_sg_picsum_gallery:
-                with st.spinner("Đang lấy 4 ảnh từ Picsum..."):
-                    st.session_state["sg_pix_gallery"] = get_picsum_gallery(limit=4)
-                    st.toast("Đã nạp 4 ảnh thật từ Picsum!", icon="🖼️")
+        with st.expander("🔍 Tìm thêm ảnh thật từ Pixabay / Picsum hoặc Tải ảnh từ máy", expanded=False):
+            sg_tab_pix, sg_tab_up = st.tabs(["🌐 Tìm Ảnh Pixabay / Picsum", "📤 Tải Ảnh Từ Máy Tính"])
+            with sg_tab_pix:
+                st.text_input("Nhập từ khóa ảnh thật:", key="sg_pix_theme_input", placeholder="mưa đêm, ga tàu, phố cũ...")
+                c_s1, c_s2 = st.columns(2)
+                with c_s1:
+                    btn_sg_search_img = st.button("🔍 Tìm 4 Ảnh Thật Pixabay", type="primary", width='stretch', key="sg_btn_search_img")
+                with c_s2:
+                    btn_sg_picsum_one = st.button("📸 1 Ảnh Thật Picsum Ngẫu Nhiên", width='stretch', key="sg_btn_picsum_1")
 
-            sg_gallery_items = st.session_state.get("sg_pix_gallery", [])
-            if sg_gallery_items:
-                st.markdown("---")
-                st.markdown("🖼️ **Chạm vào ảnh bạn thích bên dưới:**")
-                g_cols = st.columns(2)
-                for idx, item in enumerate(sg_gallery_items[:4]):
-                    with g_cols[idx % 2]:
-                        st.image(item["preview_url"], width='stretch')
-                        if st.button(f"✅ Chọn Ảnh #{idx+1}", key=f"sg_btn_pick_{item['id']}", width='stretch'):
-                            with st.spinner("Đang tải và chuẩn hóa ảnh..."):
-                                out_img = download_and_crop_pixabay_image(item["large_url"], Path("temp/background_sg.jpg"))
-                                st.session_state.sg_bg_image = str(out_img)
-                                st.session_state.sg_rendered_video = None
-                                st.toast(f"Đã chọn ảnh #{idx+1}!", icon="✨")
-                                st.rerun()
+                if btn_sg_search_img:
+                    curr_q = st.session_state.get("sg_pix_theme_input", "mưa đêm")
+                    st.session_state["sg_pix_page"] = (st.session_state.get("sg_pix_page", 1) % 8) + 1
+                    curr_p = st.session_state["sg_pix_page"]
+                    with st.spinner(f"Đang tìm 4 ảnh thật Pixabay (Trang {curr_p})..."):
+                        st.session_state["sg_pix_gallery"] = search_pixabay_images(
+                            query=curr_q,
+                            api_key=config.get("pixabay_api_key"),
+                            per_page=4,
+                            page=curr_p,
+                        )
 
-        with sg_tab_ai:
-            st.markdown("💡 **AI Tự Động Vẽ Ảnh Nền Độc Bản (Chuẩn 1080x1920):**")
-            sg_ai_prompt = st.text_input("Mô tả ảnh:", value="rainy street night dark moody cinematic", key="sg_ai_img_p")
-            if st.button("✨ Tạo Ảnh Bằng AI", type="primary", width='stretch', key="sg_btn_gen_ai"):
-                with st.spinner("AI đang vẽ ảnh nghệ thuật..."):
-                    try:
-                        from modules.ai_image_gen import generate_ai_image
-                        out_ai = generate_ai_image(prompt=sg_ai_prompt, output_dir=Path("temp"), width=1080, height=1920)
-                        st.session_state.sg_bg_image = str(out_ai)
-                        st.session_state.sg_rendered_video = None
-                        st.toast("Đã tạo ảnh AI thành công!", icon="🎨")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Lỗi: {e}")
+                if btn_sg_picsum_one:
+                    with st.spinner("Đang tải ảnh thật nghệ thuật từ Picsum Photos..."):
+                        try:
+                            p_img = fetch_picsum_image(Path("temp/background_sg.jpg"))
+                            st.session_state.sg_bg_image = str(p_img)
+                            st.session_state.sg_rendered_video = None
+                            st.toast("Đã tải ảnh Picsum thành công!", icon="📸")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Lỗi: {e}")
 
-        with sg_tab_up:
-            sg_up_file = st.file_uploader("Tải file ảnh từ máy (.jpg, .png, .webp):", type=["jpg", "jpeg", "png", "webp"], key="sg_up_file")
-            if sg_up_file is not None:
-                save_p = Path("temp") / sg_up_file.name
-                with open(save_p, "wb") as f_up:
-                    f_up.write(sg_up_file.getbuffer())
-                crop_p = resize_and_crop_to_tiktok(save_p)
-                st.session_state.sg_bg_image = str(crop_p)
-                st.session_state.sg_rendered_video = None
-                st.success(f"✅ Đã tải ảnh: {sg_up_file.name}")
+                sg_gallery_items = st.session_state.get("sg_pix_gallery", [])
+                if sg_gallery_items:
+                    st.markdown("🖼️ **Chạm vào ảnh bạn thích bên dưới:**")
+                    g_cols = st.columns(2)
+                    for idx, item in enumerate(sg_gallery_items[:4]):
+                        with g_cols[idx % 2]:
+                            st.image(item["preview_url"], width='stretch')
+                            if st.button(f"✅ Chọn Ảnh #{idx+1}", key=f"sg_btn_pick_{item['id']}", width='stretch'):
+                                with st.spinner("Đang tải và chuẩn hóa ảnh..."):
+                                    out_img = download_and_crop_pixabay_image(item["large_url"], Path("temp/background_sg.jpg"))
+                                    st.session_state.sg_bg_image = str(out_img)
+                                    st.session_state.sg_rendered_video = None
+                                    st.toast(f"Đã chọn ảnh #{idx+1}!", icon="✨")
+                                    st.rerun()
+
+            with sg_tab_up:
+                sg_up_file = st.file_uploader("Tải file ảnh từ máy (.jpg, .png, .webp):", type=["jpg", "jpeg", "png", "webp"], key="sg_up_file")
+                if sg_up_file is not None:
+                    save_p = Path("temp") / sg_up_file.name
+                    with open(save_p, "wb") as f_up:
+                        f_up.write(sg_up_file.getbuffer())
+                    crop_p = resize_and_crop_to_tiktok(save_p)
+                    st.session_state.sg_bg_image = str(crop_p)
+                    st.session_state.sg_rendered_video = None
+                    st.success(f"✅ Đã tải ảnh: {sg_up_file.name}")
 
         st.divider()
 
@@ -849,48 +823,55 @@ with tab_ch_new:
             st.session_state["new_viral_review"] = None
             st.session_state.new_rendered_video = None
 
-        # Bước AI Review Viral cho Kênh Lặng
-        col_new_rv1, col_new_rv2 = st.columns([1.8, 1.2])
+        # Bước 1B: Tối ưu Hook 3s Viral trực tiếp cho Kênh Lặng (Tư Mã Ý / Bản Lĩnh)
+        col_new_rv1, col_new_rv2 = st.columns([1.5, 1.0])
         with col_new_rv1:
-            btn_new_review_viral = st.button("🎯 AI Thẩm Định Độ Viral (Kênh Lặng)", width='stretch', key="new_btn_review_viral")
+            btn_new_boost = st.button("⚡ AI 'Độ' Hook 3s (Tư Mã Ý / Kẻ Mạnh)", type="secondary", width='stretch', key="new_btn_boost_hook")
         with col_new_rv2:
-            st.caption("AI phân tích Hook, bản lĩnh & độ dài")
+            btn_new_audit = st.button("📊 Đo Điểm Hook 3s", width='stretch', key="new_btn_audit_hook")
 
-        if btn_new_review_viral:
-            with st.spinner("AI đang thẩm định tiềm năng viral trên TikTok..."):
-                st.session_state["new_viral_review"] = review_viral_potential(
-                    quote=st.session_state.new_quote_text,
-                    channel_style="deep_philosophical",
-                    channel="kenh_moi",
-                    config=config,
-                )
+        if btn_new_audit:
+            with st.spinner("Đang phân tích 3 giây đầu..."):
+                audit_res_new = score_hook_strength(st.session_state.new_quote_text)
+                st.session_state["new_last_audit"] = audit_res_new
 
-        new_review_res = st.session_state.get("new_viral_review")
-        if new_review_res:
-            score = new_review_res.get("score", 80)
-            score_color = "#10B981" if score >= 85 else ("#F59E0B" if score >= 70 else "#EF4444")
+        if "new_last_audit" in st.session_state and st.session_state.get("new_last_audit"):
+            res_n = st.session_state["new_last_audit"]
             st.markdown(
                 f"""
-                <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid {score_color}; border-radius: 12px; padding: 0.9rem; margin-top: 0.5rem; margin-bottom: 0.8rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                        <span style="font-size: 1.15rem; font-weight: 800; color: {score_color};">🎯 Điểm Viral: {score}/100</span>
-                        <span style="font-weight: 600; font-size: 0.9rem;">{new_review_res.get('verdict', '')}</span>
-                    </div>
-                    <div style="font-size: 0.85rem; color: #CBD5E1; margin-bottom: 0.3rem;"><b>💪 Điểm mạnh:</b> {new_review_res.get('strengths', '')}</div>
-                    <div style="font-size: 0.85rem; color: #94A3B8;"><b>💡 Góp ý:</b> {new_review_res.get('suggestions', '')} (Hiện có: {new_review_res.get('word_count', 0)} từ)</div>
+                <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid #F43F5E; border-radius: 10px; padding: 0.8rem; margin: 0.5rem 0;">
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #F43F5E;">Điểm Níu Chân: {res_n['score']}/100 — {res_n['grade']}</div>
+                    <div style="font-size: 0.82rem; color: #94A3B8;">3s đầu đọc: <i>"{res_n['first_hook_words']}..."</i> ({res_n['word_count']} từ)</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
-            imp_q_new = new_review_res.get("improved_quote")
-            if imp_q_new and imp_q_new.strip() and imp_q_new.strip() != st.session_state.new_quote_text.strip():
-                st.markdown(f"**✨ Gợi ý bản viết lại bén hơn:** *\"{imp_q_new}\"*")
-                if st.button("✍️ Áp Dụng Câu Viết Lại Này", key="new_btn_apply_improved", width='stretch'):
-                    st.session_state.new_quote_text = imp_q_new
-                    st.session_state["new_viral_review"] = None
-                    st.session_state.new_rendered_video = None
-                    st.toast("Đã áp dụng câu quote tối ưu!", icon="✨")
-                    st.rerun()
+
+        if btn_new_boost:
+            with st.spinner("AI đang tạo 3 biến thể Hook bản lĩnh..."):
+                try:
+                    b_res_n = boost_quote_with_ai(st.session_state.new_quote_text, channel="kenh_moi", config=config)
+                    st.session_state["new_boost_variants"] = b_res_n
+                    st.toast("Đã tạo 3 phiên bản Hook Tư Mã Ý / Kẻ Mạnh!", icon="🔥")
+                except Exception as ex:
+                    st.error(f"Lỗi AI: {ex}")
+
+        if "new_boost_variants" in st.session_state and st.session_state.get("new_boost_variants"):
+            st.markdown("🎯 **Chọn phiên bản Hook Outlier để áp dụng ngay:**")
+            for k_var, v_item in st.session_state["new_boost_variants"].items():
+                if isinstance(v_item, dict):
+                    col_v_txt, col_v_act = st.columns([3.5, 1])
+                    with col_v_txt:
+                        st.markdown(f"• <b>{v_item.get('hook_type', '')}:</b> \"{v_item.get('quote', '')}\"", unsafe_allow_html=True)
+                    with col_v_act:
+                        if st.button("Chọn", key=f"new_pick_v_{k_var}", width='stretch'):
+                            st.session_state.new_quote_text = v_item.get("quote", "")
+                            st.session_state["new_boost_variants"] = None
+                            st.session_state["new_last_audit"] = None
+                            st.session_state.new_rendered_video = None
+                            st.session_state.new_comic_rendered_slide = None
+                            st.toast("Đã áp dụng Hook triệu view!", icon="✅")
+                            st.rerun()
 
         st.divider()
 
@@ -1473,339 +1454,5 @@ with tab_ch_new:
                     """,
                     unsafe_allow_html=True,
                 )
-
-
-# ==============================================================================
-# WORKSPACE TAB 3: PHÒNG THÍ NGHIỆM HOOK VIRAL & RETENTION (KÉO VIEW TIKTOK)
-# ==============================================================================
-with tab_viral_lab:
-    st.markdown(
-        """
-        <div class="channel-banner" style="background: linear-gradient(135deg, rgba(244,63,94,0.15) 0%, rgba(56,189,248,0.15) 100%); border: 1px solid rgba(244,63,94,0.4);">
-            🔥 <b>TikTok Retention & Outlier Research Lab</b>: 80% lý do kênh ít view nằm ở <b>3 giây đầu tiên (Hook)</b>. 
-            Công cụ này phân tích cấu trúc tâm lý của video triệu view, đo lường điểm giữ chân và dùng AI 'độ' lại câu quote của bạn thành phiên bản có tỷ lệ xem hết cao gấp 3 lần.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    v_col_left, v_col_right = st.columns([1.2, 1.0], gap="large")
-
-    with v_col_left:
-        st.subheader("1. AI Hook Booster: Tối Ưu Điểm Giữ Chân 3s Đầu")
-        
-        target_v_ch = st.radio(
-            "Chọn kênh mục tiêu cần tối ưu:",
-            options=["☕ Kênh saigonbac (Tâm sự, Hoài niệm, Chữa lành)", "🎬 Kênh Lặng (Bản lĩnh, Ẩn nhẫn Tư Mã Ý, Tiền tài)"],
-            horizontal=True,
-            key="v_target_channel_radio",
-        )
-        ch_flag = "saigonbac" if "saigonbac" in target_v_ch else "kenh_moi"
-
-        if "v_lab_input_text" not in st.session_state:
-            st.session_state.v_lab_input_text = "Bước qua tuổi 25 bạn sẽ nhận ra một điều tàn nhẫn: người càng tử tế thì càng dễ chịu thiệt thòi."
-
-        v_input = st.text_area(
-            "Nhập câu quote hoặc ý tưởng nội dung của bạn:",
-            value=st.session_state.v_lab_input_text,
-            height=100,
-            key="v_user_quote_input",
-            help="Nhập câu bạn định làm video. Chúng tôi sẽ thẩm định độ giữ chân của câu này.",
-        )
-
-        c_v_btn1, c_v_btn2 = st.columns(2)
-        with c_v_btn1:
-            btn_audit = st.button("📊 Thẩm Định Điểm Hook 3s", width='stretch', type="secondary", key="btn_hook_audit")
-        with c_v_btn2:
-            btn_boost = st.button("🚀 AI 'Độ' Hook Triệu View", width='stretch', type="primary", key="btn_hook_boost")
-
-        if btn_audit:
-            with st.spinner("Đang đo lường chỉ số giữ chân thị giác và tâm lý học..."):
-                audit_res = score_hook_strength(v_input)
-                st.session_state["v_last_audit"] = audit_res
-
-        if "v_last_audit" in st.session_state and st.session_state["v_last_audit"]:
-            res = st.session_state["v_last_audit"]
-            st.markdown(
-                f"""
-                <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #334155; border-radius: 12px; padding: 1rem; margin-top: 0.8rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                        <span style="font-size: 1.1rem; font-weight: 700;">Điểm Níu Chân (Hook Score):</span>
-                        <span style="font-size: 1.5rem; font-weight: 800; color: #38BDF8;">{res['score']}/100</span>
-                    </div>
-                    <div style="color: #F43F5E; font-weight: 600; margin-bottom: 0.5rem;">Đánh giá: {res['grade']}</div>
-                    <div style="font-size: 0.85rem; color: #94A3B8;">3 giây đầu tiên người xem đọc: <i>"{res['first_hook_words']}..."</i></div>
-                    <hr style="border-color: #334155; margin: 0.6rem 0;">
-                    <ul style="font-size: 0.88rem; margin: 0; padding-left: 1.2rem; color: #E2E8F0;">
-                        {"".join([f"<li>{r}</li>" for r in res['reasons']])}
-                    </ul>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        if btn_boost:
-            with st.spinner("AI đang bóc tách tâm lý và thiết kế 3 biến thể Hook giữ chân..."):
-                try:
-                    boost_results = boost_quote_with_ai(v_input, channel=ch_flag, config=config)
-                    st.session_state["v_boost_data"] = boost_results
-                    st.toast("Đã tạo 3 phiên bản Hook triệu view thành công!", icon="🔥")
-                except Exception as e:
-                    st.error(f"Lỗi AI: {e}")
-
-        if "v_boost_data" in st.session_state and st.session_state["v_boost_data"]:
-            b_data = st.session_state["v_boost_data"]
-            st.markdown("---")
-            st.markdown("🎯 **3 Phiên Bản Hook Giữ Chân Khách Hàng Tuyệt Đối:**")
-
-            for key_name, item in b_data.items():
-                if isinstance(item, dict):
-                    h_type = item.get("hook_type", "Biến thể Hook")
-                    h_quote = item.get("quote", "")
-                    h_why = item.get("why_it_works", "")
-
-                    st.markdown(
-                        f"""
-                        <div style="background: rgba(30, 41, 59, 0.75); border-left: 4px solid #38BDF8; border-radius: 8px; padding: 0.85rem 1.1rem; margin-bottom: 0.8rem;">
-                            <div style="color: #38BDF8; font-weight: 700; font-size: 0.9rem; margin-bottom: 0.3rem;">⚡ {h_type}</div>
-                            <div style="font-size: 1.05rem; font-weight: 600; color: #FFFFFF; line-height: 1.45; margin-bottom: 0.4rem;">"{h_quote}"</div>
-                            <div style="font-size: 0.82rem; color: #94A3B8;">💡 <i>{h_why}</i></div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-                    c_send1, c_send2 = st.columns(2)
-                    with c_send1:
-                        if st.button(f"👉 Dùng cho Kênh 1 (saigonbac)", key=f"btn_send_sg_{key_name}", width='stretch'):
-                            st.session_state.sg_quote_text = h_quote
-                            st.session_state.sg_rendered_video = None
-                            st.toast("Đã chuyển câu quote sang Kênh 1 (saigonbac)!", icon="☕")
-                    with c_send2:
-                        if st.button(f"👉 Dùng cho Kênh 2 (Lặng)", key=f"btn_send_new_{key_name}", width='stretch'):
-                            st.session_state.new_quote_text = h_quote
-                            st.session_state.new_rendered_video = None
-                            st.session_state.new_comic_rendered_slide = None
-                            st.toast("Đã chuyển câu quote sang Kênh 2 (Lặng)!", icon="🎬")
-
-    with v_col_right:
-        st.subheader("2. Kho Mẫu Hook Outlier (100% Proven)")
-        
-        tab_h_sg, tab_h_new = st.tabs(["☕ Hook Kênh saigonbac", "🎬 Hook Kênh Lặng"])
-        
-        with tab_h_sg:
-            for cat_name, hooks in VIRAL_HOOK_PATTERNS["saigonbac"].items():
-                with st.expander(f"📌 {cat_name} ({len(hooks)} mẫu)", expanded=False):
-                    for hk in hooks:
-                        col_h_txt, col_h_btn = st.columns([3.5, 1])
-                        with col_h_txt:
-                            st.markdown(f"• <b>{hk}</b>", unsafe_allow_html=True)
-                        with col_h_btn:
-                            if st.button("Chọn", key=f"sel_hk_sg_{hk[:12]}"):
-                                st.session_state.v_lab_input_text = hk
-                                st.session_state.sg_quote_text = hk
-                                st.toast("Đã nạp hook vào Studio!", icon="✨")
-                                st.rerun()
-
-        with tab_h_new:
-            for cat_name, hooks in VIRAL_HOOK_PATTERNS["kenh_moi"].items():
-                with st.expander(f"📌 {cat_name} ({len(hooks)} mẫu)", expanded=False):
-                    for hk in hooks:
-                        col_h_txt, col_h_btn = st.columns([3.5, 1])
-                        with col_h_txt:
-                            st.markdown(f"• <b>{hk}</b>", unsafe_allow_html=True)
-                        with col_h_btn:
-                            if st.button("Chọn", key=f"sel_hk_new_{hk[:12]}"):
-                                st.session_state.v_lab_input_text = hk
-                                st.session_state.new_quote_text = hk
-                                st.toast("Đã nạp hook vào Studio!", icon="✨")
-                                st.rerun()
-
-        st.markdown("---")
-        st.subheader("3. Công Thức Đẩy Đề Xuất TikTok FYP")
-        st.markdown(
-            """
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid #334155; border-radius: 12px; padding: 1rem; font-size: 0.88rem; line-height: 1.6;">
-                <b>🚀 4 Quy Tắc Sống Còn Giúp Thoát Kẹt View (200 View Trap):</b><br>
-                1. <b>Quy tắc 3 giây đầu:</b> Tuyệt đối không chào hỏi hoặc viết câu mở đầu dài dòng. Mắt người xem chỉ quét 5-7 từ đầu tiên.<br>
-                2. <b>Không nhúng nhạc sẵn (No Audio):</b> Tool xuất video câm để bạn <b>chọn nhạc Trending trực tiếp trong ứng dụng TikTok</b> khi đăng. Thuật toán TikTok đẩy view mạnh cho video dùng âm thanh xu hướng.<br>
-                3. <b>Thời lượng vàng (7s - 15s):</b> Video ngắn giúp người xem đọc xong câu quote là hết video, đạt 100% Completion Rate (Tỷ lệ xem hết), kích hoạt thuật toán đẩy sang tệp người xem mới.<br>
-                4. <b>Caption kích thích bình luận:</b> Đặt câu hỏi mở ở cuối caption: <i>"Bạn đã nhận ra điều này ở tuổi bao nhiêu?"</i> hoặc <i>"Còn điều gì bạn muốn thêm vào không?"</i> để kéo comment.
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    # ==============================================================================
-    # PHẦN 4: NGHIÊN CỨU & SINH HÌNH ẢNH VIRAL (VISUAL OUTLIER STUDIO)
-    # ==============================================================================
-    st.divider()
-    st.subheader("4. 🖼️ Nghiên Cứu & Sinh Hình Ảnh Viral (Visual Outlier Studio)")
-    st.markdown(
-        """
-        <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid #334155; border-radius: 10px; padding: 0.9rem; font-size: 0.88rem; margin-bottom: 1.2rem;">
-            💡 <b>Bóc tách từ ScrapeCreators & OpenCreator:</b> Các video triệu view luôn có <b>4 đặc trưng thị giác</b>:
-            <b>(1) Vùng âm tối ở 40% đáy màn hình</b> (Negative Space) để chữ typography không bị lẫn vào nền; 
-            <b>(2) Ánh sáng tương phản Teal & Amber</b> (xanh đêm lạnh đối lập đèn vàng ấm kích thích cảm xúc hoài niệm);
-            <b>(3) Giấu mặt nhân vật (Faceless)</b> để người xem tự hóa thân vào nhân vật;
-            <b>(4) Tỷ lệ chuẩn dọc 9:16</b> chất lượng điện ảnh 35mm.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    vis_tab_sg, vis_tab_new, vis_tab_ai = st.tabs([
-        "☕ Bối Cảnh Ảnh Kênh saigonbac",
-        "🎬 Bối Cảnh Ảnh Kênh Lặng",
-        "🤖 AI Tự Thiết Kế Prompt Cho Quote",
-    ])
-
-    if "v_lab_generated_img" not in st.session_state:
-        st.session_state.v_lab_generated_img = None
-
-    with vis_tab_sg:
-        c_vis_left, c_vis_right = st.columns([1.3, 1.0], gap="medium")
-        with c_vis_left:
-            for idx, item in enumerate(OUTLIER_VISUAL_TEMPLATES["saigonbac"]):
-                with st.expander(f"{item['title']}", expanded=(idx == 0)):
-                    st.markdown(f"🎯 <b>Vì sao dễ viral:</b> <span style='color: #38BDF8;'>{item['why_viral']}</span>", unsafe_allow_html=True)
-                    st.code(item["flux_prompt"], language="text")
-                    
-                    c_btn_g1, c_btn_g2 = st.columns(2)
-                    with c_btn_g1:
-                        if st.button("✨ Sinh Ảnh FLUX AI (1-Click)", key=f"btn_flux_sg_{idx}", width='stretch', type="primary"):
-                            with st.spinner("Đang gọi FLUX.1 AI sinh ảnh 1080x1920 chuẩn Negative Space..."):
-                                try:
-                                    img_p = generate_flux_image(item["flux_prompt"], output_dir=Path("data/cache/ai_images"))
-                                    st.session_state.v_lab_generated_img = str(img_p)
-                                    st.toast("Đã sinh ảnh FLUX.1 thành công!", icon="🎨")
-                                except Exception as ex:
-                                    st.error(f"Lỗi sinh ảnh AI: {ex}")
-                    with c_btn_g2:
-                        if st.button("📌 Cào Ảnh Pinterest", key=f"btn_pin_sg_{idx}", width='stretch'):
-                            with st.spinner(f"Đang tìm ảnh Pinterest: {item['pinterest_query']}..."):
-                                try:
-                                    pin_imgs = search_and_download_pinterest(query=item["pinterest_query"], limit=4, output_dir="temp/pinterest")
-                                    if pin_imgs:
-                                        st.session_state.v_lab_generated_img = str(pin_imgs[0])
-                                        st.toast("Đã tải ảnh Pinterest thành công!", icon="📌")
-                                    else:
-                                        st.warning("Không tìm thấy ảnh phù hợp trên Pinterest.")
-                                except Exception as ex:
-                                    st.error(f"Lỗi Pinterest: {ex}")
-
-        with c_vis_right:
-            st.markdown("<b>Khung Xem Trước Ảnh Nền Viral:</b>", unsafe_allow_html=True)
-            lab_img = st.session_state.get("v_lab_generated_img")
-            if lab_img and Path(lab_img).exists():
-                st.image(str(lab_img), width='stretch')
-                c_use1, c_use2 = st.columns(2)
-                with c_use1:
-                    if st.button("👉 Đặt làm Nền Kênh 1 (saigonbac)", width='stretch', key="btn_apply_sg_bg", type="primary"):
-                        st.session_state.sg_bg_image = str(lab_img)
-                        st.session_state.sg_rendered_video = None
-                        st.toast("Đã nạp ảnh vào Kênh 1! Chuyển sang Tab 1 để tạo video.", icon="☕")
-                with c_use2:
-                    if st.button("👉 Đặt làm Nền Kênh 2 (Lặng)", width='stretch', key="btn_apply_new_bg"):
-                        st.session_state.new_comic_bg_image = str(lab_img)
-                        st.session_state.new_comic_rendered_slide = None
-                        st.session_state.new_comic_rendered_video = None
-                        st.toast("Đã nạp ảnh vào Kênh 2!", icon="🎬")
-            else:
-                st.info("Bấm nút **[ ✨ Sinh Ảnh FLUX AI ]** hoặc **[ 📌 Cào Ảnh Pinterest ]** bên cạnh để tạo ảnh nền và xem trước tại đây.")
-
-    with vis_tab_new:
-        c_vis_n_left, c_vis_n_right = st.columns([1.3, 1.0], gap="medium")
-        with c_vis_n_left:
-            for idx, item in enumerate(OUTLIER_VISUAL_TEMPLATES["kenh_moi"]):
-                with st.expander(f"{item['title']}", expanded=(idx == 0)):
-                    st.markdown(f"🎯 <b>Vì sao dễ viral:</b> <span style='color: #F43F5E;'>{item['why_viral']}</span>", unsafe_allow_html=True)
-                    st.code(item["flux_prompt"], language="text")
-                    
-                    c_btn_n1, c_btn_n2 = st.columns(2)
-                    with c_btn_n1:
-                        if st.button("✨ Sinh Ảnh FLUX AI (1-Click)", key=f"btn_flux_new_{idx}", width='stretch', type="primary"):
-                            with st.spinner("Đang gọi FLUX.1 AI sinh ảnh 1080x1920 chuẩn Chiaroscuro..."):
-                                try:
-                                    img_p = generate_flux_image(item["flux_prompt"], output_dir=Path("data/cache/ai_images"))
-                                    st.session_state.v_lab_generated_img = str(img_p)
-                                    st.toast("Đã sinh ảnh FLUX.1 thành công!", icon="🎨")
-                                except Exception as ex:
-                                    st.error(f"Lỗi sinh ảnh AI: {ex}")
-                    with c_btn_n2:
-                        if st.button("📌 Cào Ảnh Pinterest", key=f"btn_pin_new_{idx}", width='stretch'):
-                            with st.spinner(f"Đang tìm ảnh Pinterest: {item['pinterest_query']}..."):
-                                try:
-                                    pin_imgs = search_and_download_pinterest(query=item["pinterest_query"], limit=4, output_dir="temp/pinterest")
-                                    if pin_imgs:
-                                        st.session_state.v_lab_generated_img = str(pin_imgs[0])
-                                        st.toast("Đã tải ảnh Pinterest thành công!", icon="📌")
-                                    else:
-                                        st.warning("Không tìm thấy ảnh phù hợp trên Pinterest.")
-                                except Exception as ex:
-                                    st.error(f"Lỗi Pinterest: {ex}")
-
-        with c_vis_n_right:
-            st.markdown("<b>Khung Xem Trước Ảnh Nền Viral:</b>", unsafe_allow_html=True)
-            lab_img = st.session_state.get("v_lab_generated_img")
-            if lab_img and Path(lab_img).exists():
-                st.image(str(lab_img), width='stretch')
-                c_use1, c_use2 = st.columns(2)
-                with c_use1:
-                    if st.button("👉 Đặt làm Nền Kênh 1 (saigonbac)", width='stretch', key="btn_apply_sg_bg_2"):
-                        st.session_state.sg_bg_image = str(lab_img)
-                        st.session_state.sg_rendered_video = None
-                        st.toast("Đã nạp ảnh vào Kênh 1!", icon="☕")
-                with c_use2:
-                    if st.button("👉 Đặt làm Nền Kênh 2 (Lặng)", width='stretch', key="btn_apply_new_bg_2", type="primary"):
-                        st.session_state.new_comic_bg_image = str(lab_img)
-                        st.session_state.new_comic_rendered_slide = None
-                        st.session_state.new_comic_rendered_video = None
-                        st.toast("Đã nạp ảnh vào Kênh 2!", icon="🎬")
-            else:
-                st.info("Bấm nút **[ ✨ Sinh Ảnh FLUX AI ]** hoặc **[ 📌 Cào Ảnh Pinterest ]** bên cạnh để tạo ảnh nền.")
-
-    with vis_tab_ai:
-        st.markdown("### 🤖 Visual Director: Tự Động Thiết Kế Prompt Cho Bất Kỳ Câu Quote Nào")
-        st.markdown("AI đọc câu quote của bạn, bóc tách ẩn dụ cảm xúc và tự tạo prompt tiếng Anh chuẩn 4-layer theo phong cách OpenCreator.")
-        
-        current_lab_q = st.session_state.get("v_user_quote_input", "Có một sự thật tàn nhẫn: người càng tử tế càng dễ chịu thiệt thòi.")
-        st.info(f"Quote đang phân tích: *\"{current_lab_q}\"*")
-        
-        col_gen_p1, col_gen_p2 = st.columns([1.5, 1.0])
-        with col_gen_p1:
-            if st.button("🔮 AI Tạo Prompt Điện Ảnh & Sinh Ảnh FLUX Ngay", type="primary", width='stretch', key="btn_ai_visual_director"):
-                with st.spinner("AI đang thiết kế prompt điện ảnh 4-layer..."):
-                    generated_prompt = build_ai_visual_prompt_from_quote(current_lab_q, channel=ch_flag, config=config)
-                    st.session_state["v_custom_prompt"] = generated_prompt
-                    st.toast("Đã thiết kế prompt thành công! Đang sinh ảnh FLUX...", icon="✨")
-                with st.spinner("FLUX.1 đang vẽ bức tranh 9:16 có không gian âm..."):
-                    try:
-                        img_res = generate_flux_image(generated_prompt, output_dir=Path("data/cache/ai_images"))
-                        st.session_state.v_lab_generated_img = str(img_res)
-                        st.toast("Hoàn tất sinh ảnh AI cho câu quote!", icon="🎉")
-                    except Exception as ex:
-                        st.error(f"Lỗi khi sinh ảnh: {ex}")
-
-            if "v_custom_prompt" in st.session_state and st.session_state["v_custom_prompt"]:
-                st.markdown("<b>Prompt do AI Visual Director sáng tác:</b>", unsafe_allow_html=True)
-                st.code(st.session_state["v_custom_prompt"], language="text")
-
-        with col_gen_p2:
-            st.markdown("<b>Ảnh Thành Phẩm Cho Câu Quote:</b>", unsafe_allow_html=True)
-            lab_img = st.session_state.get("v_lab_generated_img")
-            if lab_img and Path(lab_img).exists():
-                st.image(str(lab_img), width='stretch')
-                if st.button("👉 Đặt làm Ảnh Nền Cho Video Này", type="primary", width='stretch', key="btn_apply_ai_img"):
-                    if ch_flag == "saigonbac":
-                        st.session_state.sg_bg_image = str(lab_img)
-                        st.session_state.sg_quote_text = current_lab_q
-                        st.session_state.sg_rendered_video = None
-                    else:
-                        st.session_state.new_comic_bg_image = str(lab_img)
-                        st.session_state.new_quote_text = current_lab_q
-                        st.session_state.new_comic_rendered_slide = None
-                    st.toast("Đã chuyển ảnh và quote sang Studio! Sẵn sàng render.", icon="🚀")
-            else:
-                st.caption("Ảnh sau khi AI sinh sẽ xuất hiện tại đây.")
 
 
