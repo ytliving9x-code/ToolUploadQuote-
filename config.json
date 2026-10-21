@@ -19,7 +19,9 @@
     "duration_min": 7.0,
     "duration_max": 10.0,
     "target_duration": 8.0,
-    "overlay_opacity": 0.3
+    "overlay_opacity": 0.3,
+    "image_motion": "cinematic_drift",
+    "cinematic_vignette": true
   },
   "typography": {
     "font_family": "assets/fonts/BeVietnamPro-Bold.ttf",

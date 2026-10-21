@@ -201,6 +201,8 @@ def render_18s_video(
     scrim_max_alpha: int = 145,
     shadow_blur_radius: float = 3.5,
     stroke_width: int = 1,
+    motion_type: str = "cinematic_drift",
+    cinematic_vignette: bool = True,
 ) -> Path:
     """
     Render video TikTok chuẩn 18 giây, tỷ lệ 9:16 (1080x1920), không có âm thanh.
@@ -245,12 +247,25 @@ def render_18s_video(
     fade_out_start = max(1.5, duration - 0.8)
 
     # Filter ghép ảnh và chữ:
-    # - scale 1080:1920 dùng bicubic/lanczos giữ nguyên 100% độ nét gốc của ảnh, KHÔNG phủ đen (overlay_opacity=0)
-    # - Chữ trắng có sẵn bóng đen mờ mềm mại nên luôn nổi bật tự nhiên mà không làm tối hay mờ ảnh nền
+    # - Nếu motion_type là 'cinematic_drift': zoompan siêu chậm Ken Burns 1.0 -> 1.05 tạo thước phim sống động
+    # - Chữ trắng fade-in mượt từ giây 0.3 trong 1.0s
+    num_frames = max(1, int(duration * 30))
+    if motion_type in ["cinematic_drift", "zoom"]:
+        zoom_step = 0.06 / num_frames
+        motion_filter = f"zoompan=z='min(zoom+{zoom_step:.6f},1.06)':d={num_frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps=30,"
+    else:
+        motion_filter = "fps=30,"
+
+    vignette_f = "vignette=PI/5.5," if cinematic_vignette else ""
+    fade_text = "fade=t=in:st=0.3:d=1.0:alpha=1"
+
     filter_complex = (
         f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
-        f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,fps=30[bg];"
-        f"[1:v]format=rgba[text];"
+        f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,"
+        f"{motion_filter}"
+        f"{vignette_f}"
+        f"fps=30[bg];"
+        f"[1:v]format=rgba,{fade_text}[text];"
         f"[bg][text]overlay=0:0:shortest=1[outv]"
     )
 

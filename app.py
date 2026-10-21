@@ -30,12 +30,20 @@ from dotenv import load_dotenv
 import importlib
 
 # Tự động nạp lại các module con trong thư mục modules/ để tránh stale cache RAM của Streamlit
-for _m_name in ["modules.ai_image_gen", "modules.pinterest_fetcher", "modules.video_engine", "modules.video_renderer", "modules.quote_gen"]:
+for _m_name in ["modules.ai_image_gen", "modules.pinterest_fetcher", "modules.video_engine", "modules.video_renderer", "modules.quote_gen", "modules.viral_research"]:
     if _m_name in sys.modules:
         try:
             importlib.reload(sys.modules[_m_name])
         except Exception:
             pass
+
+from modules.viral_research import (
+    VIRAL_HOOK_PATTERNS,
+    HIGH_RETENTION_VISUALS,
+    get_random_outlier_hooks,
+    score_hook_strength,
+    boost_quote_with_ai,
+)
 
 from modules.pixabay_fetcher import (
     DEFAULT_DARK_KEYWORDS,
@@ -368,10 +376,11 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Phân tách 2 kênh tại cấp độ cao nhất của ứng dụng
-tab_ch_saigonbac, tab_ch_new = st.tabs([
+# Phân tách các không gian làm việc chuyên sâu
+tab_ch_saigonbac, tab_ch_new, tab_viral_lab = st.tabs([
     "☕ KÊNH 1: SAIGONBAC (Ảnh Tĩnh 18s)",
     "🎬 KÊNH 2: LẶNG (Video B-Roll Chuyển Động)",
+    "🔥 LAB HOOK VIRAL & KÉO VIEW TIKTOK",
 ])
 
 
@@ -1462,3 +1471,165 @@ with tab_ch_new:
                     """,
                     unsafe_allow_html=True,
                 )
+
+
+# ==============================================================================
+# WORKSPACE TAB 3: PHÒNG THÍ NGHIỆM HOOK VIRAL & RETENTION (KÉO VIEW TIKTOK)
+# ==============================================================================
+with tab_viral_lab:
+    st.markdown(
+        """
+        <div class="channel-banner" style="background: linear-gradient(135deg, rgba(244,63,94,0.15) 0%, rgba(56,189,248,0.15) 100%); border: 1px solid rgba(244,63,94,0.4);">
+            🔥 <b>TikTok Retention & Outlier Research Lab</b>: 80% lý do kênh ít view nằm ở <b>3 giây đầu tiên (Hook)</b>. 
+            Công cụ này phân tích cấu trúc tâm lý của video triệu view, đo lường điểm giữ chân và dùng AI 'độ' lại câu quote của bạn thành phiên bản có tỷ lệ xem hết cao gấp 3 lần.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    v_col_left, v_col_right = st.columns([1.2, 1.0], gap="large")
+
+    with v_col_left:
+        st.subheader("1. AI Hook Booster: Tối Ưu Điểm Giữ Chân 3s Đầu")
+        
+        target_v_ch = st.radio(
+            "Chọn kênh mục tiêu cần tối ưu:",
+            options=["☕ Kênh saigonbac (Tâm sự, Hoài niệm, Chữa lành)", "🎬 Kênh Lặng (Bản lĩnh, Ẩn nhẫn Tư Mã Ý, Tiền tài)"],
+            horizontal=True,
+            key="v_target_channel_radio",
+        )
+        ch_flag = "saigonbac" if "saigonbac" in target_v_ch else "kenh_moi"
+
+        if "v_lab_input_text" not in st.session_state:
+            st.session_state.v_lab_input_text = "Bước qua tuổi 25 bạn sẽ nhận ra một điều tàn nhẫn: người càng tử tế thì càng dễ chịu thiệt thòi."
+
+        v_input = st.text_area(
+            "Nhập câu quote hoặc ý tưởng nội dung của bạn:",
+            value=st.session_state.v_lab_input_text,
+            height=100,
+            key="v_user_quote_input",
+            help="Nhập câu bạn định làm video. Chúng tôi sẽ thẩm định độ giữ chân của câu này.",
+        )
+
+        c_v_btn1, c_v_btn2 = st.columns(2)
+        with c_v_btn1:
+            btn_audit = st.button("📊 Thẩm Định Điểm Hook 3s", width='stretch', type="secondary", key="btn_hook_audit")
+        with c_v_btn2:
+            btn_boost = st.button("🚀 AI 'Độ' Hook Triệu View", width='stretch', type="primary", key="btn_hook_boost")
+
+        if btn_audit:
+            with st.spinner("Đang đo lường chỉ số giữ chân thị giác và tâm lý học..."):
+                audit_res = score_hook_strength(v_input)
+                st.session_state["v_last_audit"] = audit_res
+
+        if "v_last_audit" in st.session_state and st.session_state["v_last_audit"]:
+            res = st.session_state["v_last_audit"]
+            st.markdown(
+                f"""
+                <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #334155; border-radius: 12px; padding: 1rem; margin-top: 0.8rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <span style="font-size: 1.1rem; font-weight: 700;">Điểm Níu Chân (Hook Score):</span>
+                        <span style="font-size: 1.5rem; font-weight: 800; color: #38BDF8;">{res['score']}/100</span>
+                    </div>
+                    <div style="color: #F43F5E; font-weight: 600; margin-bottom: 0.5rem;">Đánh giá: {res['grade']}</div>
+                    <div style="font-size: 0.85rem; color: #94A3B8;">3 giây đầu tiên người xem đọc: <i>"{res['first_hook_words']}..."</i></div>
+                    <hr style="border-color: #334155; margin: 0.6rem 0;">
+                    <ul style="font-size: 0.88rem; margin: 0; padding-left: 1.2rem; color: #E2E8F0;">
+                        {"".join([f"<li>{r}</li>" for r in res['reasons']])}
+                    </ul>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        if btn_boost:
+            with st.spinner("AI đang bóc tách tâm lý và thiết kế 3 biến thể Hook giữ chân..."):
+                try:
+                    boost_results = boost_quote_with_ai(v_input, channel=ch_flag, config=config)
+                    st.session_state["v_boost_data"] = boost_results
+                    st.toast("Đã tạo 3 phiên bản Hook triệu view thành công!", icon="🔥")
+                except Exception as e:
+                    st.error(f"Lỗi AI: {e}")
+
+        if "v_boost_data" in st.session_state and st.session_state["v_boost_data"]:
+            b_data = st.session_state["v_boost_data"]
+            st.markdown("---")
+            st.markdown("🎯 **3 Phiên Bản Hook Giữ Chân Khách Hàng Tuyệt Đối:**")
+
+            for key_name, item in b_data.items():
+                if isinstance(item, dict):
+                    h_type = item.get("hook_type", "Biến thể Hook")
+                    h_quote = item.get("quote", "")
+                    h_why = item.get("why_it_works", "")
+
+                    st.markdown(
+                        f"""
+                        <div style="background: rgba(30, 41, 59, 0.75); border-left: 4px solid #38BDF8; border-radius: 8px; padding: 0.85rem 1.1rem; margin-bottom: 0.8rem;">
+                            <div style="color: #38BDF8; font-weight: 700; font-size: 0.9rem; margin-bottom: 0.3rem;">⚡ {h_type}</div>
+                            <div style="font-size: 1.05rem; font-weight: 600; color: #FFFFFF; line-height: 1.45; margin-bottom: 0.4rem;">"{h_quote}"</div>
+                            <div style="font-size: 0.82rem; color: #94A3B8;">💡 <i>{h_why}</i></div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                    c_send1, c_send2 = st.columns(2)
+                    with c_send1:
+                        if st.button(f"👉 Dùng cho Kênh 1 (saigonbac)", key=f"btn_send_sg_{key_name}", width='stretch'):
+                            st.session_state.sg_quote_text = h_quote
+                            st.session_state.sg_rendered_video = None
+                            st.toast("Đã chuyển câu quote sang Kênh 1 (saigonbac)!", icon="☕")
+                    with c_send2:
+                        if st.button(f"👉 Dùng cho Kênh 2 (Lặng)", key=f"btn_send_new_{key_name}", width='stretch'):
+                            st.session_state.new_quote_text = h_quote
+                            st.session_state.new_rendered_video = None
+                            st.session_state.new_comic_rendered_slide = None
+                            st.toast("Đã chuyển câu quote sang Kênh 2 (Lặng)!", icon="🎬")
+
+    with v_col_right:
+        st.subheader("2. Kho Mẫu Hook Outlier (100% Proven)")
+        
+        tab_h_sg, tab_h_new = st.tabs(["☕ Hook Kênh saigonbac", "🎬 Hook Kênh Lặng"])
+        
+        with tab_h_sg:
+            for cat_name, hooks in VIRAL_HOOK_PATTERNS["saigonbac"].items():
+                with st.expander(f"📌 {cat_name} ({len(hooks)} mẫu)", expanded=False):
+                    for hk in hooks:
+                        col_h_txt, col_h_btn = st.columns([3.5, 1])
+                        with col_h_txt:
+                            st.markdown(f"• <b>{hk}</b>", unsafe_allow_html=True)
+                        with col_h_btn:
+                            if st.button("Chọn", key=f"sel_hk_sg_{hk[:12]}"):
+                                st.session_state.v_lab_input_text = hk
+                                st.session_state.sg_quote_text = hk
+                                st.toast("Đã nạp hook vào Studio!", icon="✨")
+                                st.rerun()
+
+        with tab_h_new:
+            for cat_name, hooks in VIRAL_HOOK_PATTERNS["kenh_moi"].items():
+                with st.expander(f"📌 {cat_name} ({len(hooks)} mẫu)", expanded=False):
+                    for hk in hooks:
+                        col_h_txt, col_h_btn = st.columns([3.5, 1])
+                        with col_h_txt:
+                            st.markdown(f"• <b>{hk}</b>", unsafe_allow_html=True)
+                        with col_h_btn:
+                            if st.button("Chọn", key=f"sel_hk_new_{hk[:12]}"):
+                                st.session_state.v_lab_input_text = hk
+                                st.session_state.new_quote_text = hk
+                                st.toast("Đã nạp hook vào Studio!", icon="✨")
+                                st.rerun()
+
+        st.markdown("---")
+        st.subheader("3. Công Thức Đẩy Đề Xuất TikTok FYP")
+        st.markdown(
+            """
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid #334155; border-radius: 12px; padding: 1rem; font-size: 0.88rem; line-height: 1.6;">
+                <b>🚀 4 Quy Tắc Sống Còn Giúp Thoát Kẹt View (200 View Trap):</b><br>
+                1. <b>Quy tắc 3 giây đầu:</b> Tuyệt đối không chào hỏi hoặc viết câu mở đầu dài dòng. Mắt người xem chỉ quét 5-7 từ đầu tiên.<br>
+                2. <b>Không nhúng nhạc sẵn (No Audio):</b> Tool xuất video câm để bạn <b>chọn nhạc Trending trực tiếp trong ứng dụng TikTok</b> khi đăng. Thuật toán TikTok đẩy view mạnh cho video dùng âm thanh xu hướng.<br>
+                3. <b>Thời lượng vàng (7s - 15s):</b> Video ngắn giúp người xem đọc xong câu quote là hết video, đạt 100% Completion Rate (Tỷ lệ xem hết), kích hoạt thuật toán đẩy sang tệp người xem mới.<br>
+                4. <b>Caption kích thích bình luận:</b> Đặt câu hỏi mở ở cuối caption: <i>"Bạn đã nhận ra điều này ở tuổi bao nhiêu?"</i> hoặc <i>"Còn điều gì bạn muốn thêm vào không?"</i> để kéo comment.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+

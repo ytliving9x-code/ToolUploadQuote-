@@ -731,18 +731,22 @@ def build_video(
     # Thời điểm bắt đầu fade-out chữ
     fade_out_start = max(1.5, actual_duration - fade_out_d)
 
-    image_motion = config.get("video", {}).get("image_motion", "static")
+    image_motion = config.get("video", {}).get("image_motion", "cinematic_drift")
+    cinematic_vignette = config.get("video", {}).get("cinematic_vignette", True)
+    vignette_filter = "vignette=PI/5.5," if cinematic_vignette else ""
 
     # Filter video/ảnh nền:
     # Nếu là ảnh tĩnh:
-    #   - 'static' (mặc định): ảnh nằm yên hoàn toàn, không zoom, giữ nguyên độ nét tối đa
-    #   - 'zoom': zoompan nhẹ Ken Burns
-    # Nếu là video: trim, scale & center crop
+    #   - 'cinematic_drift' (mặc định tối ưu TikTok): zoompan siêu chậm 1.0 -> 1.08 tạo cảm giác thước phim sống động
+    #   - 'cinematic_slow_pan': panning ngang nhẹ nhàng
+    #   - 'static': ảnh nằm yên hoàn toàn
     if is_image:
         num_frames = max(1, int(actual_duration * 30))
-        if image_motion == "zoom":
-            zoom_step = 0.15 / num_frames
-            motion_filter = f"zoompan=z='min(zoom+{zoom_step:.6f},1.15)':d={num_frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps=30,"
+        if image_motion in ["zoom", "cinematic_drift"]:
+            zoom_step = 0.08 / num_frames
+            motion_filter = f"zoompan=z='min(zoom+{zoom_step:.6f},1.08)':d={num_frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps=30,"
+        elif image_motion == "cinematic_slow_pan":
+            motion_filter = f"zoompan=z=1.06:x='if(lte(on,1),(iw-iw/zoom)/2,min(x+0.35,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d={num_frames}:s=1080x1920:fps=30,"
         else:
             motion_filter = "fps=30,"
 
@@ -750,6 +754,7 @@ def build_video(
             f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,"
             f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,"
             f"{motion_filter}"
+            f"{vignette_filter}"
             f"drawbox=x=0:y=0:w=iw:h=ih:color=black@{overlay_opacity:.2f}:t=fill[bg]"
         )
         input_args = ["-loop", "1", "-t", str(actual_duration), "-i", str(f_path)]
@@ -758,17 +763,17 @@ def build_video(
             f"[0:v]trim=0:{actual_duration},setpts=PTS-STARTPTS,"
             f"scale=1080:1920:force_original_aspect_ratio=increase,"
             f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,fps=30,"
+            f"{vignette_filter}"
             f"drawbox=x=0:y=0:w=iw:h=ih:color=black@{overlay_opacity:.2f}:t=fill[bg]"
         )
         input_args = ["-i", str(f_path)]
 
     # Filter chữ:
-    # - Fade-in từ giây 0.4 trong 1.2s
-    # - Fade-out ở cuối trong 0.8s
-    # Ghép chữ lên video nền bằng overlay
+    # - Hiệu ứng Fade-in mượt mà từ giây 0.3 trong fade_in_d giây tạo cảm giác điện ảnh
+    fade_filter = f"fade=t=in:st=0.3:d={fade_in_d:.2f}:alpha=1"
     filter_complex = (
         f"{bg_filter};"
-        f"[1:v]format=rgba[text];"
+        f"[1:v]format=rgba,{fade_filter}[text];"
         f"[bg][text]overlay=0:0:shortest=1[outv]"
     )
 
