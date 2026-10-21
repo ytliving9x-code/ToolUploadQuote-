@@ -262,9 +262,16 @@ def generate_quote_preview_image(
         top = (new_h - target_h) // 2
         bg_cropped = resized.crop((left, top, left + target_w, top + target_h))
 
-    # Phủ lớp tối nhẹ (dark overlay) tương đương trong video
+    # Phủ lớp tối nhẹ và grading điện ảnh tương đương trong video
+    from PIL import ImageEnhance
+    bg_rgb = bg_cropped.convert("RGB")
+    enhancer_b = ImageEnhance.Brightness(bg_rgb)
+    bg_dark = enhancer_b.enhance(0.88)
+    enhancer_c = ImageEnhance.Contrast(bg_dark)
+    bg_graded = enhancer_c.enhance(1.15).convert("RGBA")
+
     dim_overlay = Image.new("RGBA", (1080, 1920), (0, 0, 0, int(255 * overlay_opacity)))
-    bg_composite = Image.alpha_composite(bg_cropped, dim_overlay)
+    bg_composite = Image.alpha_composite(bg_graded, dim_overlay)
 
     # Xử lý typography
     max_text_width = 1080 - 2 * margin_h
