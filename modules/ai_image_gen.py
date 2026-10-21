@@ -108,54 +108,7 @@ def generate_flux_image(
     dest_dir.mkdir(parents=True, exist_ok=True)
     target_path = dest_dir / f"flux_{uuid.uuid4().hex[:8]}.jpg"
 
-    # Cách 1: Thử dùng g4f nếu đã cài đặt
-    try:
-        from g4f.client import Client
-        logger.info(f"Đang gọi FLUX.1 qua g4f với prompt: {prompt[:80]}...")
-        client = Client()
-        res = client.images.generate(model=model, prompt=prompt)
-        if res and hasattr(res, "data") and res.data:
-            raw_item = res.data[0]
-            raw_url = raw_item.url if hasattr(raw_item, "url") else str(raw_item)
-            if "?url=" in str(raw_url):
-                real_url = urllib.parse.unquote(str(raw_url).split("?url=")[1])
-            else:
-                real_url = str(raw_url)
-
-            req = urllib.request.Request(real_url, headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-            })
-            temp_raw = dest_dir / f"raw_flux_{uuid.uuid4().hex[:6]}.tmp"
-            with urllib.request.urlopen(req, timeout=35) as resp:
-                data = resp.read()
-                if len(data) >= 5000:
-                    with open(temp_raw, "wb") as f:
-                        f.write(data)
-                    with Image.open(temp_raw) as img:
-                        img = img.convert("RGB")
-                        w, h = img.size
-                        ratio = width / height
-                        cur_ratio = w / h
-                        if cur_ratio > ratio:
-                            new_w = int(h * ratio)
-                            left = (w - new_w) // 2
-                            img = img.crop((left, 0, left + new_w, h))
-                        else:
-                            new_h = int(w / ratio)
-                            top = (h - new_h) // 2
-                            img = img.crop((0, top, w, top + new_h))
-                        img = img.resize((width, height), Image.Resampling.LANCZOS)
-                        img.save(target_path, "JPEG", quality=95)
-                    if temp_raw.exists():
-                        temp_raw.unlink(missing_ok=True)
-                    logger.info(f"Đã sinh ảnh FLUX.1 qua g4f: {target_path}")
-                    return target_path
-    except (ImportError, ModuleNotFoundError):
-        logger.info("Chưa cài g4f, tự động chuyển sang Pollinations FLUX.1 Engine...")
-    except Exception as g4f_err:
-        logger.warning(f"g4f gặp sự cố ({g4f_err}), chuyển sang Pollinations FLUX.1 Engine...")
-
-    # Cách 2: Gọi Pollinations FLUX.1 Engine trực tiếp (Miễn phí, cực kỳ ổn định, chuẩn 1080x1920)
+    # Cách 1: Sử dụng Pollinations FLUX.1 Engine (Cực kỳ ổn định, không cần cài thư viện ngoài, chuẩn 1080x1920)
     try:
         seed = random.randint(10000, 999999)
         encoded_prompt = urllib.parse.quote(prompt.strip())
@@ -163,7 +116,7 @@ def generate_flux_image(
             f"https://image.pollinations.ai/prompt/{encoded_prompt}"
             f"?width={width}&height={height}&model=flux&seed={seed}&nologo=true"
         )
-        logger.info(f"Đang gọi Pollinations FLUX.1: {prompt[:70]}...")
+        logger.info(f"Đang sinh ảnh FLUX.1 qua Pollinations Engine: {prompt[:70]}...")
         req = urllib.request.Request(
             pollinations_flux_url,
             headers={
@@ -181,10 +134,54 @@ def generate_flux_image(
                         if img.size != (width, height):
                             img = img.resize((width, height), Image.Resampling.LANCZOS)
                             img.save(target_path, "JPEG", quality=95)
-                    logger.info(f"Đã sinh ảnh FLUX.1 qua Pollinations thành công: {target_path.name}")
+                    logger.info(f"Đã sinh ảnh FLUX.1 thành công: {target_path.name}")
                     return target_path
     except Exception as poll_err:
-        logger.warning(f"Pollinations FLUX gặp sự cố ({poll_err}), chuyển sang kho ảnh Aesthetic tuyển chọn...")
+        logger.warning(f"Pollinations FLUX gặp sự cố ({poll_err}), chuyển sang kênh dự phòng...")
+
+    # Cách 2: Kiểm tra động g4f nếu có sẵn trong môi trường (không gây lỗi gạch đỏ IDE)
+    import importlib.util
+    if importlib.util.find_spec("g4f") is not None:
+        try:
+            g4f_client_mod = importlib.import_module("g4f.client")
+            Client = getattr(g4f_client_mod, "Client")
+            logger.info(f"Đang gọi FLUX.1 qua g4f...")
+            client = Client()
+            res = client.images.generate(model=model, prompt=prompt)
+            if res and hasattr(res, "data") and res.data:
+                raw_item = res.data[0]
+                raw_url = raw_item.url if hasattr(raw_item, "url") else str(raw_item)
+                real_url = urllib.parse.unquote(str(raw_url).split("?url=")[1]) if "?url=" in str(raw_url) else str(raw_url)
+
+                req = urllib.request.Request(real_url, headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                })
+                temp_raw = dest_dir / f"raw_flux_{uuid.uuid4().hex[:6]}.tmp"
+                with urllib.request.urlopen(req, timeout=35) as resp:
+                    data = resp.read()
+                    if len(data) >= 5000:
+                        with open(temp_raw, "wb") as f:
+                            f.write(data)
+                        with Image.open(temp_raw) as img:
+                            img = img.convert("RGB")
+                            w, h = img.size
+                            ratio = width / height
+                            cur_ratio = w / h
+                            if cur_ratio > ratio:
+                                new_w = int(h * ratio)
+                                left = (w - new_w) // 2
+                                img = img.crop((left, 0, left + new_w, h))
+                            else:
+                                new_h = int(w / ratio)
+                                top = (h - new_h) // 2
+                                img = img.crop((0, top, w, top + new_h))
+                            img = img.resize((width, height), Image.Resampling.LANCZOS)
+                            img.save(target_path, "JPEG", quality=95)
+                        if temp_raw.exists():
+                            temp_raw.unlink(missing_ok=True)
+                        return target_path
+        except Exception as g4f_err:
+            logger.warning(f"g4f fallback gặp sự cố: {g4f_err}")
 
     # Cách 3: Tuyển chọn ảnh Aesthetic Cinematic từ kho Unsplash Curated
     try:
