@@ -544,11 +544,14 @@ with tab_ch_saigonbac:
             with r1_cols[i]:
                 if st.button(p_name, key=f"btn_p_r1_{i}", width='stretch'):
                     with st.spinner(f"Đang nạp ảnh {p_name}..."):
-                        saved = download_curated_35mm_photo(p_link, Path("temp/background_sg.jpg"))
-                        st.session_state.sg_bg_image = str(saved)
-                        st.session_state.sg_rendered_video = None
-                        st.toast(f"Đã chọn ảnh: {p_name}!", icon="📸")
-                        st.rerun()
+                        try:
+                            saved = download_curated_35mm_photo(p_link, Path("temp/background_sg.jpg"))
+                            st.session_state.sg_bg_image = str(saved)
+                            st.session_state.sg_rendered_video = None
+                            st.toast(f"Đã chọn ảnh: {p_name}!", icon="📸")
+                            st.rerun()
+                        except Exception as ex:
+                            st.error(f"Lỗi khi nạp ảnh: {ex}")
 
         r2_cols = st.columns(4)
         for i in range(4, min(8, len(p_items))):
@@ -556,11 +559,14 @@ with tab_ch_saigonbac:
             with r2_cols[i - 4]:
                 if st.button(p_name, key=f"btn_p_r2_{i}", width='stretch'):
                     with st.spinner(f"Đang nạp ảnh {p_name}..."):
-                        saved = download_curated_35mm_photo(p_link, Path("temp/background_sg.jpg"))
-                        st.session_state.sg_bg_image = str(saved)
-                        st.session_state.sg_rendered_video = None
-                        st.toast(f"Đã chọn ảnh: {p_name}!", icon="📸")
-                        st.rerun()
+                        try:
+                            saved = download_curated_35mm_photo(p_link, Path("temp/background_sg.jpg"))
+                            st.session_state.sg_bg_image = str(saved)
+                            st.session_state.sg_rendered_video = None
+                            st.toast(f"Đã chọn ảnh: {p_name}!", icon="📸")
+                            st.rerun()
+                        except Exception as ex:
+                            st.error(f"Lỗi khi nạp ảnh: {ex}")
 
         with st.expander("🔍 Tìm thêm ảnh thật từ Pixabay / Picsum hoặc Tải ảnh từ máy", expanded=False):
             sg_tab_pix, sg_tab_up = st.tabs(["🌐 Tìm Ảnh Pixabay / Picsum", "📤 Tải Ảnh Từ Máy Tính"])

@@ -183,27 +183,55 @@ def generate_flux_image(
         except Exception as g4f_err:
             logger.warning(f"g4f fallback gặp sự cố: {g4f_err}")
 
-    # Cách 3: Tuyển chọn ảnh Aesthetic Cinematic từ kho Unsplash Curated
+    # Cách 3: Tuyển chọn ảnh Aesthetic Cinematic từ kho ảnh thật
     try:
         sample_url = random.choice(CURATED_AESTHETIC_PHOTOS)
         req = urllib.request.Request(
             sample_url,
-            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "Accept": "image/*,*/*;q=0.8",
+            },
         )
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = resp.read()
-            with open(target_path, "wb") as f:
-                f.write(data)
-            with Image.open(target_path) as img:
-                img = img.convert("RGB")
-                img = img.resize((width, height), Image.Resampling.LANCZOS)
-                img.save(target_path, "JPEG", quality=95)
-            logger.info(f"Đã nạp ảnh Aesthetic Unsplash thành công: {target_path.name}")
-            return target_path
+            if len(data) > 5000:
+                with open(target_path, "wb") as f:
+                    f.write(data)
+                with Image.open(target_path) as img:
+                    img = img.convert("RGB")
+                    img = img.resize((width, height), Image.Resampling.LANCZOS)
+                    img.save(target_path, "JPEG", quality=95)
+                logger.info(f"Đã nạp ảnh Aesthetic thành công: {target_path.name}")
+                return target_path
     except Exception as unsp_err:
-        logger.warning(f"Lỗi Unsplash fallback: {unsp_err}")
+        logger.warning(f"Lỗi kho ảnh Unsplash ({unsp_err}), chuyển sang Picsum...")
 
-    # Cách 4: Tạo ảnh fallback gradient tối thanh lịch
+    # Cách 4: Tải ảnh thật độ phân giải cao từ Picsum Photos (100% không bị chặn cloud)
+    try:
+        rnd_seed = random.randint(1000, 99999)
+        picsum_url = f"https://picsum.photos/{width}/{height}?random={rnd_seed}"
+        req_p = urllib.request.Request(
+            picsum_url,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
+        )
+        with urllib.request.urlopen(req_p, timeout=15) as resp:
+            data = resp.read()
+            if len(data) > 5000:
+                with open(target_path, "wb") as f:
+                    f.write(data)
+                logger.info(f"Đã tải ảnh thật từ Picsum thành công: {target_path.name}")
+                return target_path
+    except Exception as pic_err:
+        logger.warning(f"Lỗi Picsum fallback: {pic_err}")
+
+    # Cách 5: Dùng ảnh mẫu local hoặc tạo nền gradient tối điện ảnh
+    sample_loc = Path("assets/samples/retro_comic/sample_stoic_man.jpg")
+    if sample_loc.exists():
+        import shutil
+        shutil.copy(sample_loc, target_path)
+        return target_path
+
     img_fallback = Image.new("RGB", (width, height), color=(15, 23, 42))
     img_fallback.save(target_path, "JPEG")
     return target_path

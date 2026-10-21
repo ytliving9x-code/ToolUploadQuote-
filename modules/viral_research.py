@@ -22,42 +22,106 @@ from PIL import Image
 logger = logging.getLogger("tiktok_tool.viral_research")
 
 # ==============================================================================
-# KHO ẢNH THẬT 35MM ĐIỆN ẢNH TUYỂN CHỌN (UNSPLASH 1080x1920 CHUẨN OUTLIER)
+# KHO ẢNH THẬT 35MM ĐIỆN ẢNH TUYỂN CHỌN (1080x1920 KHÔNG BLOCK CLOUD/AWS)
 # ==============================================================================
 REAL_35MM_CURATED_PHOTOS = {
-    "🌧️ Mưa Đêm Phố Thị": "https://images.unsplash.com/photo-1514565131-fce0801e5785?q=80&w=1080&auto=format&fit=crop",
-    "☕ Cafe Đêm & Khói Mờ": "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1080&auto=format&fit=crop",
-    "🚶 Phố Vắng & Bước Chân": "https://images.unsplash.com/photo-1477959858617-67f30bc75b82?q=80&w=1080&auto=format&fit=crop",
-    "🚇 Ga Tàu Đêm & Vệt Sáng": "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1080&auto=format&fit=crop",
-    "🌆 Hoàng Hôn Tầng Cao": "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?q=80&w=1080&auto=format&fit=crop",
-    "♟️ Bàn Cờ & Góc Tối (Tư Mã Ý)": "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?q=80&w=1080&auto=format&fit=crop",
-    "🏢 Cao Ốc Đêm Thành Phố": "https://images.unsplash.com/photo-1519501025264-65ba15a82390?q=80&w=1080&auto=format&fit=crop",
-    "🌊 Biển Đêm Sóng Lớn": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1080&auto=format&fit=crop",
+    "🌧️ Mưa Đêm Phố Thị": "https://picsum.photos/id/1076/1080/1920",
+    "☕ Cafe Đêm & Khói Mờ": "https://picsum.photos/id/1060/1080/1920",
+    "🚶 Phố Vắng & Bước Chân": "https://picsum.photos/id/1067/1080/1920",
+    "🚇 Ga Tàu Đêm & Vệt Sáng": "https://picsum.photos/id/1059/1080/1920",
+    "🌆 Hoàng Hôn Tầng Cao": "https://picsum.photos/id/1015/1080/1920",
+    "♟️ Bàn Cờ & Góc Tối (Tư Mã Ý)": "https://picsum.photos/id/1043/1080/1920",
+    "🏢 Cao Ốc Đêm Thành Phố": "https://picsum.photos/id/1029/1080/1920",
+    "🌊 Biển Đêm Sóng Lớn": "https://picsum.photos/id/1000/1080/1920",
 }
 
 
 def download_curated_35mm_photo(photo_url: str, dest_path: Optional[Path | str] = None) -> Path:
-    """Tải và crop chuẩn dọc 1080x1920 cho ảnh thật 35mm nghệ thuật."""
+    """
+    Tải và crop chuẩn dọc 1080x1920 cho ảnh thật 35mm nghệ thuật.
+    Tự động phòng thủ đa tầng (Multi-tier Fallback):
+    1. Tải URL gốc với Header trình duyệt
+    2. Nếu bị Cloud / CDN chặn 403 / 429, fallback sang Picsum Photos không chặn IP
+    3. Nếu mất mạng hoàn toàn, fallback sang ảnh mẫu nội bộ hoặc sinh nền tối gradient nghệ thuật.
+    Không bao giờ quăng lỗi làm sập ứng dụng Streamlit.
+    """
     target = Path(dest_path) if dest_path else Path("temp") / f"curated_35mm_{uuid.uuid4().hex[:6]}.jpg"
     target.parent.mkdir(parents=True, exist_ok=True)
-    req = urllib.request.Request(photo_url, headers={
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-    })
-    with urllib.request.urlopen(req, timeout=20) as resp:
-        data = resp.read()
-        with open(target, "wb") as f:
-            f.write(data)
-    with Image.open(target) as img:
-        img = img.convert("RGB")
-        target_w, target_h = 1080, 1920
-        w, h = img.size
-        scale = max(target_w / w, target_h / h)
-        new_w, new_h = int(w * scale), int(h * scale)
-        resized = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
-        left = (new_w - target_w) // 2
-        top = (new_h - target_h) // 2
-        cropped = resized.crop((left, top, left + target_w, top + target_h))
-        cropped.save(target, "JPEG", quality=95)
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+
+    download_success = False
+
+    # Tầng 1: Thử tải từ URL ban đầu
+    try:
+        req = urllib.request.Request(photo_url, headers=headers)
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = resp.read()
+            if len(data) > 5000:
+                with open(target, "wb") as f:
+                    f.write(data)
+                download_success = True
+    except Exception as e:
+        logger.warning(f"URL ảnh 35mm gốc ({photo_url[:40]}...) lỗi HTTP: {e}. Đang chuyển sang tầng dự phòng Picsum...")
+
+    # Tầng 2: Fallback sang Picsum Cloud-safe nếu tầng 1 bị 403/429
+    if not download_success:
+        try:
+            rnd_seed = random.randint(1000, 99999)
+            fallback_picsum_url = f"https://picsum.photos/1080/1920?random={rnd_seed}"
+            req_fb = urllib.request.Request(fallback_picsum_url, headers=headers)
+            with urllib.request.urlopen(req_fb, timeout=15) as resp:
+                data = resp.read()
+                if len(data) > 5000:
+                    with open(target, "wb") as f:
+                        f.write(data)
+                    download_success = True
+                    logger.info("Đã tải ảnh nền 35mm thành công qua tầng dự phòng Picsum.")
+        except Exception as e2:
+            logger.warning(f"Picsum dự phòng cũng gặp sự cố: {e2}")
+
+    # Tầng 3: Nếu offline hoặc mất mạng, dùng ảnh mẫu local hoặc sinh nền gradient tối điện ảnh
+    if not download_success:
+        sample_local = Path("assets/samples/retro_comic/sample_stoic_man.jpg")
+        if sample_local.exists():
+            import shutil
+            shutil.copy(sample_local, target)
+            logger.info("Đã áp dụng ảnh mẫu cục bộ làm nền dự phòng.")
+        else:
+            # Tự vẽ nền Dark Moody Cinematic Gradient 1080x1920
+            from PIL import ImageDraw
+            img_grad = Image.new("RGB", (1080, 1920), color=(15, 18, 28))
+            draw = ImageDraw.Draw(img_grad)
+            for y in range(1920):
+                ratio = y / 1920.0
+                r = int(18 * (1 - ratio * 0.6))
+                g = int(22 * (1 - ratio * 0.6))
+                b = int(32 * (1 - ratio * 0.6))
+                draw.line([(0, y), (1080, y)], fill=(r, g, b))
+            img_grad.save(target, "JPEG", quality=95)
+            logger.info("Đã sinh ảnh nền gradient tối nghệ thuật dự phòng.")
+
+    # Chuẩn hoá kích thước và căn giữa chuẩn 1080x1920
+    try:
+        with Image.open(target) as img:
+            img = img.convert("RGB")
+            target_w, target_h = 1080, 1920
+            w, h = img.size
+            if (w, h) != (target_w, target_h):
+                scale = max(target_w / w, target_h / h)
+                new_w, new_h = int(w * scale), int(h * scale)
+                resized = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+                left = (new_w - target_w) // 2
+                top = (new_h - target_h) // 2
+                cropped = resized.crop((left, top, left + target_w, top + target_h))
+                cropped.save(target, "JPEG", quality=95)
+    except Exception as img_err:
+        logger.error(f"Lỗi khi xử lý crop ảnh 35mm: {img_err}")
+
     return target
 
 
