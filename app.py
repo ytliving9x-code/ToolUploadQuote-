@@ -43,6 +43,7 @@ from modules.viral_research import (
     download_curated_35mm_photo,
     score_hook_strength,
     boost_quote_with_ai,
+    generate_saigonbac_auto_video,
 )
 
 from modules.pixabay_fetcher import (
@@ -396,6 +397,59 @@ with tab_ch_saigonbac:
         unsafe_allow_html=True,
     )
 
+    # ==========================================================================
+    # ⚡ CHẾ ĐỘ AUTO-PILOT 1-CHẠM (DÀNH CHO NGƯỜI BẬN RỘN - TỰ ĐỘNG TOÀN DIỆN TỪ A-Z)
+    # ==========================================================================
+    with st.container():
+        st.markdown(
+            """
+            <div style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.18) 0%, rgba(30, 41, 59, 0.7) 100%); border: 1.5px solid #38BDF8; border-radius: 14px; padding: 1rem 1.2rem; margin-bottom: 1.2rem;">
+                <div style="font-size: 1.15rem; font-weight: 800; color: #38BDF8; margin-bottom: 0.3rem;">
+                    🚀 CHẾ ĐỘ AUTO-PILOT 1-CHẠM (TỰ ĐỘNG TOÀN DIỆN CHO SAIGONBAC)
+                </div>
+                <div style="font-size: 0.88rem; color: #CBD5E1; margin-bottom: 0.6rem;">
+                    Chỉ cần 1 cú click: AI tự động nghiên cứu Hook 3s outlier, khớp ảnh 35mm điện ảnh theo cảm xúc câu quote, render video 18s và soạn sẵn <b>Caption + Hashtag + Khung giờ vàng</b> để bạn tải về đăng TikTok ngay lập tức!
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        col_auto_topic, col_auto_btn = st.columns([1.4, 1.2])
+        with col_auto_topic:
+            sel_auto_topic = st.selectbox(
+                "Chọn chủ đề muốn làm (hoặc để AI ngẫu nhiên):",
+                options=[
+                    "🎲 Ngẫu nhiên chủ đề triệu view",
+                    "Cô đơn giữa phố thị & nỗi nhớ",
+                    "Hoài niệm tuổi trẻ & sự trưởng thành",
+                    "Những khoảng lặng sau ngày dài mệt mỏi",
+                    "Tĩnh tại chữa lành & học cách buông bỏ",
+                    "Đêm mưa và những điều chưa từng nói",
+                ],
+                index=0,
+                key="sg_auto_topic_sel",
+            )
+        with col_auto_btn:
+            st.write("")
+            st.write("")
+            btn_auto_pilot = st.button("⚡ 1-CHẠM TẠO VIDEO SAIGONBAC VIRAL", type="primary", width='stretch', key="sg_btn_auto_pilot")
+
+        if btn_auto_pilot:
+            topic_arg = None if sel_auto_topic.startswith("🎲") else sel_auto_topic
+            with st.spinner("🤖 Auto-Pilot đang chạy toàn bộ quy trình: Research Hook ➔ Khớp Ảnh 35mm ➔ Render 18s ➔ Thẩm Định Viral..."):
+                try:
+                    auto_result = generate_saigonbac_auto_video(topic=topic_arg, config=config)
+                    st.session_state.sg_quote_text = auto_result["quote"]
+                    st.session_state.sg_bg_image = auto_result["photo_path"]
+                    st.session_state.sg_rendered_video = auto_result["video_path"]
+                    st.session_state["sg_auto_scorecard"] = auto_result
+                    st.toast("Đã tự động tạo video và báo cáo viral thành công!", icon="🚀")
+                    st.rerun()
+                except Exception as auto_err:
+                    st.error(f"Lỗi quy trình Auto-Pilot: {auto_err}")
+
+    st.markdown('<div style="text-align: center; color: #64748B; margin: 1rem 0; font-size: 0.82rem;">─── HOẶC TÙY CHỈNH THỦ CÔNG TỪNG BƯỚC BÊN DƯỚI ───</div>', unsafe_allow_html=True)
+
     sg_col_input, sg_col_preview = st.columns([1.4, 1.0], gap="large")
 
     with sg_col_input:
@@ -697,6 +751,40 @@ with tab_ch_saigonbac:
                     width='stretch',
                     key="sg_btn_dl",
                 )
+
+            # Bảng Đánh Giá Viral & Caption Soạn Sẵn Đăng TikTok
+            card = st.session_state.get("sg_auto_scorecard")
+            if card:
+                st.markdown(
+                    f"""
+                    <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid #38BDF8; border-radius: 12px; padding: 1rem; margin-top: 1rem;">
+                        <div style="font-size: 1.05rem; font-weight: 800; color: #38BDF8; margin-bottom: 0.4rem;">
+                            📊 BÁO CÁO THẨM ĐỊNH TIỀM NĂNG VIRAL
+                        </div>
+                        <div style="font-size: 0.88rem; color: #E2E8F0; margin-bottom: 0.3rem;">
+                            🎯 <b>Điểm Viral Toàn Diện:</b> <span style="color: #10B981; font-weight: 700;">{card.get('viral_score', 90)}/100</span>
+                        </div>
+                        <div style="font-size: 0.84rem; color: #94A3B8; margin-bottom: 0.3rem;">
+                            ⚡ <b>Hook 3s Níu Chân:</b> {card.get('hook_audit', {}).get('score', 88)}/100 ({card.get('hook_audit', {}).get('grade', 'Xuất Sắc')})
+                        </div>
+                        <div style="font-size: 0.84rem; color: #94A3B8; margin-bottom: 0.3rem;">
+                            🖼️ <b>Bối Cảnh Khớp:</b> {card.get('photo_name', 'Ảnh 35mm Điện Ảnh')}
+                        </div>
+                        <div style="font-size: 0.84rem; color: #94A3B8; margin-bottom: 0.3rem;">
+                            📌 <b>Tỉ Lệ Lưu Lại:</b> {card.get('save_factor', '')}
+                        </div>
+                        <div style="font-size: 0.84rem; color: #94A3B8; margin-bottom: 0.3rem;">
+                            ⏰ <b>Khung Giờ Vàng Đăng:</b> <span style="color: #FBBF24;">{card.get('best_posting_times', '')}</span>
+                        </div>
+                        <div style="font-size: 0.84rem; color: #94A3B8; margin-bottom: 0.3rem;">
+                            🎵 <b>Nhạc Gợi Ý:</b> {card.get('recommended_sound', '')}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+                st.markdown("📝 **Caption & Hashtags Soạn Sẵn (Chỉ cần Copy & Đăng TikTok):**")
+                st.code(card.get("caption", ""), language="text")
         elif sg_bg and Path(sg_bg).exists():
             st.caption("👁️ **Xem Trước Chữ Trên Ảnh Nền (Tỉ Lệ Chuẩn 9:16):**")
             try:
