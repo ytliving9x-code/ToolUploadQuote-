@@ -30,6 +30,9 @@ __all__ = [
     "generate_flux_image",
     "generate_retro_comic_image",
     "generate_ai_image",
+    "generate_imagen3_image",
+    "build_scene_director_prompt",
+    "generate_smart_ai_background",
 ]
 
 # Bộ sưu tập ảnh phong cách Cinematic 35mm dọc (Aesthetic Portrait 1080x1920) được tuyển chọn kỹ lưỡng
@@ -90,6 +93,226 @@ RETRO_COMIC_PRESETS: Dict[str, str] = {
         "their dramatic shadows projected on the textured wall, poignant emotional metaphor, muted vintage tones, vertical 9:16 aspect ratio"
     ),
 }
+
+
+def build_scene_director_prompt(quote_text: str, channel: str = "saigonbac") -> str:
+    """
+    Sử dụng Gemini AI (siêu tốc, miễn phí) làm Đạo diễn Nghệ thuật (AI Scene Director):
+    Phân tích câu quote tiếng Việt để kiến tạo prompt tiếng Anh nhiếp ảnh/minh họa chuẩn 9:16.
+    Tránh tuyệt đối việc đưa thẳng tiếng Việt vào AI vẽ tranh khiến ảnh sai lệch hoặc ra ảnh rác.
+    """
+    clean_q = quote_text.strip()
+    if not clean_q:
+        return (
+            "Cinematic 35mm film photograph, shot on Leica M6, Kodak Portra 400. "
+            "A solitary figure seen from behind walking away down a rainy street at night, warm amber streetlights reflection, "
+            "moody introspective atmosphere, dark negative space at bottom, 9:16 vertical orientation"
+        )
+
+    try:
+        from modules.quote_gen import call_gemini
+        if channel == "saigonbac":
+            director_instruction = (
+                "You are an elite cinematic art director for moody 35mm film photography.\n"
+                f"Convert this Vietnamese introspective quote into a single-sentence English photography prompt for a vertical 9:16 portrait still: \"{clean_q}\"\n"
+                "Rules:\n"
+                "1. Authentic 35mm film still, shot on Leica M6, Kodak Portra 400 film grain.\n"
+                "2. Subject: Lone silhouette or figure seen from behind (NO face visible), quiet rainy street, train station, dark cafe window, or misty dawn.\n"
+                "3. Composition: Keep lower 40% clean with dark negative space for white quote typography.\n"
+                "4. Mood: Nostalgic, melancholic, quiet healing.\n"
+                "5. Return ONLY the English prompt in 1 concise sentence without quotes or markdown."
+            )
+        else:
+            director_instruction = (
+                "You are an elite art director for vintage 1980s graphic novels and retro comic art (ligne claire style, Edward Hopper mood).\n"
+                f"Convert this Vietnamese stoic/philosophical quote into a single-sentence English illustration prompt for a vertical 9:16 aspect ratio: \"{clean_q}\"\n"
+                "Rules:\n"
+                "1. Retro vintage graphic novel illustration, ligne claire, textured paper grain, muted warm palette.\n"
+                "2. Subject: Stoic thinker in dark coat, study room with desk lamp, chess board, or quiet city balcony overlooking misty night skyline.\n"
+                "3. Composition: Generous negative space at the bottom for typography.\n"
+                "4. Return ONLY the English prompt in 1 concise sentence without quotes or markdown."
+            )
+        res = call_gemini(director_instruction, model_name="gemini-3.5-flash-lite")
+        if res and len(res.strip()) > 15:
+            clean_res = res.strip().strip('"').strip("'").replace("\n", " ")
+            return clean_res
+    except Exception as e:
+        logger.warning(f"Lỗi khi gọi AI Scene Director: {e}")
+
+    # Fallback chất lượng cao nếu Gemini bận
+    if channel == "saigonbac":
+        return (
+            "Vertical 9:16 cinematic 35mm film photograph, shot on Leica M6, Kodak Portra 400. "
+            "Solitary figure walking away down a rainy street at night, warm amber streetlights reflection, "
+            "dark negative space at bottom for typography, moody atmospheric healing."
+        )
+    else:
+        return (
+            "Vertical 9:16 retro vintage comic book illustration, 1980s graphic novel style, ligne claire, "
+            "stoic thinker sitting in dimly lit room with warm desk lamp, textured paper grain, muted vintage colors, "
+            "negative space at bottom."
+        )
+
+
+def generate_imagen3_image(
+    prompt: str,
+    api_key: Optional[str] = None,
+    output_path: Optional[Path | str] = None,
+    aspect_ratio: str = "9:16",
+) -> Path:
+    """
+    Sinh ảnh nghệ thuật độ phân giải cao sử dụng Google Imagen 3 (imagen-3.0-generate-002)
+    thông qua API Key Google Gemini (yêu cầu dự án đã bật Pay-as-you-go trên Google AI Studio).
+    """
+    import base64
+    import json
+    import os
+    import urllib.error
+    import urllib.request
+
+    key = api_key or os.getenv("GEMINI_API_KEY")
+    if not key:
+        try:
+            import streamlit as st
+            if "GEMINI_API_KEY" in st.secrets:
+                key = str(st.secrets["GEMINI_API_KEY"])
+        except Exception:
+            pass
+
+    if not key or key == "your_gemini_api_key_here":
+        raise ValueError("Chưa cấu hình GEMINI_API_KEY trong file .env hoặc cấu hình!")
+
+    dest_path = Path(output_path) if output_path else (CACHE_IMAGE_DIR / f"imagen3_{uuid.uuid4().hex[:8]}.jpg")
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # 1. Thử gọi qua official google-genai Client
+    try:
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=key)
+        config = types.GenerateImagesConfig(
+            number_of_images=1,
+            aspect_ratio=aspect_ratio,
+            output_mime_type="image/jpeg",
+            person_generation="ALLOW_ADULT",
+        )
+        logger.info(f"Đang gọi Google Imagen 3 SDK: {prompt[:60]}...")
+        res = client.models.generate_images(
+            model="imagen-3.0-generate-002",
+            prompt=prompt,
+            config=config,
+        )
+        if res and res.generated_images:
+            raw_bytes = res.generated_images[0].image.image_bytes
+            with open(dest_path, "wb") as f:
+                f.write(raw_bytes)
+            logger.info(f"Đã sinh ảnh Google Imagen 3 thành công: {dest_path.name}")
+            return dest_path
+    except Exception as g_err:
+        err_msg = str(g_err)
+        if "quota" in err_msg.lower() or "429" in err_msg or "billing" in err_msg.lower() or "enterprise" in err_msg.lower():
+            logger.warning(f"Google Imagen 3 yêu cầu tài khoản kích hoạt Billing/Pay-as-you-go: {g_err}")
+            raise PermissionError(
+                "Tài khoản Google AI Studio Free Tier chưa kích hoạt Pay-as-you-go cho tính năng sinh ảnh Imagen 3. "
+                "Vui lòng vào https://aistudio.google.com/ để bật billing Google Cloud (chi phí ~$0.03/ảnh)."
+            )
+        logger.warning(f"Lỗi khi gọi google-genai Imagen 3 ({g_err}). Đang thử endpoint REST...")
+
+    # 2. Thử gọi REST API trực tiếp
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key={key}"
+    payload = {
+        "instances": [{"prompt": prompt}],
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": aspect_ratio,
+            "personGeneration": "ALLOW_ADULT",
+        },
+    }
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json", "x-goog-api-key": key},
+    )
+    with urllib.request.urlopen(req, timeout=40) as response:
+        data = json.loads(response.read().decode("utf-8"))
+        preds = data.get("predictions", [])
+        if preds and "bytesBase64Encoded" in preds[0]:
+            img_data = base64.b64decode(preds[0]["bytesBase64Encoded"])
+            with open(dest_path, "wb") as f:
+                f.write(img_data)
+            return dest_path
+
+    raise RuntimeError("Không nhận được dữ liệu ảnh từ Google Imagen 3 API.")
+
+
+def generate_smart_ai_background(
+    quote_text: str,
+    channel: str = "saigonbac",
+    user_prompt: Optional[str] = None,
+    output_path: Optional[Path | str] = None,
+    width: int = 1080,
+    height: int = 1920,
+) -> Path:
+    """
+    Quy trình sinh ảnh thông minh tự động:
+    1. AI Scene Director chuyển quote -> Prompt tiếng Anh chuẩn nhiếp ảnh/comic 9:16.
+    2. Thử Google Imagen 3 (nếu có key & đã bật billing).
+    3. Tự động fallback sang Pollinations (với model sana / flux) bằng chính prompt chuyên nghiệp đó.
+    4. Nếu mạng lỗi, tự động lấy 1 trong 8 ảnh 35mm Master thật tuyển chọn (cam kết không bao giờ ra ảnh rác).
+    """
+    dest_path = Path(output_path) if output_path else (CACHE_IMAGE_DIR / f"smart_{uuid.uuid4().hex[:8]}.jpg")
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Bước 1: Xây dựng Director Prompt
+    if user_prompt and len(user_prompt.strip()) > 10 and not user_prompt.strip().startswith("auto"):
+        director_prompt = user_prompt.strip()
+    else:
+        director_prompt = build_scene_director_prompt(quote_text, channel=channel)
+
+    logger.info(f"[{channel}] Director Prompt: {director_prompt}")
+
+    # Bước 2: Thử Google Imagen 3
+    try:
+        return generate_imagen3_image(prompt=director_prompt, output_path=dest_path, aspect_ratio="9:16")
+    except Exception as img3_err:
+        logger.info(f"Imagen 3 thông báo: {img3_err}. Chuyển sang công cụ dự phòng chất lượng cao...")
+
+    # Bước 3: Thử Pollinations với prompt chuyên nghiệp (thử sana rồi flux)
+    for model_name in ["sana", "flux"]:
+        try:
+            encoded = urllib.parse.quote(director_prompt)
+            seed = random.randint(1000, 999999)
+            url = f"https://image.pollinations.ai/prompt/{encoded}?width=720&height=1280&model={model_name}&nologo=true&seed={seed}"
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=18) as r:
+                data = r.read()
+                if len(data) > 10000:
+                    with open(dest_path, "wb") as f:
+                        f.write(data)
+                    with Image.open(dest_path) as im:
+                        im = im.convert("RGB")
+                        if im.size != (width, height):
+                            im = im.resize((width, height), Image.Resampling.LANCZOS)
+                            im.save(dest_path, "JPEG", quality=95)
+                    logger.info(f"Đã sinh ảnh qua Pollinations ({model_name}) thành công: {dest_path.name}")
+                    return dest_path
+        except Exception as p_err:
+            logger.warning(f"Pollinations {model_name} chưa phản hồi ({p_err}).")
+
+    # Bước 4: Fallback kho ảnh 35mm Master chuẩn 100% trong máy (Không bao giờ lỗi)
+    if channel == "saigonbac":
+        from modules.viral_research import REAL_35MM_CURATED_PHOTOS, download_curated_35mm_photo
+        p_items = list(REAL_35MM_CURATED_PHOTOS.values())
+        chosen_photo = random.choice(p_items)
+        return download_curated_35mm_photo(chosen_photo, dest_path)
+    else:
+        sample_loc = Path("assets/samples/retro_comic/sample_stoic_man.jpg")
+        if sample_loc.exists():
+            shutil.copy(sample_loc, dest_path)
+            return dest_path
+        img_fb = Image.new("RGB", (width, height), color=(15, 23, 42))
+        img_fb.save(dest_path, "JPEG")
+        return dest_path
 
 
 def generate_flux_image(

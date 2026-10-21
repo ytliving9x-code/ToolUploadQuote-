@@ -71,6 +71,9 @@ from modules.ai_image_gen import (
     RETRO_COMIC_PRESETS,
     generate_retro_comic_image,
     generate_flux_image,
+    generate_imagen3_image,
+    build_scene_director_prompt,
+    generate_smart_ai_background,
 )
 from modules.pinterest_fetcher import (
     PINTEREST_CURATED_THEMES,
@@ -622,6 +625,50 @@ with tab_ch_saigonbac:
                         except Exception as ex:
                             st.error(f"Lỗi khi nạp ảnh: {ex}")
 
+        with st.expander("✨ AI Đạo Diễn Phân Cảnh & Sinh Ảnh 35mm Độc Bản (Google Imagen 3 / AI)", expanded=True):
+            st.markdown(
+                """
+                <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 0.7rem; font-size: 0.85rem; color: #94A3B8; margin-bottom: 0.6rem;">
+                    🎯 <b>AI Scene Director:</b> Tự động đọc nội dung câu quote để đạo diễn bối cảnh (Góc máy 35mm Leica M6, ánh sáng, bóng lưng, chừa 40% khoảng tối phía dưới để không bị chìm chữ).
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            col_ai_dir1, col_ai_dir2 = st.columns([2.5, 1.2])
+            with col_ai_dir1:
+                custom_ai_prompt = st.text_input(
+                    "Gợi ý bối cảnh thêm (để trống để AI tự đạo diễn):",
+                    placeholder="ví dụ: mưa đêm quán cà phê cũ, bước chân ga tàu, hoàng hôn thành phố...",
+                    key="sg_ai_custom_prompt_input",
+                )
+            with col_ai_dir2:
+                st.write("")
+                st.write("")
+                btn_gen_director_img = st.button("🎬 Sinh Ảnh Cho Quote", type="primary", width='stretch', key="sg_btn_gen_director_img")
+
+            if btn_gen_director_img:
+                with st.spinner("AI Scene Director đang phân tích câu quote và kiến tạo ảnh 35mm 9:16..."):
+                    try:
+                        dir_prompt = build_scene_director_prompt(st.session_state.sg_quote_text, channel="saigonbac")
+                        if custom_ai_prompt.strip():
+                            dir_prompt = f"{dir_prompt}, {custom_ai_prompt.strip()}"
+                        out_bg = generate_smart_ai_background(
+                            quote_text=st.session_state.sg_quote_text,
+                            channel="saigonbac",
+                            user_prompt=dir_prompt,
+                            output_path=Path("temp/background_sg.jpg"),
+                        )
+                        st.session_state.sg_bg_image = str(out_bg)
+                        st.session_state.sg_rendered_video = None
+                        st.session_state["sg_last_ai_prompt"] = dir_prompt
+                        st.toast("Đã đạo diễn và sinh ảnh 35mm thành công!", icon="🎬")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Lỗi sinh ảnh AI: {e}")
+
+            if "sg_last_ai_prompt" in st.session_state and st.session_state["sg_last_ai_prompt"]:
+                st.caption(f"📝 Prompt đạo diễn đã dùng: *\"{st.session_state['sg_last_ai_prompt']}\"*")
+
         with st.expander("🔍 Tìm thêm ảnh thật từ Pixabay / Picsum hoặc Tải ảnh từ máy", expanded=False):
             sg_tab_pix, sg_tab_up = st.tabs(["🌐 Tìm Ảnh Pixabay / Picsum", "📤 Tải Ảnh Từ Máy Tính"])
             with sg_tab_pix:
@@ -1108,20 +1155,21 @@ with tab_ch_new:
                 with col_fl_suggest:
                     st.write("")
                     st.write("")
-                    if st.button("💡 Gợi Ý Prompt Từ Quote", width='stretch', key="btn_suggest_flux_prompt"):
-                        q_now = st.session_state.new_quote_text.strip()
-                        st.session_state.flux_prompt_input = f"Retro vintage comic illustration depicting the stoic depth of: {q_now[:80]}, 1980s graphic novel style, ligne claire, moody lighting, vertical 9:16"
-                        st.toast("Đã sinh prompt theo ngữ cảnh câu quote!", icon="💡")
-                        st.rerun()
+                    if st.button("💡 AI Đạo Diễn Prompt Cho Quote", width='stretch', key="btn_suggest_flux_prompt"):
+                        with st.spinner("AI Scene Director đang kiến tạo prompt..."):
+                            dir_p = build_scene_director_prompt(st.session_state.new_quote_text, channel="kenh_moi")
+                            st.session_state.flux_prompt_input = dir_p
+                            st.toast("Đã đạo diễn prompt tiếng Anh chuyên nghiệp!", icon="💡")
+                            st.rerun()
 
                 with col_fl_mode:
                     flux_model_sel = st.selectbox(
                         "Lựa chọn AI Model:",
-                        options=["flux (FLUX.1 - Đỉnh cao nghệ thuật)", "sdxl_turbo (Siêu tốc 3 giây)"],
+                        options=["Google Imagen 3 / Smart AI", "flux (FLUX.1 - Đỉnh cao nghệ thuật)"],
                         index=0,
                         key="flux_model_choice",
                     )
-                    chosen_m = "flux" if "flux" in flux_model_sel else "sdxl_turbo"
+                    chosen_m = "flux" if "flux" in flux_model_sel else "imagen3"
 
                 user_comic_prompt = st.text_area(
                     "Mô tả bối cảnh tranh muốn AI vẽ (Prompt):",
@@ -1133,30 +1181,22 @@ with tab_ch_new:
                 if user_comic_prompt != st.session_state.flux_prompt_input:
                     st.session_state.flux_prompt_input = user_comic_prompt
 
-                if st.button("✨ SINH TRANH FLUX.1 ĐỘC BẢN (1080x1920)", type="primary", width='stretch', key="new_btn_gen_flux"):
-                    with st.spinner("AI FLUX.1 đang vẽ tranh nghệ thuật 9:16 (khoảng 10-15s)..."):
+                if st.button("✨ SINH TRANH ĐỘC BẢN CHO QUOTE (1080x1920)", type="primary", width='stretch', key="new_btn_gen_flux"):
+                    with st.spinner("AI đang vẽ tranh Retro Comic 9:16 (khoảng 8-15s)..."):
                         try:
                             prompt_val = st.session_state.flux_prompt_input.strip() if st.session_state.flux_prompt_input.strip() else "auto"
-                            import inspect
-                            sig = inspect.signature(generate_retro_comic_image)
-                            if "model" in sig.parameters:
-                                out_img = generate_retro_comic_image(
-                                    prompt_or_theme=prompt_val,
-                                    quote_context=st.session_state.new_quote_text,
-                                    model=chosen_m,
-                                )
-                            else:
-                                out_img = generate_flux_image(
-                                    prompt=f"Retro vintage comic illustration, 1980s graphic novel style, ligne claire, {prompt_val}",
-                                    model=chosen_m,
-                                )
+                            out_img = generate_smart_ai_background(
+                                quote_text=st.session_state.new_quote_text,
+                                channel="kenh_moi",
+                                user_prompt=prompt_val if prompt_val != "auto" else None,
+                            )
                             st.session_state.new_comic_bg_image = str(out_img)
                             st.session_state.new_comic_rendered_slide = None
                             st.session_state.new_comic_rendered_video = None
-                            st.toast("Đã vẽ xong bức tranh FLUX.1 độc bản!", icon="🎨")
+                            st.toast("Đã vẽ xong bức tranh nghệ thuật độc bản!", icon="🎨")
                             st.rerun()
                         except Exception as e:
-                            st.error(f"Lỗi vẽ tranh FLUX.1: {e}")
+                            st.error(f"Lỗi vẽ tranh: {e}")
 
             with tab_comic_preset:
                 st.caption("Chọn nhanh 1 trong 6 bối cảnh kinh điển cho Kênh Lặng (1 chạm):")
