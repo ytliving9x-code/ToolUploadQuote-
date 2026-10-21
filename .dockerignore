@@ -1,0 +1,13 @@
+.git
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+temp/*
+!temp/.gitkeep
+output/*
+!output/.gitkeep
+generated_media
+.env

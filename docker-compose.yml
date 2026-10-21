@@ -1,0 +1,12 @@
+services:
+  quote-app:
+    build: .
+    container_name: tiktok_quote_generator
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./output:/app/output
