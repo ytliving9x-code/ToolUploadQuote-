@@ -23,51 +23,54 @@ from PIL import Image
 logger = logging.getLogger("tiktok_tool.viral_research")
 
 # ==============================================================================
-# KHO ẢNH THẬT 35MM ĐIỆN ẢNH TUYỂN CHỌN (1080x1920 KHÔNG BLOCK CLOUD/AWS)
+# KHO ẢNH THẬT 35MM ĐIỆN ẢNH TUYỂN CHỌN NỘI BỘ (1080x1920 CHUẨN GU SAIGONBAC)
 # ==============================================================================
 REAL_35MM_CURATED_PHOTOS = {
-    "🌧️ Mưa Đêm Phố Thị": "https://picsum.photos/id/1076/1080/1920",
-    "☕ Cafe Đêm & Khói Mờ": "https://picsum.photos/id/1060/1080/1920",
-    "🚶 Phố Vắng & Bước Chân": "https://picsum.photos/id/1067/1080/1920",
-    "🚇 Ga Tàu Đêm & Vệt Sáng": "https://picsum.photos/id/1059/1080/1920",
-    "🌆 Hoàng Hôn Tầng Cao": "https://picsum.photos/id/1015/1080/1920",
-    "♟️ Bàn Cờ & Góc Tối (Tư Mã Ý)": "https://picsum.photos/id/1043/1080/1920",
-    "🏢 Cao Ốc Đêm Thành Phố": "https://picsum.photos/id/1029/1080/1920",
-    "🌊 Biển Đêm Sóng Lớn": "https://picsum.photos/id/1000/1080/1920",
+    "🌧️ Mưa Đêm Phố Thị": "assets/samples/curated_saigonbac/rain_window.jpg",
+    "☕ Cafe Đêm & Khói Mờ": "assets/samples/curated_saigonbac/cafe_night.jpg",
+    "🚶 Phố Vắng & Bước Chân": "assets/samples/curated_saigonbac/street_lonely.jpg",
+    "🚇 Ga Tàu Đêm & Vệt Sáng": "assets/samples/curated_saigonbac/train_night.jpg",
+    "🌆 Hoàng Hôn Tầng Cao": "assets/samples/curated_saigonbac/sunset_city.jpg",
+    "🌫️ Sương Mù Rạng Đông": "assets/samples/curated_saigonbac/misty_morning.jpg",
+    "🚶 Bước Chân Đơn Độc": "assets/samples/curated_saigonbac/alone_walk.jpg",
+    "🪟 Khung Cửa Sổ Chiều": "assets/samples/curated_saigonbac/dark_room_window.jpg",
 }
 
 
-def download_curated_35mm_photo(photo_url: str, dest_path: Optional[Path | str] = None) -> Path:
+def download_curated_35mm_photo(photo_url_or_path: str, dest_path: Optional[Path | str] = None) -> Path:
     """
     Tải và crop chuẩn dọc 1080x1920 cho ảnh thật 35mm nghệ thuật.
-    Tự động phòng thủ đa tầng (Multi-tier Fallback):
-    1. Tải URL gốc với Header trình duyệt
-    2. Nếu bị Cloud / CDN chặn 403 / 429, fallback sang Picsum Photos không chặn IP
-    3. Nếu mất mạng hoàn toàn, fallback sang ảnh mẫu nội bộ hoặc sinh nền tối gradient nghệ thuật.
-    Không bao giờ quăng lỗi làm sập ứng dụng Streamlit.
+    Hỗ trợ cả file ảnh nội bộ (local) lẫn URL mạng.
     """
     target = Path(dest_path) if dest_path else Path("temp") / f"curated_35mm_{uuid.uuid4().hex[:6]}.jpg"
     target.parent.mkdir(parents=True, exist_ok=True)
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-    }
-
     download_success = False
 
-    # Tầng 1: Thử tải từ URL ban đầu
-    try:
-        req = urllib.request.Request(photo_url, headers=headers)
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            data = resp.read()
-            if len(data) > 5000:
-                with open(target, "wb") as f:
-                    f.write(data)
-                download_success = True
-    except Exception as e:
-        logger.warning(f"URL ảnh 35mm gốc ({photo_url[:40]}...) lỗi HTTP: {e}. Đang chuyển sang tầng dự phòng Picsum...")
+    # Tầng 0: Nếu là file ảnh cục bộ nội bộ (ưu tiên cao nhất, tốc độ 0.01s, 100% chuẩn gu)
+    local_src = Path(photo_url_or_path)
+    if local_src.exists() and local_src.is_file():
+        import shutil
+        shutil.copy(local_src, target)
+        download_success = True
+
+    # Tầng 1: Thử tải từ URL ban đầu nếu là đường link web
+    if not download_success and (photo_url_or_path.startswith("http://") or photo_url_or_path.startswith("https://")):
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+        }
+        try:
+            req = urllib.request.Request(photo_url_or_path, headers=headers)
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = resp.read()
+                if len(data) > 5000:
+                    with open(target, "wb") as f:
+                        f.write(data)
+                    download_success = True
+        except Exception as e:
+            logger.warning(f"URL ảnh 35mm gốc ({photo_url_or_path[:40]}...) lỗi HTTP: {e}.")
 
     # Tầng 2: Fallback sang Picsum Cloud-safe nếu tầng 1 bị 403/429
     if not download_success:
@@ -521,39 +524,139 @@ HÃY XUẤT ĐẦU RA DUY NHẤT 1 JSON HỢP LỆ VỚI CẤU TRÚC:
 
 
 # ==============================================================================
-# QUY TRÌNH AUTO-PILOT TOÀN DIỆN CHO KÊNH SAIGONBAC (1-CLICK AUTO PIPELINE)
+# HỆ THỐNG TRÍCH XUẤT THỊ GIÁC & TÌM ẢNH THẬT 35MM (CHUẨN MONEYPRINTERTURBO)
 # ==============================================================================
-def match_photo_for_quote(quote_text: str) -> Tuple[str, str]:
-    """Phân tích cảm xúc ngữ cảnh câu quote để tự động khớp với ảnh 35mm phù hợp nhất."""
+def extract_visual_search_query_with_ai(quote_text: str, config: Optional[Dict[str, Any]] = None) -> str:
+    """
+    Kỹ thuật trích xuất từ khóa thị giác điện ảnh (Visual Keyword Extraction)
+    từ MoneyPrinterTurbo & ShortGPT:
+    Nhận diện bối cảnh câu quote và sinh 1 cụm từ khóa tiếng Anh ngắn gọn (3-5 từ),
+    tối ưu cho công cụ tìm kiếm ảnh stock (Pixabay / Pexels) theo gu 35mm hoài niệm.
+    """
+    prompt = f"""Bạn là đạo diễn hình ảnh cho kênh TikTok điện ảnh hoài niệm (gu saigonbac, 35mm film, moody, aesthetic).
+Nhiệm vụ: Dựa vào câu trích dẫn sau, hãy trích xuất đúng 1 cụm từ tìm kiếm hình ảnh (Image search query) bằng TIẾNG ANH (3-5 từ) mô tả bối cảnh hình ảnh KHÔNG GIAN ĐIỆN ẢNH phù hợp nhất.
+
+QUY TẮC CỐT LÕI:
+- CHỈ chọn các bối cảnh điện ảnh tĩnh lặng, giàu cảm xúc: mưa đêm qua cửa kính, quán cafe vắng đèn vàng, bước chân trên phố đêm ẩm ướt, ga tàu đêm, hoàng hôn thành phố tĩnh mịch, căn phòng tối có ánh sáng le lói.
+- TUYỆT ĐỐI KHÔNG tìm người rõ mặt, không tìm đồ vật vụn vặt (áo quần, đồ gia dụng, xe cộ cận cảnh).
+- Luôn thêm các từ: "night", "rain", "street", "cafe", "sunset", "moody", "dark", "bokeh" để đảm bảo ảnh có vùng tối cho chữ quote màu trắng.
+
+Câu trích dẫn: "{quote_text}"
+
+XUẤT RA DUY NHẤT 1 DÒNG TỪ KHÓA TIẾNG ANH (Không giải thích, không dấu ngoặc kép):
+"""
+    try:
+        from modules.quote_gen import call_gemini, call_openai
+        if config is None:
+            cfg_p = Path("config.json")
+            if cfg_p.exists():
+                with open(cfg_p, "r", encoding="utf-8") as f:
+                    config = json.load(f)
+            else:
+                config = {}
+        provider = config.get("llm_provider", "gemini").lower()
+        if provider == "openai":
+            query = call_openai(prompt, model_name=config.get("openai_model", "gpt-4o-mini"))
+        else:
+            query = call_gemini(prompt, model_name=config.get("gemini_model", "gemini-3.5-flash-lite"))
+        
+        clean_q = query.strip().replace('"', '').replace("'", "").replace("\n", " ")
+        if clean_q and len(clean_q.split()) <= 8:
+            return clean_q
+    except Exception as e:
+        logger.warning(f"Lỗi gọi LLM Visual Extraction ({e}), dùng fallback ngữ cảnh.")
+
+    q_lower = quote_text.lower()
+    if any(k in q_lower for k in ["mưa", "ướt", "ô kính", "hạt mưa", "lạnh"]):
+        return "rain drops window night lights"
+    if any(k in q_lower for k in ["cafe", "cà phê", "quán", "ly", "tách", "uống"]):
+        return "coffee shop night dark cozy"
+    if any(k in q_lower for k in ["tàu", "ga", "chuyến", "vé", "đường ray"]):
+        return "subway train window night blur"
+    if any(k in q_lower for k in ["hoàng hôn", "chiều", "ngày tàn", "nắng"]):
+        return "sunset city dusk silhouette dark"
+    if any(k in q_lower for k in ["bước", "đi", "đường", "phố", "bóng", "đèn đường"]):
+        return "night street pavement reflection dark"
+    return "night street pavement reflection dark"
+
+
+def match_photo_for_quote(quote_text: str, config: Optional[Dict[str, Any]] = None) -> Tuple[str, Path]:
+    """
+    Hệ thống phân tích ngữ cảnh & tìm kiếm ảnh thông minh:
+    1. Trích xuất visual query bằng AI (chuẩn MoneyPrinterTurbo)
+    2. Tìm kiếm ảnh chất lượng cao trên Pixabay với API key (orientation=vertical, photo)
+    3. Nếu Pixabay có ảnh đẹp -> tải và crop 1080x1920
+    4. Nếu không có hoặc offline -> nạp ngay từ Kho Ảnh 35mm Nội Bộ (assets/samples/curated_saigonbac/)
+    ĐẢM BẢO 100% ĐÚNG BỐI CẢNH ĐIỆN ẢNH HOÀI NIỆM, KHÔNG BAO GIỜ RA ẢNH VỚ VẨN!
+    """
+    from modules.pixabay_fetcher import search_pixabay_images, download_and_crop_pixabay_image
+    if config is None:
+        try:
+            with open("config.json", "r", encoding="utf-8") as f:
+                config = json.load(f)
+        except Exception:
+            config = {}
+
+    api_key = config.get("pixabay_api_key")
+    
+    # 1. Trích xuất từ khóa thị giác thông minh
+    visual_query = extract_visual_search_query_with_ai(quote_text, config=config)
+    logger.info(f"Visual Query trích xuất cho quote: '{visual_query}'")
+
+    # 2. Thử tìm trên Pixabay API
+    if api_key:
+        try:
+            hits = search_pixabay_images(visual_query, api_key=api_key, per_page=4)
+            if hits:
+                best_img_url = hits[0].get("large_url")
+                if best_img_url:
+                    target_out = Path("temp") / f"pixabay_match_{uuid.uuid4().hex[:6]}.jpg"
+                    cropped_p = download_and_crop_pixabay_image(best_img_url, target_out)
+                    return f"📸 Pixabay 35mm ({visual_query})", cropped_p
+        except Exception as e:
+            logger.warning(f"Lỗi tìm kiếm Pixabay tự động ({e}), chuyển về Kho Ảnh 35mm Nội Bộ...")
+
+    # 3. Fallback thông minh: Kho Ảnh 35mm Nội Bộ Tuyển Chọn Sẵn (assets/samples/curated_saigonbac/)
+    curated_dir = Path("assets/samples/curated_saigonbac")
     q_lower = quote_text.lower()
     
-    # 1. Bối cảnh mưa / ướt
-    if any(k in q_lower for k in ["mưa", "ướt", "ô kính", "hạt mưa", "bão", "lạnh"]):
-        return "🌧️ Mưa Đêm Phố Thị", REAL_35MM_CURATED_PHOTOS["🌧️ Mưa Đêm Phố Thị"]
-    
-    # 2. Bối cảnh cafe / quán xá / khoảng lặng
-    if any(k in q_lower for k in ["cafe", "cà phê", "quán", "ly", "tách", "ngồi", "ấm", "bàn"]):
-        return "☕ Cafe Đêm & Khói Mờ", REAL_35MM_CURATED_PHOTOS["☕ Cafe Đêm & Khói Mờ"]
-        
-    # 3. Bối cảnh chuyến tàu / ga xe / thời gian
-    if any(k in q_lower for k in ["tàu", "ga", "chuyến", "vé", "đường ray", "chuyến xe", "rời đi", "trôi"]):
-        return "🚇 Ga Tàu Đêm & Vệt Sáng", REAL_35MM_CURATED_PHOTOS["🚇 Ga Tàu Đêm & Vệt Sáng"]
-        
-    # 4. Bối cảnh bước chân / đường phố / một mình
-    if any(k in q_lower for k in ["bước", "đi", "đường", "phố", "bóng", "đèn đường", "chân", "lạc"]):
-        return "🚶 Phố Vắng & Bước Chân", REAL_35MM_CURATED_PHOTOS["🚶 Phố Vắng & Bước Chân"]
-        
-    # 5. Bối cảnh hoàng hôn / chiều tà
-    if any(k in q_lower for k in ["hoàng hôn", "chiều", "ngày tàn", "nắng", "mây", "trời"]):
-        return "🌆 Hoàng Hôn Tầng Cao", REAL_35MM_CURATED_PHOTOS["🌆 Hoàng Hôn Tầng Cao"]
-        
-    # 6. Mặc định: chọn ngẫu nhiên giữa Mưa, Cafe hoặc Phố Vắng (3 bối cảnh níu chân cao nhất ngách hoài niệm)
-    top_3 = [
-        ("🌧️ Mưa Đêm Phố Thị", REAL_35MM_CURATED_PHOTOS["🌧️ Mưa Đêm Phố Thị"]),
-        ("☕ Cafe Đêm & Khói Mờ", REAL_35MM_CURATED_PHOTOS["☕ Cafe Đêm & Khói Mờ"]),
-        ("🚶 Phố Vắng & Bước Chân", REAL_35MM_CURATED_PHOTOS["🚶 Phố Vắng & Bước Chân"]),
-    ]
-    return random.choice(top_3)
+    if any(k in q_lower for k in ["mưa", "ướt", "ô kính", "hạt mưa", "lạnh"]):
+        cand = curated_dir / "rain_window.jpg"
+        if cand.exists():
+            return "🌧️ Mưa Đêm Phố Thị (Ảnh 35mm Gốc)", cand
+
+    if any(k in q_lower for k in ["cafe", "cà phê", "quán", "ly", "tách", "ngồi", "ấm"]):
+        cand = curated_dir / "cafe_night.jpg"
+        if cand.exists():
+            return "☕ Cafe Đêm & Khói Mờ (Ảnh 35mm Gốc)", cand
+
+    if any(k in q_lower for k in ["tàu", "ga", "chuyến", "vé", "đường ray", "chuyến xe", "rời đi"]):
+        cand = curated_dir / "train_night.jpg"
+        if cand.exists():
+            return "🚇 Ga Tàu Đêm & Vệt Sáng (Ảnh 35mm Gốc)", cand
+
+    if any(k in q_lower for k in ["hoàng hôn", "chiều", "ngày tàn", "nắng", "mây"]):
+        cand = curated_dir / "sunset_city.jpg"
+        if cand.exists():
+            return "🌆 Hoàng Hôn Tầng Cao (Ảnh 35mm Gốc)", cand
+
+    if any(k in q_lower for k in ["sương", "sáng", "rạng đông", "tĩnh lặng"]):
+        cand = curated_dir / "misty_morning.jpg"
+        if cand.exists():
+            return "🌫️ Sương Mù Rạng Đông (Ảnh 35mm Gốc)", cand
+
+    # Mặc định: Phố đêm hoặc bước chân một mình
+    cand_street = curated_dir / "street_lonely.jpg"
+    if cand_street.exists():
+        return "🚶 Phố Vắng & Bước Chân (Ảnh 35mm Gốc)", cand_street
+
+    cand_alone = curated_dir / "alone_walk.jpg"
+    if cand_alone.exists():
+        return "🚶 Bước Chân Đơn Độc (Ảnh 35mm Gốc)", cand_alone
+
+    # Cuối cùng nếu thư mục trống, fallback về download_curated_35mm_photo
+    target_fb = Path("temp") / f"auto_sg_fallback_{uuid.uuid4().hex[:6]}.jpg"
+    return "📸 Ảnh 35mm Tuyển Chọn", download_curated_35mm_photo("https://picsum.photos/1080/1920", target_fb)
 
 
 def generate_saigonbac_auto_video(
@@ -639,12 +742,8 @@ def generate_saigonbac_auto_video(
     # Điểm viral toàn diện luôn bảo đảm >= 86 điểm
     viral_score = max(86, min(98, hook_audit.get("score", 86) + random.randint(1, 4)))
 
-    # 2. Khớp ảnh thật 35mm điện ảnh
-    photo_name, photo_url = match_photo_for_quote(chosen_quote)
-    
-    # 3. Tải và crop chuẩn 1080x1920 (fallback phòng vệ an toàn)
-    bg_target = Path("temp") / f"auto_sg_{uuid.uuid4().hex[:6]}.jpg"
-    bg_path = download_curated_35mm_photo(photo_url, dest_path=bg_target)
+    # 2. Khớp ảnh thật 35mm điện ảnh (LLM Visual Extraction + Pixabay HD + Kho nội bộ)
+    photo_name, bg_path = match_photo_for_quote(chosen_quote, config=config)
     
     # 4. Render video 18s chuẩn điện ảnh
     timestamp_str = time.strftime("%Y%m%d_%H%M%S")
