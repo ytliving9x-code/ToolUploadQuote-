@@ -684,23 +684,17 @@ def generate_saigonbac_auto_video(
     best_audit: Dict[str, Any] = {}
     best_score = 0
 
-    # VÒNG LẶP KIỂM TRA ĐỘ VIRAL (ĐẠT ÍT NHẤT 85 ĐIỂM MỚI DUYỆT RENDER)
-    for attempt in range(5):
-        try:
-            ai_res = generate_quote(topic=selected_topic, channel="saigonbac", style="sad_introspective", config=config)
-            raw_q = ai_res.get("quote", "")
-            
-            # Đánh giá câu gốc
-            cand_audit = score_hook_strength(raw_q)
-            if cand_audit.get("score", 0) > best_score:
-                best_score = cand_audit.get("score", 0)
-                best_quote = raw_q
-                best_audit = cand_audit
-                
-            if best_score >= min_score:
-                break
-                
-            # Thử tăng lực với AI Hook Booster
+    # 1. Thử sinh quote bằng AI (1 lượt nhanh duy nhất, không loop lặp lại làm treo máy)
+    try:
+        ai_res = generate_quote(topic=selected_topic, channel="saigonbac", style="sad_introspective", config=config)
+        raw_q = ai_res.get("quote", "").strip()
+        cand_audit = score_hook_strength(raw_q)
+        if cand_audit.get("score", 0) >= min_score:
+            best_quote = raw_q
+            best_audit = cand_audit
+            best_score = cand_audit.get("score", 0)
+        else:
+            # Nếu câu gốc chưa đạt, thử nhanh AI Hook Booster 1 lần
             boost_vars = boost_quote_with_ai(raw_q, channel="saigonbac", config=config)
             for var_key, var_val in boost_vars.items():
                 if isinstance(var_val, dict) and var_val.get("quote"):
@@ -712,12 +706,10 @@ def generate_saigonbac_auto_video(
                         best_audit = sc_cand
                     if best_score >= min_score:
                         break
-            if best_score >= min_score:
-                break
-        except Exception as e:
-            logger.warning(f"Lỗi lượt tạo quote #{attempt}: {e}")
+    except Exception as e:
+        logger.warning(f"Lỗi AI sinh quote ({e}), chuyển sang kho Outlier triệu view...")
 
-    # NẾU SAU CÁC LƯỢT AI VẪN DƯỚI 85 ĐIỂM, NẠP NGAY TỪ KHO OUTLIER TRIỆU VIEW (LUÔN >= 88-98 ĐIỂM)
+    # 2. NẾU VẪN DƯỚI 85 ĐIỂM, NẠP NGAY TỪ KHO OUTLIER TRIỆU VIEW (TỐC ĐỘ 0.001s, LUÔN >= 90 ĐIỂM)
     if best_score < min_score:
         outlier_bank = [
             "Càng trưởng thành, người ta càng nhận ra một sự thật: im lặng không phải là yếu đuối, mà là đỉnh cao của sự thấu suốt.",
@@ -727,13 +719,13 @@ def generate_saigonbac_auto_video(
             "Có những ngày mệt mỏi đến mức, chỉ muốn đứng dưới mưa: để chẳng ai nhận ra mắt mình đang ướt.",
             "Sau nhiều lần thất vọng, bạn sẽ nhận ra một sự thật: kỳ vọng ít đi, cuộc đời tự nhiên sẽ bình yên hơn rất nhiều.",
         ]
+        random.shuffle(outlier_bank)
         for q_out in outlier_bank:
             audit_out = score_hook_strength(q_out)
-            if audit_out.get("score", 0) > best_score:
-                best_score = audit_out.get("score", 0)
+            if audit_out.get("score", 0) >= min_score:
                 best_quote = q_out
                 best_audit = audit_out
-            if best_score >= min_score:
+                best_score = audit_out.get("score", 0)
                 break
 
     chosen_quote = best_quote
