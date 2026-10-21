@@ -40,9 +40,11 @@ for _m_name in ["modules.ai_image_gen", "modules.pinterest_fetcher", "modules.vi
 from modules.viral_research import (
     VIRAL_HOOK_PATTERNS,
     HIGH_RETENTION_VISUALS,
+    OUTLIER_VISUAL_TEMPLATES,
     get_random_outlier_hooks,
     score_hook_strength,
     boost_quote_with_ai,
+    build_ai_visual_prompt_from_quote,
 )
 
 from modules.pixabay_fetcher import (
@@ -1632,4 +1634,178 @@ with tab_viral_lab:
             """,
             unsafe_allow_html=True,
         )
+
+    # ==============================================================================
+    # PHẦN 4: NGHIÊN CỨU & SINH HÌNH ẢNH VIRAL (VISUAL OUTLIER STUDIO)
+    # ==============================================================================
+    st.divider()
+    st.subheader("4. 🖼️ Nghiên Cứu & Sinh Hình Ảnh Viral (Visual Outlier Studio)")
+    st.markdown(
+        """
+        <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid #334155; border-radius: 10px; padding: 0.9rem; font-size: 0.88rem; margin-bottom: 1.2rem;">
+            💡 <b>Bóc tách từ ScrapeCreators & OpenCreator:</b> Các video triệu view luôn có <b>4 đặc trưng thị giác</b>:
+            <b>(1) Vùng âm tối ở 40% đáy màn hình</b> (Negative Space) để chữ typography không bị lẫn vào nền; 
+            <b>(2) Ánh sáng tương phản Teal & Amber</b> (xanh đêm lạnh đối lập đèn vàng ấm kích thích cảm xúc hoài niệm);
+            <b>(3) Giấu mặt nhân vật (Faceless)</b> để người xem tự hóa thân vào nhân vật;
+            <b>(4) Tỷ lệ chuẩn dọc 9:16</b> chất lượng điện ảnh 35mm.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    vis_tab_sg, vis_tab_new, vis_tab_ai = st.tabs([
+        "☕ Bối Cảnh Ảnh Kênh saigonbac",
+        "🎬 Bối Cảnh Ảnh Kênh Lặng",
+        "🤖 AI Tự Thiết Kế Prompt Cho Quote",
+    ])
+
+    if "v_lab_generated_img" not in st.session_state:
+        st.session_state.v_lab_generated_img = None
+
+    with vis_tab_sg:
+        c_vis_left, c_vis_right = st.columns([1.3, 1.0], gap="medium")
+        with c_vis_left:
+            for idx, item in enumerate(OUTLIER_VISUAL_TEMPLATES["saigonbac"]):
+                with st.expander(f"{item['title']}", expanded=(idx == 0)):
+                    st.markdown(f"🎯 <b>Vì sao dễ viral:</b> <span style='color: #38BDF8;'>{item['why_viral']}</span>", unsafe_allow_html=True)
+                    st.code(item["flux_prompt"], language="text")
+                    
+                    c_btn_g1, c_btn_g2 = st.columns(2)
+                    with c_btn_g1:
+                        if st.button("✨ Sinh Ảnh FLUX AI (1-Click)", key=f"btn_flux_sg_{idx}", width='stretch', type="primary"):
+                            with st.spinner("Đang gọi FLUX.1 AI sinh ảnh 1080x1920 chuẩn Negative Space..."):
+                                try:
+                                    img_p = generate_flux_image(item["flux_prompt"], output_dir=Path("data/cache/ai_images"))
+                                    st.session_state.v_lab_generated_img = str(img_p)
+                                    st.toast("Đã sinh ảnh FLUX.1 thành công!", icon="🎨")
+                                except Exception as ex:
+                                    st.error(f"Lỗi sinh ảnh AI: {ex}")
+                    with c_btn_g2:
+                        if st.button("📌 Cào Ảnh Pinterest", key=f"btn_pin_sg_{idx}", width='stretch'):
+                            with st.spinner(f"Đang tìm ảnh Pinterest: {item['pinterest_query']}..."):
+                                try:
+                                    pin_imgs = search_and_download_pinterest(query=item["pinterest_query"], limit=4, output_dir="temp/pinterest")
+                                    if pin_imgs:
+                                        st.session_state.v_lab_generated_img = str(pin_imgs[0])
+                                        st.toast("Đã tải ảnh Pinterest thành công!", icon="📌")
+                                    else:
+                                        st.warning("Không tìm thấy ảnh phù hợp trên Pinterest.")
+                                except Exception as ex:
+                                    st.error(f"Lỗi Pinterest: {ex}")
+
+        with c_vis_right:
+            st.markdown("<b>Khung Xem Trước Ảnh Nền Viral:</b>", unsafe_allow_html=True)
+            lab_img = st.session_state.get("v_lab_generated_img")
+            if lab_img and Path(lab_img).exists():
+                st.image(str(lab_img), width='stretch')
+                c_use1, c_use2 = st.columns(2)
+                with c_use1:
+                    if st.button("👉 Đặt làm Nền Kênh 1 (saigonbac)", width='stretch', key="btn_apply_sg_bg", type="primary"):
+                        st.session_state.sg_bg_image = str(lab_img)
+                        st.session_state.sg_rendered_video = None
+                        st.toast("Đã nạp ảnh vào Kênh 1! Chuyển sang Tab 1 để tạo video.", icon="☕")
+                with c_use2:
+                    if st.button("👉 Đặt làm Nền Kênh 2 (Lặng)", width='stretch', key="btn_apply_new_bg"):
+                        st.session_state.new_comic_bg_image = str(lab_img)
+                        st.session_state.new_comic_rendered_slide = None
+                        st.session_state.new_comic_rendered_video = None
+                        st.toast("Đã nạp ảnh vào Kênh 2!", icon="🎬")
+            else:
+                st.info("Bấm nút **[ ✨ Sinh Ảnh FLUX AI ]** hoặc **[ 📌 Cào Ảnh Pinterest ]** bên cạnh để tạo ảnh nền và xem trước tại đây.")
+
+    with vis_tab_new:
+        c_vis_n_left, c_vis_n_right = st.columns([1.3, 1.0], gap="medium")
+        with c_vis_n_left:
+            for idx, item in enumerate(OUTLIER_VISUAL_TEMPLATES["kenh_moi"]):
+                with st.expander(f"{item['title']}", expanded=(idx == 0)):
+                    st.markdown(f"🎯 <b>Vì sao dễ viral:</b> <span style='color: #F43F5E;'>{item['why_viral']}</span>", unsafe_allow_html=True)
+                    st.code(item["flux_prompt"], language="text")
+                    
+                    c_btn_n1, c_btn_n2 = st.columns(2)
+                    with c_btn_n1:
+                        if st.button("✨ Sinh Ảnh FLUX AI (1-Click)", key=f"btn_flux_new_{idx}", width='stretch', type="primary"):
+                            with st.spinner("Đang gọi FLUX.1 AI sinh ảnh 1080x1920 chuẩn Chiaroscuro..."):
+                                try:
+                                    img_p = generate_flux_image(item["flux_prompt"], output_dir=Path("data/cache/ai_images"))
+                                    st.session_state.v_lab_generated_img = str(img_p)
+                                    st.toast("Đã sinh ảnh FLUX.1 thành công!", icon="🎨")
+                                except Exception as ex:
+                                    st.error(f"Lỗi sinh ảnh AI: {ex}")
+                    with c_btn_n2:
+                        if st.button("📌 Cào Ảnh Pinterest", key=f"btn_pin_new_{idx}", width='stretch'):
+                            with st.spinner(f"Đang tìm ảnh Pinterest: {item['pinterest_query']}..."):
+                                try:
+                                    pin_imgs = search_and_download_pinterest(query=item["pinterest_query"], limit=4, output_dir="temp/pinterest")
+                                    if pin_imgs:
+                                        st.session_state.v_lab_generated_img = str(pin_imgs[0])
+                                        st.toast("Đã tải ảnh Pinterest thành công!", icon="📌")
+                                    else:
+                                        st.warning("Không tìm thấy ảnh phù hợp trên Pinterest.")
+                                except Exception as ex:
+                                    st.error(f"Lỗi Pinterest: {ex}")
+
+        with c_vis_n_right:
+            st.markdown("<b>Khung Xem Trước Ảnh Nền Viral:</b>", unsafe_allow_html=True)
+            lab_img = st.session_state.get("v_lab_generated_img")
+            if lab_img and Path(lab_img).exists():
+                st.image(str(lab_img), width='stretch')
+                c_use1, c_use2 = st.columns(2)
+                with c_use1:
+                    if st.button("👉 Đặt làm Nền Kênh 1 (saigonbac)", width='stretch', key="btn_apply_sg_bg_2"):
+                        st.session_state.sg_bg_image = str(lab_img)
+                        st.session_state.sg_rendered_video = None
+                        st.toast("Đã nạp ảnh vào Kênh 1!", icon="☕")
+                with c_use2:
+                    if st.button("👉 Đặt làm Nền Kênh 2 (Lặng)", width='stretch', key="btn_apply_new_bg_2", type="primary"):
+                        st.session_state.new_comic_bg_image = str(lab_img)
+                        st.session_state.new_comic_rendered_slide = None
+                        st.session_state.new_comic_rendered_video = None
+                        st.toast("Đã nạp ảnh vào Kênh 2!", icon="🎬")
+            else:
+                st.info("Bấm nút **[ ✨ Sinh Ảnh FLUX AI ]** hoặc **[ 📌 Cào Ảnh Pinterest ]** bên cạnh để tạo ảnh nền.")
+
+    with vis_tab_ai:
+        st.markdown("### 🤖 Visual Director: Tự Động Thiết Kế Prompt Cho Bất Kỳ Câu Quote Nào")
+        st.markdown("AI đọc câu quote của bạn, bóc tách ẩn dụ cảm xúc và tự tạo prompt tiếng Anh chuẩn 4-layer theo phong cách OpenCreator.")
+        
+        current_lab_q = st.session_state.get("v_user_quote_input", "Có một sự thật tàn nhẫn: người càng tử tế càng dễ chịu thiệt thòi.")
+        st.info(f"Quote đang phân tích: *\"{current_lab_q}\"*")
+        
+        col_gen_p1, col_gen_p2 = st.columns([1.5, 1.0])
+        with col_gen_p1:
+            if st.button("🔮 AI Tạo Prompt Điện Ảnh & Sinh Ảnh FLUX Ngay", type="primary", width='stretch', key="btn_ai_visual_director"):
+                with st.spinner("AI đang thiết kế prompt điện ảnh 4-layer..."):
+                    generated_prompt = build_ai_visual_prompt_from_quote(current_lab_q, channel=ch_flag, config=config)
+                    st.session_state["v_custom_prompt"] = generated_prompt
+                    st.toast("Đã thiết kế prompt thành công! Đang sinh ảnh FLUX...", icon="✨")
+                with st.spinner("FLUX.1 đang vẽ bức tranh 9:16 có không gian âm..."):
+                    try:
+                        img_res = generate_flux_image(generated_prompt, output_dir=Path("data/cache/ai_images"))
+                        st.session_state.v_lab_generated_img = str(img_res)
+                        st.toast("Hoàn tất sinh ảnh AI cho câu quote!", icon="🎉")
+                    except Exception as ex:
+                        st.error(f"Lỗi khi sinh ảnh: {ex}")
+
+            if "v_custom_prompt" in st.session_state and st.session_state["v_custom_prompt"]:
+                st.markdown("<b>Prompt do AI Visual Director sáng tác:</b>", unsafe_allow_html=True)
+                st.code(st.session_state["v_custom_prompt"], language="text")
+
+        with col_gen_p2:
+            st.markdown("<b>Ảnh Thành Phẩm Cho Câu Quote:</b>", unsafe_allow_html=True)
+            lab_img = st.session_state.get("v_lab_generated_img")
+            if lab_img and Path(lab_img).exists():
+                st.image(str(lab_img), width='stretch')
+                if st.button("👉 Đặt làm Ảnh Nền Cho Video Này", type="primary", width='stretch', key="btn_apply_ai_img"):
+                    if ch_flag == "saigonbac":
+                        st.session_state.sg_bg_image = str(lab_img)
+                        st.session_state.sg_quote_text = current_lab_q
+                        st.session_state.sg_rendered_video = None
+                    else:
+                        st.session_state.new_comic_bg_image = str(lab_img)
+                        st.session_state.new_quote_text = current_lab_q
+                        st.session_state.new_comic_rendered_slide = None
+                    st.toast("Đã chuyển ảnh và quote sang Studio! Sẵn sàng render.", icon="🚀")
+            else:
+                st.caption("Ảnh sau khi AI sinh sẽ xuất hiện tại đây.")
+
 

@@ -71,22 +71,147 @@ VIRAL_HOOK_PATTERNS = {
 # ==============================================================================
 # BỘ TỪ KHÓA VISUAL CINEMATIC RETENTION CAO (B-ROLL ĐIỆN ẢNH)
 # ==============================================================================
-HIGH_RETENTION_VISUALS = {
+# ==============================================================================
+# HỆ THỐNG KHUÔN MẪU THỊ GIÁC OUTLIER (NGHIÊN CỨU TỪ SCRAPECREATORS & OPENCREATOR)
+# ==============================================================================
+OUTLIER_VISUAL_TEMPLATES = {
     "saigonbac": [
-        {"theme": "Mưa đêm qua ô kính xe", "keywords": "rainy car window night city blur lights"},
-        {"theme": "Góc quán cà phê vắng", "keywords": "dark cozy cafe window rain solitary coffee"},
-        {"theme": "Bước chân đơn độc phố đêm", "keywords": "lonely man walking night street lamp puddle"},
-        {"theme": "Hoàng hôn buông trên tầng cao", "keywords": "dusk rooftop silhouette city horizon deep blue"},
-        {"theme": "Ga tàu & chuyến đi muộn", "keywords": "subway train window reflection night commute"},
+        {
+            "title": "🌧️ Mưa Đêm Ô Kính Xe (Deep Nostalgia)",
+            "why_viral": "Giữ chân 3s cực mạnh nhờ hiệu ứng hạt mưa lấp lánh (Bokeh). Vùng tối phía dưới chiếm 45% giúp chữ quote trắng nổi bật 100%.",
+            "flux_prompt": "Cinematic 35mm photo through a rainy car window at night, glowing amber streetlights and bokeh reflections, lonely melancholic atmosphere, deep dark lower third with clean negative space for typography, Kodachrome film grain, 9:16 vertical portrait, 8k resolution",
+            "pinterest_query": "rainy car window night city aesthetic vertical 9:16",
+            "pixabay_query": "rain window night city",
+        },
+        {
+            "title": "☕ Góc Quán Cafe Vắng & Đèn Vàng (Khoảng Lặng)",
+            "why_viral": "Khơi gợi sự bình yên và đồng cảm. Nhân vật quay lưng không thấy mặt giúp người xem tự đặt bản thân vào vị trí người trong ảnh.",
+            "flux_prompt": "Aesthetic photograph of a solitary person from behind sitting alone at a dark wooden cafe table near a wet window at night, warm lamp glowing, steam from coffee cup, moody shadows, clean dark negative space at bottom, 35mm film still, 9:16 vertical portrait",
+            "pinterest_query": "dark cozy cafe night rain lonely coffee aesthetic 9:16",
+            "pixabay_query": "cozy cafe night dark rain",
+        },
+        {
+            "title": "🚶 Bước Chân Đơn Độc Phố Đêm (Trưởng Thành)",
+            "why_viral": "Hình tượng bước đi kiêu hãnh một mình, ánh đèn đường đổ bóng dài trên mặt đường ướt tạo cảm giác điện ảnh sâu thẳm.",
+            "flux_prompt": "Cinematic street photography at dusk, back view of a lone person in a dark coat walking on wet asphalt pavement under a vintage yellow streetlight, long dark shadow, moody mist, dark lower space, Leica 35mm lens, 9:16 vertical aspect ratio",
+            "pinterest_query": "lonely man walking night street lamp puddle aesthetic 9:16",
+            "pixabay_query": "man walking night street puddle",
+        },
+        {
+            "title": "🚇 Chuyến Tàu Đêm & Vệt Sáng (Thời Gian Trôi)",
+            "why_viral": "Chuyển động mờ của ánh sáng bên ngoài cửa sổ tàu tạo cảm giác suy tưởng về thời gian và các mối quan hệ đã qua.",
+            "flux_prompt": "Atmospheric cinematic shot inside a dark night train cabin, silhouette reflection on the window showing blurred rushing city lights outside, deep blue and amber tones, quiet contemplative solitude, clean typography zone at bottom, 9:16 vertical",
+            "pinterest_query": "night train window aesthetic lonely reflection 9:16",
+            "pixabay_query": "train window night city blur",
+        },
     ],
     "kenh_moi": [
-        {"theme": "Bàn cờ & bóng tối", "keywords": "chess pieces dramatic lighting dark background"},
-        {"theme": "Góc nhìn từ đỉnh cao ốc đêm", "keywords": "skyscraper night skyline aerial luxury dark"},
-        {"theme": "Chạy bộ đêm & kỷ luật thép", "keywords": "man running night dark street determination"},
-        {"theme": "Sóng biển đêm cuồn cuộn", "keywords": "dark ocean waves crashing storm deep power"},
-        {"theme": "Khói mờ & ánh sáng ven", "keywords": "smoke dark silhouette rim light cinematic 4k"},
+        {
+            "title": "♟️ Bàn Cờ Tư Mã Ý & Ánh Đèn Góc (Mưu Lược)",
+            "why_viral": "Vật thể biểu tượng cho tính toán và bản lĩnh. Ánh sáng chiếu nghiêng (Chiaroscuro) tạo sự bí hiểm, quyền lực của kẻ mạnh.",
+            "flux_prompt": "Dramatic chiaroscuro photography of a wooden chessboard with carved pieces in deep shadow, a solitary king piece illuminated by a single warm beam of light, dark moody luxury study room background, smoke haze, 9:16 vertical portrait, cinematic 8k",
+            "pinterest_query": "chess pieces dark dramatic lighting luxury aesthetic 9:16",
+            "pixabay_query": "chess pieces dark dramatic lighting",
+        },
+        {
+            "title": "🏢 Đỉnh Cao Ốc Đêm (Vị Thế & Tiền Tài)",
+            "why_viral": "Góc nhìn từ trên cao (Eagle view) xuống thành phố lấp lánh tượng trưng cho tham vọng, vị thế và tiền bạc.",
+            "flux_prompt": "Cinematic aerial view from a luxury penthouse balcony looking down at a vast sprawling metropolitan skyline at night, glowing skyscrapers and highway light trails, silhouette of an ambitious thinker holding a glass, dark moody palette, 9:16 portrait",
+            "pinterest_query": "skyscraper night skyline luxury aerial dark aesthetic 9:16",
+            "pixabay_query": "skyscraper night skyline aerial dark",
+        },
+        {
+            "title": "🌊 Sóng Biển Đêm Cuồn Cuộn (Nội Tâm Kẻ Mạnh)",
+            "why_viral": "Sóng biển lớn trong đêm đại diện cho sóng gió thương trường và tâm thế tĩnh lặng của người kiểm soát được cảm xúc.",
+            "flux_prompt": "Cinematic dark moody ocean with powerful crashing waves at night under a storm cloud sky, deep navy and black tones, textured foam, dramatic rim light, immense power and stoic tranquility, clean dark negative space, 9:16 vertical portrait",
+            "pinterest_query": "dark ocean waves crashing storm deep power aesthetic 9:16",
+            "pixabay_query": "dark ocean waves night storm",
+        },
+        {
+            "title": "🏃 Chạy Bộ Đêm & Kỷ Luật Thép (Bản Lĩnh)",
+            "why_viral": "Chủ đề kỷ luật cá nhân khi cả thế giới đang ngủ. Kích thích hoóc-môn hành động và nỗ lực của nam giới 25-35 tuổi.",
+            "flux_prompt": "Powerful cinematic action shot of a solitary athletic man running at night on a dark bridge, sweat and determination, moody streetlights, mist and breath in cold air, low-key dramatic lighting, 9:16 vertical aspect ratio",
+            "pinterest_query": "man running night dark street discipline aesthetic 9:16",
+            "pixabay_query": "running night dark street athlete",
+        },
     ],
 }
+
+HIGH_RETENTION_VISUALS = {
+    "saigonbac": [
+        {"theme": item["title"], "keywords": item["pixabay_query"]} for item in OUTLIER_VISUAL_TEMPLATES["saigonbac"]
+    ],
+    "kenh_moi": [
+        {"theme": item["title"], "keywords": item["pixabay_query"]} for item in OUTLIER_VISUAL_TEMPLATES["kenh_moi"]
+    ],
+}
+
+
+def build_ai_visual_prompt_from_quote(
+    quote: str,
+    channel: str = "saigonbac",
+    config: Optional[Dict[str, Any]] = None,
+) -> str:
+    """
+    Sử dụng AI để phân tích câu quote và tạo ra 1 Prompt FLUX.1 chuẩn 4-layer
+    chuyên biệt cho hình ảnh TikTok 9:16 có vùng âm tối ở đáy cho typography.
+    """
+    channel_key = "kenh_moi" if channel in ["kenh_moi", "new_channel", "lang"] else "saigonbac"
+    if channel_key == "kenh_moi":
+        mood_guide = "Phong cách điện ảnh quyền lực, sắc lạnh, bàn cờ, bóng tối, cao ốc, kỷ luật, mưu lược, ánh sáng tương phản mạnh (Chiaroscuro)."
+    else:
+        mood_guide = "Phong cách hoài niệm, mưa đêm, đèn vàng phố thị, quán cà phê vắng, ga tàu, bóng lưng cô đơn, hạt film 35mm, êm dịu."
+
+    prompt = f"""Bạn là Giám đốc Hình ảnh Điện ảnh (Cinematic Visual Director) cho các video triệu view TikTok.
+Nhiệm vụ của bạn là đọc câu trích dẫn sau và tạo ra DUY NHẤT 1 PROMPT TIẾNG ANH để đưa vào bộ sinh ảnh AI (FLUX.1):
+
+CÂU TRÍCH DẪN:
+"{quote}"
+
+HƯỚNG DẪN TÂM LÝ THỊ GIÁC:
+{mood_guide}
+
+YÊU CẦU BẮT BUỘC ĐỂ ẢNH ĐẠT TRIỆU VIEW:
+1. Không gian âm (Negative Space): Phải có câu lệnh 'dark lower third negative space for typography' để vùng dưới ảnh tối màu, giúp đặt chữ không bị chói.
+2. Giấu mặt nhân vật: Chỉ chụp góc lưng (back view), góc nghiêng trong bóng tối (silhouette), hoặc cảnh vật ẩn dụ (metaphor).
+3. Máy ảnh & Ánh sáng: '35mm photograph, shallow depth of field, cinematic lighting, Kodachrome film grain, vertical 9:16 aspect ratio'.
+
+HÃY XUẤT RA DUY NHẤT ĐOẠN PROMPT TIẾNG ANH (KHÔNG KÈM GIẢI THÍCH, KHÔNG BỎ VÀO NGOẶC):
+"""
+    try:
+        from modules.quote_gen import call_gemini, call_openai
+        if config is None:
+            cfg_p = Path("config.json")
+            if cfg_p.exists():
+                with open(cfg_p, "r", encoding="utf-8") as f:
+                    config = json.load(f)
+            else:
+                config = {}
+
+        provider = config.get("llm_provider", "gemini").lower()
+        if provider == "openai":
+            res = call_openai(prompt, model_name=config.get("openai_model", "gpt-4o-mini"))
+        else:
+            res = call_gemini(prompt, model_name=config.get("gemini_model", "gemini-3.5-flash-lite"))
+
+        cleaned = res.strip().strip('"').strip("'").strip("`")
+        if cleaned:
+            return cleaned
+    except Exception as e:
+        logger.warning(f"Lỗi AI visual prompt builder ({e}), dùng fallback.")
+
+    if channel_key == "kenh_moi":
+        return (
+            "Dramatic chiaroscuro 35mm photograph of a wooden chessboard with carved pieces in deep shadow, "
+            "warm beam of rim light, dark moody luxury study background, clean dark lower third negative space for typography, "
+            "cinematic film grain, 9:16 vertical portrait, 8k"
+        )
+    else:
+        return (
+            "Cinematic 35mm photograph through a rainy car window at night, blurred amber bokeh streetlights, "
+            "wet asphalt reflections, solitary moody atmosphere, clean dark lower space for typography, "
+            "Kodachrome film texture, 9:16 vertical aspect ratio"
+        )
 
 
 def get_random_outlier_hooks(channel: str = "saigonbac", limit: int = 5) -> List[Dict[str, str]]:
