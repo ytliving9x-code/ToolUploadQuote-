@@ -29,6 +29,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Tự động dọn dẹp RAM cache của Streamlit để luôn nạp code mới nhất từ disk
+for _mod in list(sys.modules.keys()):
+    if _mod.startswith("modules.") or _mod == "modules":
+        sys.modules.pop(_mod, None)
+
 try:
     from modules.history_db import init_db
     from modules.quote_gen import (
