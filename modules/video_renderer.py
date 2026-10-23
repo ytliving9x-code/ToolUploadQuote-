@@ -30,13 +30,20 @@ except Exception:
 DEFAULT_FONT = Path("assets/fonts/BeVietnamPro-Bold.ttf")
 
 
-def get_vietnamese_font(font_size: int = 54) -> ImageFont.FreeTypeFont:
-    """Tải font chữ tiếng Việt Be Vietnam Pro hoặc DejaVu Sans dự phòng."""
+def get_vietnamese_font(font_size: int = 54, font_path: Optional[Path | str] = None) -> ImageFont.FreeTypeFont:
+    """Tải font chữ tiếng Việt theo font_path hoặc Be Vietnam Pro / Montserrat dự phòng."""
+    target = Path(font_path) if font_path else DEFAULT_FONT
+    if target.exists():
+        try:
+            return ImageFont.truetype(str(target), font_size)
+        except Exception as e:
+            logger.warning(f"Lỗi load font {target}: {e}")
+
     if DEFAULT_FONT.exists():
         try:
             return ImageFont.truetype(str(DEFAULT_FONT), font_size)
-        except Exception as e:
-            logger.warning(f"Lỗi load font {DEFAULT_FONT}: {e}")
+        except Exception:
+            pass
 
     try:
         return ImageFont.truetype("arial.ttf", font_size)
@@ -85,9 +92,10 @@ def create_quote_overlay(
     signature: Optional[str] = "saigonbac",
     signature_font_size: int = 24,
     enable_gradient_scrim: bool = True,
-    scrim_max_alpha: int = 145,
-    shadow_blur_radius: float = 3.5,
+    scrim_max_alpha: int = 175,
+    shadow_blur_radius: float = 5.0,
     stroke_width: int = 1,
+    font_path: Optional[Path | str] = None,
 ) -> Image.Image:
     """
     Tạo lớp ảnh chữ trong suốt RGBA (1080x1920) chứa câu quote và chữ ký nhỏ.
@@ -100,12 +108,12 @@ def create_quote_overlay(
     img = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
     max_text_width = canvas_size[0] - margin_left - margin_right
 
-    font = get_vietnamese_font(font_size)
+    font = get_vietnamese_font(font_size, font_path=font_path)
     lines = wrap_quote_to_lines(quote, font, max_width=max_text_width)
 
     # Nếu câu dài hơn 3 dòng, tự động giảm nhẹ font size
     if len(lines) > 3 and font_size > 36:
-        font = get_vietnamese_font(font_size - 4)
+        font = get_vietnamese_font(font_size - 4, font_path=font_path)
         lines = wrap_quote_to_lines(quote, font, max_width=max_text_width)
 
     # Tính toán kích thước từng dòng
@@ -219,11 +227,12 @@ def render_18s_video(
     overlay_opacity: float = 0.30,
     signature: Optional[str] = "saigonbac",
     enable_gradient_scrim: bool = True,
-    scrim_max_alpha: int = 145,
-    shadow_blur_radius: float = 3.5,
+    scrim_max_alpha: int = 175,
+    shadow_blur_radius: float = 5.0,
     stroke_width: int = 1,
     motion_type: str = "cinematic_drift",
     cinematic_vignette: bool = True,
+    font_path: Optional[Path | str] = None,
 ) -> Path:
     """
     Render video TikTok chuẩn 18 giây, tỷ lệ 9:16 (1080x1920), không có âm thanh.
@@ -258,6 +267,7 @@ def render_18s_video(
         scrim_max_alpha=scrim_max_alpha,
         shadow_blur_radius=shadow_blur_radius,
         stroke_width=stroke_width,
+        font_path=font_path,
     )
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_png:
         tmp_png_path = Path(tmp_png.name)

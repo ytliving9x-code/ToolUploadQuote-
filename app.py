@@ -494,6 +494,32 @@ ANTIGLARE_PRESETS = {
 }
 
 # ==============================================================================
+# BỘ CẤU HÌNH PHÔNG CHỮ NỔI BẬT TRÊN HÌNH
+# ==============================================================================
+FONT_PRESETS = {
+    "🔥 Montserrat Black (Siêu Đậm - Nổi Bật Số 1)": {
+        "path": "assets/fonts/Montserrat-Black.ttf",
+        "desc": "Nét dày bản to, chữ cực kỳ bắt mắt và nổi bật trên mọi bức ảnh (chuẩn phong cách TikTok viral).",
+    },
+    "⚡ Montserrat Bold (Hiện Đại & Sắc Nét)": {
+        "path": "assets/fonts/Montserrat-Bold.ttf",
+        "desc": "Nét dày vừa vặn, hình khối hiện đại, thanh thoát và dễ đọc.",
+    },
+    "☕ Be Vietnam Pro Bold (Thanh Lịch Sài Gòn)": {
+        "path": "assets/fonts/BeVietnamPro-Bold.ttf",
+        "desc": "Font quốc dân cho video tâm trạng, khoảng cách chữ thoáng đãng, sâu lắng.",
+    },
+    "🎞️ Playfair Display Bold (Điện Ảnh Hoài Niệm)": {
+        "path": "assets/fonts/PlayfairDisplay-Bold.ttf",
+        "desc": "Font Serif có chân cổ điển, lãng mạn, rất hợp cho quote thơ, triết lý, hoài niệm.",
+    },
+    "🍃 Itim (Viết Tay Dễ Thương / Nhẹ Nhàng)": {
+        "path": "assets/fonts/Itim-Regular.ttf",
+        "desc": "Nét chữ bo tròn thân thiện, tự nhiên như trang nhật ký tâm sự.",
+    },
+}
+
+# ==============================================================================
 # KHỞI TẠO STATE & CẤU HÌNH MẶC ĐỊNH
 # ==============================================================================
 config = load_config()
@@ -512,6 +538,8 @@ if "enable_antiglare" not in st.session_state:
     st.session_state.enable_antiglare = True
 if "antiglare_preset" not in st.session_state:
     st.session_state.antiglare_preset = "✨ Chuẩn Điện Ảnh (Khuyên dùng)"
+if "font_preset" not in st.session_state:
+    st.session_state.font_preset = "🔥 Montserrat Black (Siêu Đậm - Nổi Bật Số 1)"
 
 
 # ==============================================================================
@@ -651,8 +679,24 @@ with col_input:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # ---------------- TUỲ CHỌN HIỂN THỊ & BỘ LỌC CHỐNG LOÁ ----------------
-    with st.expander("⚙️ Bộ lọc chống loá & Chữ ký video", expanded=True):
+    # ---------------- TUỲ CHỌN HIỂN THỊ, PHÔNG CHỮ & BỘ LỌC CHỐNG LOÁ ----------------
+    with st.expander("⚙️ Phông chữ, Chống loá & Chữ ký video", expanded=True):
+        st.markdown("<b style='color: #38BDF8; font-size: 0.9rem;'>🔤 Phông chữ hiển thị:</b>", unsafe_allow_html=True)
+        font_names = list(FONT_PRESETS.keys())
+        default_font_idx = font_names.index(st.session_state.font_preset) if st.session_state.font_preset in font_names else 0
+        selected_font = st.selectbox(
+            "Chọn phông chữ:",
+            options=font_names,
+            index=default_font_idx,
+            key="sb_font_select",
+            label_visibility="collapsed",
+        )
+        if selected_font != st.session_state.font_preset:
+            st.session_state.font_preset = selected_font
+            st.session_state.rendered_video = None
+
+        st.caption(f"ℹ️ {FONT_PRESETS[selected_font]['desc']}")
+
         st.markdown("<b style='color: #38BDF8; font-size: 0.9rem;'>🛡️ Chế độ chống loá chữ:</b>", unsafe_allow_html=True)
         preset_names = list(ANTIGLARE_PRESETS.keys())
         default_idx = preset_names.index(st.session_state.antiglare_preset) if st.session_state.antiglare_preset in preset_names else 0
@@ -691,10 +735,14 @@ with col_input:
 
     st.write("")
 
-    # Lấy thông số chống loá hiện tại
+    # Lấy thông số chống loá và font chữ hiện tại
     active_cfg = ANTIGLARE_PRESETS.get(
         st.session_state.antiglare_preset,
         ANTIGLARE_PRESETS["✨ Chuẩn Điện Ảnh (Khuyên dùng)"],
+    )
+    active_font = FONT_PRESETS.get(
+        st.session_state.font_preset,
+        FONT_PRESETS["🔥 Montserrat Black (Siêu Đậm - Nổi Bật Số 1)"],
     )
 
     # ---------------- NÚT HÀNH ĐỘNG HERO ----------------
@@ -725,6 +773,7 @@ with col_input:
                         scrim_max_alpha=active_cfg["scrim"],
                         shadow_blur_radius=active_cfg["blur"],
                         stroke_width=active_cfg["stroke"],
+                        font_path=active_font["path"],
                     )
                     st.session_state.rendered_video = str(out_vid)
                     st.toast("Tạo video 18s hoàn tất thành công 100%!", icon="🎉")
@@ -788,6 +837,10 @@ with col_preview:
                         st.session_state.antiglare_preset,
                         ANTIGLARE_PRESETS["✨ Chuẩn Điện Ảnh (Khuyên dùng)"],
                     )
+                    active_font = FONT_PRESETS.get(
+                        st.session_state.font_preset,
+                        FONT_PRESETS["🔥 Montserrat Black (Siêu Đậm - Nổi Bật Số 1)"],
+                    )
 
                     text_overlay = create_quote_overlay(
                         quote=st.session_state.quote_text,
@@ -796,6 +849,7 @@ with col_preview:
                         scrim_max_alpha=active_cfg["scrim"],
                         shadow_blur_radius=active_cfg["blur"],
                         stroke_width=active_cfg["stroke"],
+                        font_path=active_font["path"],
                     )
                     preview_composite = Image.alpha_composite(bg_ready, text_overlay)
                     st.image(preview_composite.convert("RGB"), use_container_width=True)
