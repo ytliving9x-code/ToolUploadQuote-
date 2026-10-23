@@ -186,7 +186,12 @@ def save_config(cfg: Dict[str, Any]) -> None:
 
 def crop_image_to_tiktok_portrait(image_path: Path, target_size=(1080, 1920)) -> Path:
     """Cắt và căn giữa (Center-Crop) ảnh chính xác về khổ 1080x1920 (9:16)."""
+    from PIL import ImageOps
     with Image.open(image_path) as img:
+        try:
+            img = ImageOps.exif_transpose(img)
+        except Exception:
+            pass
         img = img.convert("RGB")
         target_w, target_h = target_size
         img_w, img_h = img.size
@@ -235,6 +240,10 @@ if "sg_user_prompt" not in st.session_state:
     st.session_state.sg_user_prompt = ""
 if "sg_bg_image" not in st.session_state:
     st.session_state.sg_bg_image = str(default_sample_bg) if default_sample_bg.exists() else None
+if "sg_last_uploaded_bg_name" not in st.session_state:
+    st.session_state.sg_last_uploaded_bg_name = None
+if "sg_last_insp_name" not in st.session_state:
+    st.session_state.sg_last_insp_name = None
 if "sg_rendered_video" not in st.session_state:
     st.session_state.sg_rendered_video = None
 if "sg_signature" not in st.session_state:
@@ -322,12 +331,14 @@ with col_input:
         st.markdown('<div class="step-badge">BƯỚC 1</div>', unsafe_allow_html=True)
         st.subheader("Nhập Prompt / AI Sáng Tác Quote")
 
-        tab_prompt_text, tab_prompt_img = st.tabs([
-            "✍️ Nhập Prompt Bằng Chữ",
-            "🖼️ Copy Ý Tưởng Từ Ảnh (Gửi Ảnh Có Chữ)",
-        ])
+        prompt_mode = st.radio(
+            "Chọn hình thức sáng tác quote:",
+            options=["✍️ Nhập Prompt Bằng Chữ", "🖼️ Copy Ý Tưởng Từ Ảnh (Gửi Ảnh Có Chữ)"],
+            horizontal=True,
+            key="sb_prompt_mode_select",
+        )
 
-        with tab_prompt_text:
+        if prompt_mode == "✍️ Nhập Prompt Bằng Chữ":
             user_prompt_input = st.text_area(
                 "Nhập Prompt của bạn cho AI:",
                 value=st.session_state.sg_user_prompt,
@@ -353,22 +364,33 @@ with col_input:
                             st.session_state.sg_last_gen_quote_source = "text"
                             st.session_state.sg_rendered_video = None
                             st.toast("AI đã viết xong câu quote theo prompt của bạn!", icon="✨")
-                            st.rerun()
                         except Exception as e:
                             st.error(f"Lỗi khi gọi AI: {e}")
 
             if st.session_state.get("sg_last_gen_quote_source") == "text" and st.session_state.get("sg_quote_text"):
                 st.success(f"✨ **AI đã sáng tác câu quote:**\n\n> *\"{st.session_state.sg_quote_text}\"*")
 
-        with tab_prompt_img:
+        else:
             st.caption("📸 **Tải ảnh có chữ/quote bạn thích (từ TikTok, Facebook, Pinterest...)**. AI Vision sẽ đọc nội dung trong ảnh và sáng tác lại 1 câu tương tự về ý tưởng, phong cách nhưng độc bản.")
             insp_file = st.file_uploader(
-                "Chọn file ảnh chụp màn hình / ảnh có chữ (.jpg, .png, .webp):",
-                type=["jpg", "jpeg", "png", "webp"],
+                "Chọn file ảnh chụp màn hình / ảnh có chữ (.jpg, .png, .webp, .jfif, .bmp):",
+                type=["jpg", "jpeg", "png", "webp", "jfif", "bmp"],
                 key="sb_insp_uploader",
             )
-            if insp_file is not None:
-                st.image(insp_file, caption="Ảnh tham khảo đã chọn", width=220)
+
+            # Đồng bộ hoá trạng thái xoá / đổi file ảnh tham khảo
+            if insp_file is None:
+                if st.session_state.get("sg_last_insp_name") is not None:
+                    st.session_state.sg_last_insp_name = None
+                    if st.session_state.get("sg_last_gen_quote_source") == "image":
+                        st.session_state.sg_last_gen_quote_source = None
+            else:
+                if insp_file.name != st.session_state.get("sg_last_insp_name"):
+                    st.session_state.sg_last_insp_name = insp_file.name
+                    if st.session_state.get("sg_last_gen_quote_source") == "image":
+                        st.session_state.sg_last_gen_quote_source = None
+
+                st.image(insp_file, caption=f"Ảnh tham khảo đã chọn: {insp_file.name}", width=220)
 
             insp_note = st.text_input(
                 "Ghi chú thêm cho AI (Tùy chọn):",
@@ -394,7 +416,6 @@ with col_input:
                             st.session_state.sg_last_gen_quote_source = "image"
                             st.session_state.sg_rendered_video = None
                             st.toast("AI đã đọc ảnh và sáng tác câu quote tương tự thành công!", icon="🎉")
-                            st.rerun()
                         except Exception as e:
                             st.error(f"Lỗi phân tích ảnh: {e}")
 
@@ -439,21 +460,48 @@ with col_input:
 
         up_file = st.file_uploader(
             "Kéo thả hoặc duyệt file ảnh từ máy của bạn:",
-            type=["jpg", "jpeg", "png", "webp"],
+            type=["jpg", "jpeg", "png", "webp", "jfif", "bmp"],
             key="sb_file_uploader",
         )
         if up_file is not None:
-            temp_dir = Path("temp")
-            temp_dir.mkdir(parents=True, exist_ok=True)
-            save_path = temp_dir / up_file.name
-            with open(save_path, "wb") as f_out:
-                f_out.write(up_file.getbuffer())
+            # Chỉ xử lý khi người dùng mới tải file lên hoặc đổi sang file khác
+            if up_file.name != st.session_state.get("sg_last_uploaded_bg_name"):
+                try:
+                    temp_dir = Path("temp")
+                    temp_dir.mkdir(parents=True, exist_ok=True)
+                    # Dùng timestamp để tránh trùng file và phá bỏ hoàn toàn cache trình duyệt
+                    file_ext = Path(up_file.name).suffix or ".jpg"
+                    unique_bg_path = temp_dir / f"bg_{int(time.time() * 1000)}{file_ext}"
+                    with open(unique_bg_path, "wb") as f_out:
+                        f_out.write(up_file.getbuffer())
 
-            # Chuẩn hoá kích thước 1080x1920
-            crop_path = crop_image_to_tiktok_portrait(save_path)
-            st.session_state.sg_bg_image = str(crop_path)
-            st.session_state.sg_rendered_video = None
-            st.toast(f"Đã nạp và chuẩn hóa ảnh: {up_file.name}", icon="📸")
+                    crop_path = crop_image_to_tiktok_portrait(unique_bg_path)
+                    st.session_state.sg_bg_image = str(crop_path)
+                    st.session_state.sg_last_uploaded_bg_name = up_file.name
+                    st.session_state.sg_rendered_video = None
+                    st.toast(f"Đã nạp và chuẩn hóa ảnh mới: {up_file.name}", icon="📸")
+                except Exception as e:
+                    st.error(f"Lỗi khi xử lý ảnh tải lên: {e}")
+        else:
+            # Nếu người dùng bấm [X] trên file uploader để xoá ảnh tải lên
+            if st.session_state.get("sg_last_uploaded_bg_name") is not None:
+                st.session_state.sg_last_uploaded_bg_name = None
+                st.session_state.sg_bg_image = str(default_sample_bg) if default_sample_bg.exists() else None
+                st.session_state.sg_rendered_video = None
+                st.toast("Đã gỡ ảnh tải lên, chuyển về ảnh nền mặc định.", icon="🗑️")
+
+        # Hiển thị thông tin ảnh đang dùng + nút xoá nhanh nếu có
+        if st.session_state.get("sg_last_uploaded_bg_name"):
+            col_cur, col_del = st.columns([3, 1])
+            with col_cur:
+                st.caption(f"✅ Đang dùng ảnh bạn tải lên: **{st.session_state.sg_last_uploaded_bg_name}**")
+            with col_del:
+                if st.button("🗑️ Xoá ảnh", key="sb_btn_del_bg_manual", help="Gỡ ảnh này để chọn ảnh khác"):
+                    st.session_state.sg_last_uploaded_bg_name = None
+                    st.session_state.sg_bg_image = str(default_sample_bg) if default_sample_bg.exists() else None
+                    st.session_state.sg_rendered_video = None
+                    st.toast("Đã xoá ảnh thành công!", icon="🗑️")
+                    st.rerun()
 
         # Nút nạp nhanh ảnh mẫu nếu cần
         if default_sample_bg.exists():
@@ -461,6 +509,7 @@ with col_input:
                 st.caption(f"Ảnh mẫu hiện tại: `{default_sample_bg.name}`")
                 if st.button("🔄 Nạp lại ảnh mẫu này", key="sb_btn_reset_sample"):
                     st.session_state.sg_bg_image = str(default_sample_bg)
+                    st.session_state.sg_last_uploaded_bg_name = None
                     st.session_state.sg_rendered_video = None
                     st.toast("Đã nạp ảnh mẫu saigonbac!", icon="☕")
                     st.rerun()
@@ -540,11 +589,15 @@ with col_preview:
                     "stroke_width": ag_stroke_map.get(sel_level, 1),
                 }
                 prev_img = generate_quote_preview_image(image_path=bg_img, quote=st.session_state.sg_quote_text, config=prev_cfg)
-                st.image(str(prev_img), use_container_width=True)
+                # Dùng PIL Image để Streamlit hash pixel trực tiếp, loại bỏ 100% hiện tượng cache ảnh cũ
+                with Image.open(prev_img) as _pimg:
+                    st.image(_pimg.convert("RGB"), use_container_width=True)
             except Exception as ex:
-                st.image(str(bg_img), use_container_width=True)
+                with Image.open(bg_img) as _bimg:
+                    st.image(_bimg.convert("RGB"), use_container_width=True)
         else:
-            st.image(str(bg_img), use_container_width=True)
+            with Image.open(bg_img) as _bimg:
+                st.image(_bimg.convert("RGB"), use_container_width=True)
             st.caption("🖼️ Ảnh nền đã sẵn sàng. Hãy nhập câu quote ở Bước 1 để hiển thị chữ trên ảnh.")
 
     else:
