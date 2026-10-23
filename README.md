@@ -33,34 +33,22 @@ Hệ thống phần mềm tự động hóa toàn diện bằng **Python & Strea
 ```text
 ToolUploalQuote/
 ├── app.py                      # Giao diện Web App tương tác chính (Streamlit)
-├── cli.py                      # Giao diện dòng lệnh tự động tạo video hàng loạt
-├── config.json                 # Cấu hình lưu trữ API Keys và tham số mặc định
+├── config.json                 # Cấu hình tham số mặc định và signature
 ├── packages.txt                # Khai báo cài đặt FFmpeg cho Streamlit Cloud
 ├── requirements.txt            # Danh sách thư viện Python cần thiết
-├── quotes.json                 # Kho câu quote mẫu chọn lọc offline
 ├── README.md                   # Tài liệu chi tiết dự án
 │
 ├── modules/                    # Các module tính năng chuyên biệt
-│   ├── ai_image_gen.py         # Tạo ảnh nghệ thuật bằng AI (Pollinations AI, 1080x1920)
-│   ├── exporter.py             # Quản lý xuất hàng chờ đăng (Pending / Published)
-│   ├── history_db.py           # SQLite lưu trữ lịch sử và chống trùng lặp quote
-│   ├── pixabay_fetcher.py      # Tải ảnh Pixabay, crop 1080x1920, kho keyword cinematic
-│   ├── quote_gen.py            # Sinh quote bằng AI (Gemini, Groq, OpenRouter) & prompt
-│   ├── quote_manager.py        # Gợi ý keyword ngữ nghĩa tự động từ nội dung quote
+│   ├── __init__.py             # Package init
+│   ├── video_engine.py         # Kiểm tra và phân tích metadata video bằng FFprobe
 │   └── video_renderer.py       # Engine dựng ảnh typography & render video 18.0s bằng FFmpeg
 │
 ├── assets/
-│   └── fonts/                  # Font chữ tiếng Việt cao cấp (BeVietnamPro-Bold.ttf)
+│   └── fonts/                  # Tuyển tập font chữ tiếng Việt cao cấp (BeVietnamPro, Montserrat,...)
 │
-├── data/
-│   └── history.db              # Cơ sở dữ liệu SQLite cục bộ
-│
-├── output/
-│   ├── cho_dang/               # Video chờ đăng kèm file text (.mp4 + .txt)
-│   └── da_dang/                # Lưu trữ các video đã hoàn thành xuất bản
-│
-├── temp/                       # Thư mục lưu ảnh/video tạm thời khi render
-└── tests/                      # Bộ kiểm thử tự động (Pytest)
+├── generated_media/            # Lưu trữ video xuất bản
+├── output/                     # Thư mục lưu sản phẩm hoàn thiện
+└── temp/                       # Thư mục lưu ảnh/video tạm thời khi render
 ```
 
 ---
