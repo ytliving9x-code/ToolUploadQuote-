@@ -29,10 +29,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Tự động dọn dẹp RAM cache của Streamlit để luôn nạp code mới nhất từ disk
-for _mod in list(sys.modules.keys()):
-    if _mod.startswith("modules.") or _mod == "modules":
-        sys.modules.pop(_mod, None)
+# Tự động dọn dẹp RAM cache của Streamlit khi đang chạy app (không áp dụng khi chạy test suite)
+if hasattr(st, "runtime") and st.runtime.exists():
+    for _mod in list(sys.modules.keys()):
+        if _mod.startswith("modules.") or _mod == "modules":
+            sys.modules.pop(_mod, None)
 
 try:
     from modules.history_db import init_db
@@ -226,6 +227,10 @@ if not default_sample_bg.exists():
 
 if "sg_quote_text" not in st.session_state:
     st.session_state.sg_quote_text = ""
+if "sb_quote_text_area" not in st.session_state:
+    st.session_state.sb_quote_text_area = ""
+if "sg_last_gen_quote_source" not in st.session_state:
+    st.session_state.sg_last_gen_quote_source = None
 if "sg_user_prompt" not in st.session_state:
     st.session_state.sg_user_prompt = ""
 if "sg_bg_image" not in st.session_state:
@@ -344,11 +349,16 @@ with col_input:
                                 config=config,
                             )
                             st.session_state.sg_quote_text = res["quote"]
+                            st.session_state.sb_quote_text_area = res["quote"]
+                            st.session_state.sg_last_gen_quote_source = "text"
                             st.session_state.sg_rendered_video = None
                             st.toast("AI đã viết xong câu quote theo prompt của bạn!", icon="✨")
                             st.rerun()
                         except Exception as e:
                             st.error(f"Lỗi khi gọi AI: {e}")
+
+            if st.session_state.get("sg_last_gen_quote_source") == "text" and st.session_state.get("sg_quote_text"):
+                st.success(f"✨ **AI đã sáng tác câu quote:**\n\n> *\"{st.session_state.sg_quote_text}\"*")
 
         with tab_prompt_img:
             st.caption("📸 **Tải ảnh có chữ/quote bạn thích (từ TikTok, Facebook, Pinterest...)**. AI Vision sẽ đọc nội dung trong ảnh và sáng tác lại 1 câu tương tự về ý tưởng, phong cách nhưng độc bản.")
@@ -380,11 +390,16 @@ with col_input:
                                 config=config,
                             )
                             st.session_state.sg_quote_text = res["quote"]
+                            st.session_state.sb_quote_text_area = res["quote"]
+                            st.session_state.sg_last_gen_quote_source = "image"
                             st.session_state.sg_rendered_video = None
                             st.toast("AI đã đọc ảnh và sáng tác câu quote tương tự thành công!", icon="🎉")
                             st.rerun()
                         except Exception as e:
                             st.error(f"Lỗi phân tích ảnh: {e}")
+
+            if st.session_state.get("sg_last_gen_quote_source") == "image" and st.session_state.get("sg_quote_text"):
+                st.success(f"✨ **AI đã đọc chữ trong ảnh & sáng tác câu quote mới:**\n\n> *\"{st.session_state.sg_quote_text}\"*")
 
         # Ô chỉnh sửa câu quote trực tiếp
         current_quote = st.text_area(

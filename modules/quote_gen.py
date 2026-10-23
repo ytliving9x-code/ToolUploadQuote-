@@ -278,8 +278,20 @@ def clean_and_parse_json(raw_text: str) -> Dict[str, Any]:
 
     # Nếu không phải JSON, nghĩa là AI đã tuân thủ prompt xuất DUY NHẤT 1 CÂU QUOTE VĂN BẢN
     cleaned_quote = text.strip().strip('"').strip("'").strip("`").strip()
-    lines = [line.strip().strip('"').strip("'") for line in cleaned_quote.split("\n") if line.strip()]
-    final_quote = " ".join(lines) if lines else cleaned_quote
+    raw_lines = [line.strip().strip('"').strip("'").strip("`").strip() for line in cleaned_quote.split("\n") if line.strip()]
+
+    # Lọc bỏ các dòng dẫn nhập/giải thích nếu AI vô tình xuất hiện
+    filtered_lines = []
+    for line in raw_lines:
+        lower_l = line.lower()
+        if any(lower_l.startswith(p) for p in [
+            "đây là", "dưới đây là", "câu quote", "quote:", "gợi ý:", "ý tưởng:", "câu mới:", "kết quả:"
+        ]) and len(line) < 60:
+            continue
+        filtered_lines.append(line)
+
+    final_quote = " ".join(filtered_lines) if filtered_lines else cleaned_quote
+    final_quote = final_quote.strip('"').strip("'").strip("`").strip()
 
     return {
         "quote": final_quote,
@@ -416,7 +428,14 @@ def call_gemini(prompt: Union[str, List[Any]], model_name: str = "gemini-3.8-fla
     from google import genai
     client = genai.Client(api_key=key)
 
-    candidate_models = [model_name, "gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.8-flash"]
+    candidate_models = [
+        model_name,
+        "gemini-2.5-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-flash-lite-latest",
+        "gemini-3.8-flash",
+        "gemini-2.5-flash-lite",
+    ]
     # Loại bỏ model trùng lặp nhưng giữ thứ tự ưu tiên
     seen = set()
     models_to_try = [m for m in candidate_models if not (m in seen or seen.add(m))]
@@ -822,17 +841,28 @@ def generate_quote_from_inspiration_image(
     Nhận diện câu chữ trong ảnh tham khảo (inspiration image) và sáng tác câu quote mới
     có ý tưởng, phong cách và cảm xúc tương tự (copy idea & rewrite).
     """
-    from PIL import Image
+    from PIL import Image, ImageOps
     import io
 
     if isinstance(image_input, (str, Path)):
-        img = Image.open(image_input).convert("RGB")
+        img = Image.open(str(image_input))
     elif isinstance(image_input, bytes):
-        img = Image.open(io.BytesIO(image_input)).convert("RGB")
+        img = Image.open(io.BytesIO(image_input))
     elif hasattr(image_input, "convert"):
-        img = image_input.convert("RGB")
+        img = image_input
     else:
         raise ValueError("Định dạng ảnh không hợp lệ!")
+
+    try:
+        img = ImageOps.exif_transpose(img)
+    except Exception:
+        pass
+
+    img = img.convert("RGB")
+
+    # Giảm kích thước nếu ảnh quá lớn để tối ưu hoá bộ nhớ và tốc độ truyền lên Gemini
+    if max(img.size) > 2048:
+        img.thumbnail((2048, 2048), Image.Resampling.LANCZOS)
 
     if config is None:
         config_path = Path("config.json")
@@ -846,15 +876,19 @@ def generate_quote_from_inspiration_image(
 
     extra_note = f"\nYêu cầu bổ sung từ bạn: {custom_instruction.strip()}" if custom_instruction and custom_instruction.strip() else ""
 
-    vision_prompt = f"""Bạn là một chuyên gia sáng tác quote cho video ngắn TikTok (kênh Sài Gòn Bạc - hoài niệm, sâu sắc, chữa lành).
+    vision_prompt = f"""Bạn là một chuyên gia sáng tác quote cho video ngắn TikTok (kênh Sài Gòn Bạc - hoài niệm, sâu sắc, chữa lành, tĩnh tại).
 Hãy thực hiện các bước sau dựa trên bức ảnh được đính kèm:
-1. Đọc và nhận diện toàn bộ câu chữ / câu quote / thông điệp có trong bức ảnh này.
+1. Đọc và nhận diện toàn bộ câu chữ / câu quote / thông điệp có trong bức ảnh này (nếu có).
 2. Phân tích phong cách, cảm xúc, chủ đề và cấu trúc câu của nội dung đó.
 3. Sáng tác 1 câu quote MỚI có phong cách, ý tứ và cảm xúc tương tự (học hỏi ý tưởng, biến tấu tinh tế và sâu sắc, tuyệt đối không sao chép nguyên văn từng chữ để đảm bảo tính độc bản).
+   - Nếu trong ảnh có câu chữ: Hãy học hỏi ý tưởng đó và sáng tác 1 câu mới mang phong cách Sài Gòn Bạc tương tự.
+   - Nếu ảnh không có chữ hoặc chữ mờ: Hãy cảm nhận tâm trạng/khung cảnh của bức ảnh và sáng tác 1 câu quote hoài niệm, sâu sắc phù hợp.
 4. Độ dài chuẩn cho video 18s: từ 15 đến 26 từ (không quá ngắn và không quá 28 từ), câu từ thấm thía, ngắt nhịp tự nhiên.{extra_note}
 
-ĐỊNH DẠNG ĐẦU RA (BẮT BUỘC):
-- Trả về đúng 1 câu quote duy nhất (không dùng dấu ngoặc kép, không viết lời dẫn 'Đây là câu quote...', không giải thích, không kèm hashtag)."""
+QUY TẮC ĐẦU RA (BẮT BUỘC):
+- Trả về đúng duy nhất 1 câu quote tiếng Việt mới sáng tác.
+- Tuyệt đối không dùng dấu ngoặc kép, không viết bất kỳ lời dẫn giải thích nào (như 'Đây là câu quote...', 'Gợi ý:').
+- Không kèm hashtag hay icon mở đầu câu."""
 
     for attempt in range(1, max_retries + 1):
         logger.info(f"Đang phân tích ảnh tham khảo và sáng tác quote tương tự (Lần {attempt}/{max_retries})...")
