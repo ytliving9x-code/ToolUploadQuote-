@@ -396,8 +396,8 @@ RÀNG BUỘC KỸ THUẬT:
 
 
 
-def call_gemini(prompt: str, model_name: str = "gemini-3.8-flash", api_key: Optional[str] = None) -> str:
-    """Gọi Google Gemini API sử dụng thư viện google-genai, có cơ chế fallback model tự động."""
+def call_gemini(prompt: Union[str, List[Any]], model_name: str = "gemini-3.8-flash", api_key: Optional[str] = None) -> str:
+    """Gọi Google Gemini API sử dụng thư viện google-genai, có cơ chế fallback model tự động. Hỗ trợ cả text và multimodal."""
     key = api_key or os.getenv("GEMINI_API_KEY")
     if not key or key == "your_gemini_api_key_here":
         try:
@@ -742,4 +742,146 @@ HÃY ĐÁNH GIÁ DỰA TRÊN 4 TIÊU CHÍ CỐT LÕI CỦA THUẬT TOÁN TIKTOK:
             "suggestions": "Đảm bảo độ dài trong khoảng 15-26 từ để người xem kịp đọc trọn vẹn trong video ngắn.",
             "improved_quote": None,
         }
+
+
+def build_custom_prompt_for_saigonbac(user_prompt: str, recent_quotes: Optional[List[str]] = None) -> str:
+    """Xây dựng prompt cơ bản nếu cần tham chiếu."""
+    clean_prompt = user_prompt.strip() if user_prompt and user_prompt.strip() else ""
+    return clean_prompt
+
+
+def generate_quote_from_user_prompt(
+    user_prompt: str,
+    config: Optional[Dict[str, Any]] = None,
+    max_retries: int = 2,
+    check_duplicate: bool = False,
+    custom_db_path: Optional[Union[Path, str]] = None,
+) -> Dict[str, Any]:
+    """
+    Gửi trực tiếp Prompt của người dùng tới AI để sinh quote theo đúng ý muốn.
+    Người dùng hoàn toàn tự chủ động viết prompt, không dùng prompt mẫu hay khuôn mẫu định sẵn.
+    """
+    clean_prompt = (user_prompt or "").strip()
+    if not clean_prompt:
+        raise ValueError("Vui lòng nhập prompt của bạn trước khi yêu cầu AI viết quote!")
+
+    if config is None:
+        config_path = Path("config.json")
+        if config_path.exists():
+            with open(config_path, "r", encoding="utf-8") as f:
+                config = json.load(f)
+        else:
+            config = {}
+
+    provider = config.get("llm_provider", "gemini").lower()
+    gemini_model = config.get("gemini_model", "gemini-3.5-flash-lite")
+    openai_model = config.get("openai_model", "gpt-4o-mini")
+
+    for attempt in range(1, max_retries + 1):
+        logger.info(f"Đang gửi custom prompt của người dùng tới LLM (Lần {attempt}/{max_retries}, Provider={provider})...")
+        try:
+            if provider == "openai":
+                raw_response = call_openai(clean_prompt, model_name=openai_model)
+            else:
+                raw_response = call_gemini(clean_prompt, model_name=gemini_model)
+
+            parsed = clean_and_parse_json(raw_response)
+            quote_text = parsed["quote"]
+
+            quote_id = save_quote(parsed, topic="user_custom_prompt", channel="saigonbac", custom_path=custom_db_path)
+            parsed["topic"] = clean_prompt
+            parsed["quote_id"] = quote_id
+            parsed["channel"] = "saigonbac"
+            parsed["is_ai_generated"] = True
+            return parsed
+
+        except ValueError as ve:
+            err_msg = str(ve)
+            if "Chưa cấu hình" in err_msg or "API_KEY" in err_msg:
+                raise ve
+            logger.warning(f"Lỗi phản hồi ở lần {attempt}: {ve}")
+        except Exception as e:
+            logger.error(f"Lỗi gọi API ở lần {attempt}: {e}")
+            if attempt == max_retries:
+                raise e
+
+    raise RuntimeError("Không thể nhận phản hồi từ AI sau các lần thử.")
+
+
+def generate_quote_from_inspiration_image(
+    image_input: Union[Path, str, Any, bytes],
+    custom_instruction: Optional[str] = None,
+    config: Optional[Dict[str, Any]] = None,
+    max_retries: int = 2,
+    custom_db_path: Optional[Union[Path, str]] = None,
+) -> Dict[str, Any]:
+    """
+    Nhận diện câu chữ trong ảnh tham khảo (inspiration image) và sáng tác câu quote mới
+    có ý tưởng, phong cách và cảm xúc tương tự (copy idea & rewrite).
+    """
+    from PIL import Image
+    import io
+
+    if isinstance(image_input, (str, Path)):
+        img = Image.open(image_input).convert("RGB")
+    elif isinstance(image_input, bytes):
+        img = Image.open(io.BytesIO(image_input)).convert("RGB")
+    elif hasattr(image_input, "convert"):
+        img = image_input.convert("RGB")
+    else:
+        raise ValueError("Định dạng ảnh không hợp lệ!")
+
+    if config is None:
+        config_path = Path("config.json")
+        if config_path.exists():
+            with open(config_path, "r", encoding="utf-8") as f:
+                config = json.load(f)
+        else:
+            config = {}
+
+    gemini_model = config.get("gemini_model", "gemini-3.5-flash-lite")
+
+    extra_note = f"\nYêu cầu bổ sung từ bạn: {custom_instruction.strip()}" if custom_instruction and custom_instruction.strip() else ""
+
+    vision_prompt = f"""Bạn là một chuyên gia sáng tác quote cho video ngắn TikTok (kênh Sài Gòn Bạc - hoài niệm, sâu sắc, chữa lành).
+Hãy thực hiện các bước sau dựa trên bức ảnh được đính kèm:
+1. Đọc và nhận diện toàn bộ câu chữ / câu quote / thông điệp có trong bức ảnh này.
+2. Phân tích phong cách, cảm xúc, chủ đề và cấu trúc câu của nội dung đó.
+3. Sáng tác 1 câu quote MỚI có phong cách, ý tứ và cảm xúc tương tự (học hỏi ý tưởng, biến tấu tinh tế và sâu sắc, tuyệt đối không sao chép nguyên văn từng chữ để đảm bảo tính độc bản).
+4. Độ dài chuẩn cho video 18s: từ 15 đến 26 từ (không quá ngắn và không quá 28 từ), câu từ thấm thía, ngắt nhịp tự nhiên.{extra_note}
+
+ĐỊNH DẠNG ĐẦU RA (BẮT BUỘC):
+- Trả về đúng 1 câu quote duy nhất (không dùng dấu ngoặc kép, không viết lời dẫn 'Đây là câu quote...', không giải thích, không kèm hashtag)."""
+
+    for attempt in range(1, max_retries + 1):
+        logger.info(f"Đang phân tích ảnh tham khảo và sáng tác quote tương tự (Lần {attempt}/{max_retries})...")
+        try:
+            raw_response = call_gemini(
+                prompt=[img, vision_prompt],
+                model_name=gemini_model,
+            )
+            parsed = clean_and_parse_json(raw_response)
+            quote_text = parsed["quote"]
+
+            quote_id = save_quote(parsed, topic="inspiration_image", channel="saigonbac", custom_path=custom_db_path)
+            parsed["topic"] = "Copy ý tưởng từ ảnh tham khảo"
+            parsed["quote_id"] = quote_id
+            parsed["channel"] = "saigonbac"
+            parsed["is_ai_generated"] = True
+            return parsed
+
+        except ValueError as ve:
+            err_msg = str(ve)
+            if "Chưa cấu hình" in err_msg or "API_KEY" in err_msg:
+                raise ve
+            logger.warning(f"Lỗi phản hồi ở lần {attempt}: {ve}")
+        except Exception as e:
+            logger.error(f"Lỗi gọi Vision API ở lần {attempt}: {e}")
+            if attempt == max_retries:
+                raise e
+
+    raise RuntimeError("Không thể nhận diện ảnh và sinh quote sau các lần thử.")
+
+
+
 

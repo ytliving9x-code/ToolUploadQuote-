@@ -1,27 +1,21 @@
 {
-  "pixabay_api_key": "58082304-db4fa2d62dd8aede526b38ef3",
   "llm_provider": "gemini",
   "gemini_model": "gemini-3.5-flash-lite",
   "openai_model": "gpt-4o-mini",
-  "topics": [
-    "Tĩnh Tại & Chữa Lành",
-    "Cô Độc Kiêu Hãnh",
-    "Người Cũ & Góc Phố",
-    "Rời Xa Trong Im Lặng",
-    "Bạn Cũ & Thời Gian",
-    "Khoảng Lặng Vô Thanh"
-  ],
-  "default_topic": "Tĩnh Tại & Chữa Lành",
+  "channel": "saigonbac",
+  "branding": {
+    "signature": "saigonbac",
+    "signature_font_size": 24
+  },
   "video": {
     "width": 1080,
     "height": 1920,
     "fps": 30,
-    "duration_min": 7.0,
-    "duration_max": 10.0,
-    "target_duration": 8.0,
+    "duration": 18.0,
     "overlay_opacity": 0.3,
     "image_motion": "cinematic_drift",
-    "cinematic_vignette": true
+    "cinematic_vignette": true,
+    "output_folder": "output/saigonbac"
   },
   "typography": {
     "font_family": "assets/fonts/BeVietnamPro-Bold.ttf",
@@ -49,18 +43,8 @@
     "fade_in_duration": 1.2,
     "fade_out_duration": 0.8
   },
-  "pexels": {
-    "min_duration": 8,
-    "max_duration": 60,
-    "per_page": 20,
-    "orientation": "portrait"
-  },
   "anti_duplicate": {
     "similarity_threshold": 0.7
-  },
-  "branding": {
-    "signature": "saigonbac",
-    "signature_font_size": 24
   },
   "channels": {
     "saigonbac": {
@@ -96,4 +80,4 @@
       ]
     }
   }
-}
+}

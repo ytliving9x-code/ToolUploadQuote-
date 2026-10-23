@@ -152,18 +152,18 @@ def test_vietnamese_pixabay_query_translation():
     """Kiểm tra chức năng chuyển đổi tiếng Việt sang từ khóa Pixabay tiếng Anh chuẩn."""
     from modules.pixabay_fetcher import QUICK_THEMES_VI, translate_vietnamese_to_pixabay_query
 
-    # 1. Kiểm tra đủ 6 nút chủ đề tiếng Việt phong cách tĩnh tại
+    # 1. Kiểm tra đủ 6 nút chủ đề tiếng Việt phong cách điện ảnh
     assert len(QUICK_THEMES_VI) == 6
-    assert "☕ Cà Phê Sáng & Nắng" in QUICK_THEMES_VI
-    assert "🌿 Góc Ban Công Yên Tĩnh" in QUICK_THEMES_VI
-    assert "🌧️ Mưa Hiên Nhà" in QUICK_THEMES_VI
-    assert "🍂 Góc Phố Hoài Niệm" in QUICK_THEMES_VI
-    assert "🛋️ Căn Phòng Tĩnh Lặng" in QUICK_THEMES_VI
-    assert "🌅 Hoàng Hôn Dịu Êm" in QUICK_THEMES_VI
+    assert "🌧️ Mưa Đêm Phố Vắng" in QUICK_THEMES_VI
+    assert "☕ Cà Phê Đêm & Ánh Đèn" in QUICK_THEMES_VI
+    assert "🚶 Bước Chân Trong Đêm" in QUICK_THEMES_VI
+    assert "🚇 Ga Tàu Đêm Cô Độc" in QUICK_THEMES_VI
+    assert "🪟 Cửa Sổ Mưa Đêm" in QUICK_THEMES_VI
+    assert "🌃 Phố Cũ Đèn Vàng" in QUICK_THEMES_VI
 
-    # 2. Bấm 1 chạm vào thẻ: Cà Phê Sáng & Nắng
-    q_cafe = translate_vietnamese_to_pixabay_query("☕ Cà Phê Sáng & Nắng")
-    assert "coffee" in q_cafe
+    # 2. Bấm 1 chạm vào thẻ: Cà Phê Đêm & Ánh Đèn
+    q_cafe = translate_vietnamese_to_pixabay_query("☕ Cà Phê Đêm & Ánh Đèn")
+    assert "coffee" in q_cafe or "cafe" in q_cafe
     assert "vertical" in q_cafe
 
     # 3. Gõ tiếng Việt tự do: con sói và trời mưa

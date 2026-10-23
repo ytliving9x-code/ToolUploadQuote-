@@ -11,12 +11,12 @@ Chịu trách nhiệm:
 import json
 import logging
 import re
+import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-
-import shutil
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
@@ -824,3 +824,192 @@ def build_video(
         f"({meta['width']}x{meta['height']}, {meta['fps']}fps, {meta['duration']}s, Audio={meta['has_audio']})"
     )
     return out_file
+
+
+# ==============================================================================
+# BỘ CÔNG CỤ DỰNG NỘI DUNG 2 NHỊP ĐỘT PHÁ MỐC 200 VIEWS CHO KÊNH LẶNG
+# ==============================================================================
+
+def generate_lang_carousel_pack(
+    image_path: Path | str,
+    hook_text: str,
+    payoff_text: str,
+    cta_text: Optional[str] = None,
+    output_dir: Optional[Path | str] = None,
+    font_family: str = "PatrickHand-Regular.ttf",
+    signature: str = "— LẶNG —",
+) -> Tuple[Path, Path]:
+    """
+    Tạo bộ Carousel 2 Slide chuẩn TikTok Photo Mode giúp tăng gấp đôi thời gian giữ chân (Watch Time):
+    - Slide 1: Hook giật nảy in hoa cỡ lớn + Hướng dẫn vuốt sang trái.
+    - Slide 2: Đoạn đúc kết (Payoff) sâu sắc + Chữ ký + Câu hỏi kích thích bình luận.
+    """
+    out_dir = Path(output_dir) if output_dir else Path("output/kenh_moi")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = int(time.time())
+
+    slide1_path = out_dir / f"lang_slide1_hook_{timestamp}.jpg"
+    slide2_path = out_dir / f"lang_slide2_payoff_{timestamp}.jpg"
+
+    # Slide 1: Hook
+    hook_clean = hook_text.upper().strip()
+    s1_text = f"{hook_clean}\n\n(Vuốt sang để xem bản chất ➔)"
+    generate_retro_comic_slide(
+        image_path=image_path,
+        quote=s1_text,
+        output_path=slide1_path,
+        font_family=font_family,
+        font_size=58,
+        position="upper_center",
+        all_caps=False,
+        signature=signature,
+        dim_opacity=0.18,
+    )
+
+    # Slide 2: Payoff
+    payoff_clean = payoff_text.strip()
+    cta_part = f"\n\n💬 {cta_text}" if cta_text else ""
+    s2_text = f"{payoff_clean}{cta_part}"
+    generate_retro_comic_slide(
+        image_path=image_path,
+        quote=s2_text,
+        output_path=slide2_path,
+        font_family=font_family,
+        font_size=46,
+        position="center",
+        all_caps=False,
+        signature=signature,
+        dim_opacity=0.16,
+    )
+
+    return slide1_path, slide2_path
+
+
+def render_lang_dynamic_video(
+    footage_or_image_path: Path | str,
+    hook_text: str,
+    payoff_text: str,
+    output_path: Optional[Path | str] = None,
+    duration: float = 7.5,
+    signature: str = "— LẶNG —",
+    font_family: str = "PatrickHand-Regular.ttf",
+    with_voiceover: bool = True,
+) -> Path:
+    """
+    Dựng video TikTok 2 nhịp chuẩn thuật toán FYP:
+    - 0.0s - 2.5s: Hiển thị duy nhất dòng HOOK in hoa cỡ lớn, zoom giật nhẹ níu mắt 3s đầu.
+    - 2.5s - hết: Chuyển mượt sang câu PAYOFF đúc kết và chữ ký — LẶNG —.
+    - Âm thanh: Tự động lồng tiếng AI NamMinh + Nhạc nền Ambient Cinematic Drone (KHÔNG bị MUTE).
+    """
+    f_path = Path(footage_or_image_path)
+    if not f_path.exists():
+        f_path = Path("assets/samples/retro_comic/sample_stoic_man.jpg")
+
+    out_file = Path(output_path) if output_path else Path("output/kenh_moi") / f"lang_video_{int(time.time())}.mp4"
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # 1. Nạp Font
+    font_path = Path("assets/fonts") / font_family
+    if not font_path.exists():
+        font_path = FONT_PATH_DEFAULT
+
+    font_hook = get_font(font_path, 60)
+    font_payoff = get_font(font_path, 48)
+    font_sig = get_font(font_path, 28)
+
+    # 2. Tạo Overlay 1 (Hook)
+    hook_lines = wrap_text_to_lines(hook_text.upper().strip(), font_hook, max_width=900, max_lines=4)
+    img_hook = create_retro_comic_text_overlay(
+        lines=hook_lines,
+        font=font_hook,
+        canvas_size=(1080, 1920),
+        position="upper_center",
+        signature=signature,
+        signature_font=font_sig,
+        font_color=(255, 235, 120, 255),  # Vàng nhạt nổi bật
+    )
+    with tempfile.NamedTemporaryFile(suffix="_hook.png", delete=False) as tmp_h:
+        tmp_hook_path = Path(tmp_h.name)
+    img_hook.save(tmp_hook_path, format="PNG")
+
+    # 3. Tạo Overlay 2 (Payoff)
+    payoff_lines = wrap_text_to_lines(payoff_text.strip(), font_payoff, max_width=900, max_lines=6)
+    img_payoff = create_retro_comic_text_overlay(
+        lines=payoff_lines,
+        font=font_payoff,
+        canvas_size=(1080, 1920),
+        position="upper_center",
+        signature=signature,
+        signature_font=font_sig,
+        font_color=(245, 245, 240, 255),
+    )
+    with tempfile.NamedTemporaryFile(suffix="_payoff.png", delete=False) as tmp_p:
+        tmp_payoff_path = Path(tmp_p.name)
+    img_payoff.save(tmp_payoff_path, format="PNG")
+
+    # 4. Tạo âm thanh tự động (Voiceover + Ambient Drone)
+    from modules.audio_engine import generate_voiceover_edge_tts, mix_voice_and_ambient
+    full_speech = f"{hook_text}. {payoff_text}"
+    voice_p = generate_voiceover_edge_tts(full_speech) if with_voiceover else None
+    audio_track = mix_voice_and_ambient(voice_p, duration=duration)
+
+    # 5. Dựng video bằng FFmpeg với filter timing
+    is_image = f_path.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp"]
+    num_frames = int(duration * 30)
+
+    if is_image:
+        zoom_step = 0.07 / num_frames
+        bg_filter = (
+            f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,"
+            f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,"
+            f"zoompan=z='min(zoom+{zoom_step:.6f},1.07)':d={num_frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps=30,"
+            f"drawbox=x=0:y=0:w=iw:h=ih:color=black@0.22:t=fill[bg]"
+        )
+        input_args = ["-loop", "1", "-t", str(duration), "-i", str(f_path)]
+    else:
+        bg_filter = (
+            f"[0:v]trim=0:{duration},setpts=PTS-STARTPTS,"
+            f"scale=1080:1920:force_original_aspect_ratio=increase,"
+            f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,fps=30,"
+            f"drawbox=x=0:y=0:w=iw:h=ih:color=black@0.22:t=fill[bg]"
+        )
+        input_args = ["-i", str(f_path)]
+
+    filter_complex = (
+        f"{bg_filter};"
+        f"[1:v]format=rgba[hook];"
+        f"[2:v]format=rgba[payoff];"
+        f"[bg][hook]overlay=0:0:enable='between(t,0,2.5)'[v1];"
+        f"[v1][payoff]overlay=0:0:enable='gte(t,2.4)'[outv]"
+    )
+
+    cmd = [
+        FFMPEG_EXE,
+        "-y",
+        *input_args,
+        "-loop", "1", "-i", str(tmp_hook_path),
+        "-loop", "1", "-i", str(tmp_payoff_path),
+        "-i", str(audio_track),
+        "-filter_complex", filter_complex,
+        "-map", "[outv]",
+        "-map", "3:a",
+        "-c:v", "libx264",
+        "-preset", "medium",
+        "-crf", "19",
+        "-pix_fmt", "yuv420p",
+        "-c:a", "aac",
+        "-b:a", "128k",
+        "-r", "30",
+        "-t", str(duration),
+        str(out_file),
+    ]
+
+    try:
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return out_file
+    finally:
+        if tmp_hook_path.exists():
+            tmp_hook_path.unlink()
+        if tmp_payoff_path.exists():
+            tmp_payoff_path.unlink()
+
