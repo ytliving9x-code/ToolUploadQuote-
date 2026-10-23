@@ -394,18 +394,10 @@ def crop_image_to_tiktok_portrait(image_path: Path, target_size=(1080, 1920)) ->
 # ==============================================================================
 config = load_config()
 
-default_sample_bg = Path("assets/samples/curated_saigonbac/cafe_night.jpg")
-if not default_sample_bg.exists():
-    samples_dir = Path("assets/samples/curated_saigonbac")
-    if samples_dir.exists():
-        found = list(samples_dir.glob("*.jpg"))
-        if found:
-            default_sample_bg = found[0]
-
 if "quote_text" not in st.session_state:
-    st.session_state.quote_text = "Thành phố này rộng lớn đến mức, chỉ cần quay lưng lại một cái là cả đời chẳng còn gặp lại nhau."
+    st.session_state.quote_text = ""
 if "bg_image" not in st.session_state:
-    st.session_state.bg_image = str(default_sample_bg) if default_sample_bg.exists() else None
+    st.session_state.bg_image = None
 if "last_uploaded_bg_name" not in st.session_state:
     st.session_state.last_uploaded_bg_name = None
 if "rendered_video" not in st.session_state:
@@ -427,7 +419,7 @@ st.markdown(
     </div>
     <div class="main-title">AESTHETIC QUOTE VIDEO CREATOR</div>
     <div class="main-subtitle">
-        Tạo video tĩnh 18s TikTok chuẩn điện ảnh: Nhập quote tự do, tải ảnh nền từ máy tính, xem trước chữ tức thì và xuất file 1080x1920 sắc nét.
+        Tạo video tĩnh 18s TikTok chuẩn điện ảnh: Tự nhập câu quote, tự tải ảnh nền từ máy tính và xuất video 1080x1920 sắc nét.
     </div>
     <div class="feature-tags-row">
         <div class="feature-tag-pill">📐 Khổ dọc 1080x1920 (9:16)</div>
@@ -459,27 +451,11 @@ with col_input:
             unsafe_allow_html=True,
         )
 
-        # Gợi ý chọn nhanh câu quote mẫu
-        st.markdown('<div class="chip-label">✨ GỢI Ý CHỌN NHANH Ý TƯỞNG:</div>', unsafe_allow_html=True)
-        sample_quotes = [
-            ("☕ Sài Gòn Đêm", "Thành phố này rộng lớn đến mức, chỉ cần quay lưng lại một cái là cả đời chẳng còn gặp lại nhau."),
-            ("🌧️ Bình Yên", "Có những ngày mệt mỏi chỉ muốn ngồi lại một góc quen, nhìn dòng người vội vã mà lòng an yên."),
-            ("🍂 Trưởng Thành", "Người trưởng thành im lặng không phải vì không biết đau, mà vì biết có nói ra cũng chẳng đổi thay được gì."),
-        ]
-        col_s1, col_s2, col_s3 = st.columns(3)
-        for idx, (label, text) in enumerate(sample_quotes):
-            col_target = [col_s1, col_s2, col_s3][idx]
-            with col_target:
-                if st.button(label, key=f"chip_q_{idx}", use_container_width=True):
-                    st.session_state.quote_text = text
-                    st.session_state.rendered_video = None
-                    st.rerun()
-
         input_quote = st.text_area(
-            "Nhập nội dung quote của bạn (hỗ trợ xuống dòng tự nhiên):",
+            "Nhập câu quote của bạn:",
             value=st.session_state.quote_text,
-            placeholder="Gõ hoặc dán câu quote tại đây...",
-            height=110,
+            placeholder="Gõ hoặc dán câu quote của bạn tại đây...",
+            height=120,
             key="txt_quote_input",
             label_visibility="collapsed",
         )
@@ -553,7 +529,7 @@ with col_input:
         else:
             if st.session_state.get("last_uploaded_bg_name") is not None:
                 st.session_state.last_uploaded_bg_name = None
-                st.session_state.bg_image = str(default_sample_bg) if default_sample_bg.exists() else None
+                st.session_state.bg_image = None
                 st.session_state.rendered_video = None
 
         if st.session_state.get("last_uploaded_bg_name"):
@@ -563,11 +539,9 @@ with col_input:
             with col_del:
                 if st.button("🗑️ Đổi ảnh", key="btn_del_bg", use_container_width=True):
                     st.session_state.last_uploaded_bg_name = None
-                    st.session_state.bg_image = str(default_sample_bg) if default_sample_bg.exists() else None
+                    st.session_state.bg_image = None
                     st.session_state.rendered_video = None
                     st.rerun()
-        elif default_sample_bg.exists():
-            st.caption(f"🖼️ Đang hiển thị ảnh mẫu mặc định: `{default_sample_bg.name}`")
 
         st.markdown("</div>", unsafe_allow_html=True)
 
