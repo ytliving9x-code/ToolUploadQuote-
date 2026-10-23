@@ -257,11 +257,7 @@ def render_18s_video(
         motion_filter = "fps=30,"
 
     vignette_f = "vignette=PI/5.5," if cinematic_vignette else ""
-    # Bộ lọc chỉnh màu điện ảnh gam tối (Low-Key Moody Noir):
-    # Tăng contrast (+16%), hạ độ chói sáng (-12%), đẩy nhẹ tone xanh đêm thẳm ở vùng tối và giữ ấm ánh đèn
     dark_grading_f = "eq=contrast=1.16:brightness=-0.12:saturation=0.92,colorbalance=rs=-0.03:gs=-0.01:bs=0.04:rh=0.04:gh=0.02:bh=-0.02,"
-    fade_text = "fade=t=in:st=0.3:d=1.0:alpha=1"
-
     filter_complex = (
         f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
         f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,"
@@ -269,7 +265,7 @@ def render_18s_video(
         f"{dark_grading_f}"
         f"{vignette_f}"
         f"fps=30[bg];"
-        f"[1:v]format=rgba,{fade_text}[text];"
+        f"[1:v]format=rgba[text];"
         f"[bg][text]overlay=0:0:shortest=1[outv]"
     )
 

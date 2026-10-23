@@ -497,12 +497,56 @@ with col_input:
 # ==============================================================================
 with col_preview:
     st.markdown('<div class="step-badge">BƯỚC 3</div>', unsafe_allow_html=True)
-    st.subheader("Xem Trước & Tải Video")
+    st.subheader("Xem Trước Chữ Trên Ảnh & Video")
 
     rendered_vid = st.session_state.sg_rendered_video
     bg_img = st.session_state.sg_bg_image
+    quote_ready = bool(st.session_state.sg_quote_text.strip())
 
+    # 1. Luôn hiển thị ảnh xem trước có chữ trực tiếp
+    if bg_img and Path(bg_img).exists():
+        if quote_ready:
+            st.caption("👁️ **Ảnh xem trước có chữ (Live Typography 9:16 - Hiển thị chữ tức thì):**")
+            try:
+                prev_cfg = dict(config)
+                prev_cfg["branding"] = {"signature": st.session_state.sg_signature, "signature_font_size": 24}
+                ag_alpha_map = {"Vừa Phải (Khuyên Dùng)": 145, "Mạnh (Cho Nền Rất Sáng/Chói)": 190, "Nhẹ (Cho Nền Tối)": 95}
+                ag_radius_map = {"Vừa Phải (Khuyên Dùng)": 3.5, "Mạnh (Cho Nền Rất Sáng/Chói)": 4.8, "Nhẹ (Cho Nền Tối)": 2.2}
+                ag_stroke_map = {"Vừa Phải (Khuyên Dùng)": 1, "Mạnh (Cho Nền Rất Sáng/Chói)": 2, "Nhẹ (Cho Nền Tối)": 1}
+                sel_level = st.session_state.get("sg_antiglare_level", "Vừa Phải (Khuyên Dùng)")
+                is_ag = st.session_state.get("sg_toggle_antiglare", True)
+                prev_cfg["typography"] = {
+                    "enable_gradient_scrim": is_ag,
+                    "scrim_max_alpha": ag_alpha_map.get(sel_level, 145),
+                    "shadow_blur_radius": ag_radius_map.get(sel_level, 3.5),
+                    "stroke_width": ag_stroke_map.get(sel_level, 1),
+                }
+                prev_img = generate_quote_preview_image(image_path=bg_img, quote=st.session_state.sg_quote_text, config=prev_cfg)
+                st.image(str(prev_img), use_container_width=True)
+            except Exception as ex:
+                st.image(str(bg_img), use_container_width=True)
+        else:
+            st.image(str(bg_img), use_container_width=True)
+            st.caption("🖼️ Ảnh nền đã sẵn sàng. Hãy nhập câu quote ở Bước 1 để hiển thị chữ trên ảnh.")
+
+    else:
+        st.markdown(
+            """
+            <div style="border: 2px dashed #475569; border-radius: 14px; height: 380px; display: flex; align-items: center; justify-content: center; color: #94A3B8; text-align: center; padding: 1.5rem;">
+                <div>
+                    <div style="font-size: 2.5rem; margin-bottom: 0.6rem;">📱</div>
+                    <b>Khung Xem Trước Sài Gòn Bạc</b><br>
+                    <span style="font-size: 0.88rem; color: #64748B;">Hãy tải lên một bức ảnh ở Bước 2 để hiển thị chữ trên ảnh.</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    # 2. Hiển thị Video thành phẩm bên dưới (nếu đã bấm render)
     if rendered_vid and Path(rendered_vid).exists():
+        st.divider()
+        st.markdown("🎬 **Video 18s Đã Tạo (Chữ xuất hiện ngay từ giây 0):**")
         meta = probe_video_metadata(rendered_vid)
         st.video(str(rendered_vid))
         st.markdown(
@@ -525,44 +569,3 @@ with col_preview:
             )
         st.caption(f"Đã lưu tại: `{rendered_vid}`")
 
-    elif bg_img and Path(bg_img).exists():
-        if st.session_state.sg_quote_text.strip():
-            st.caption("👁️ **Xem trước trực tiếp (Live Typography Preview trên nền ảnh):**")
-            try:
-                prev_cfg = dict(config)
-                prev_cfg["branding"] = {"signature": st.session_state.sg_signature, "signature_font_size": 24}
-                ag_alpha_map = {"Vừa Phải (Khuyên Dùng)": 145, "Mạnh (Cho Nền Rất Sáng/Chói)": 190, "Nhẹ (Cho Nền Tối)": 95}
-                ag_radius_map = {"Vừa Phải (Khuyên Dùng)": 3.5, "Mạnh (Cho Nền Rất Sáng/Chói)": 4.8, "Nhẹ (Cho Nền Tối)": 2.2}
-                ag_stroke_map = {"Vừa Phải (Khuyên Dùng)": 1, "Mạnh (Cho Nền Rất Sáng/Chói)": 2, "Nhẹ (Cho Nền Tối)": 1}
-                sel_level = st.session_state.get("sg_antiglare_level", "Vừa Phải (Khuyên Dùng)")
-                is_ag = st.session_state.get("sg_toggle_antiglare", True)
-                prev_cfg["typography"] = {
-                    "enable_gradient_scrim": is_ag,
-                    "scrim_max_alpha": ag_alpha_map.get(sel_level, 145),
-                    "shadow_blur_radius": ag_radius_map.get(sel_level, 3.5),
-                    "stroke_width": ag_stroke_map.get(sel_level, 1),
-                }
-                prev_img = generate_quote_preview_image(image_path=bg_img, quote=st.session_state.sg_quote_text, config=prev_cfg)
-                st.image(str(prev_img), use_container_width=True)
-            except Exception as ex:
-                st.image(str(bg_img), use_container_width=True)
-
-            st.info("👉 Bấm **[ 🚀 TẠO VIDEO SAIGONBAC 18S ]** ở cột bên trái để render video hoàn chỉnh.")
-        else:
-            st.image(str(bg_img), use_container_width=True)
-            st.caption("🖼️ Ảnh nền đã sẵn sàng. Hãy nhập prompt ở Bước 1 để AI viết quote hoặc tự gõ quote để xem trước chữ trên ảnh.")
-
-
-    else:
-        st.markdown(
-            """
-            <div style="border: 2px dashed #475569; border-radius: 14px; height: 420px; display: flex; align-items: center; justify-content: center; color: #94A3B8; text-align: center; padding: 1.5rem;">
-                <div>
-                    <div style="font-size: 2.5rem; margin-bottom: 0.6rem;">📱</div>
-                    <b>Khung Xem Trước Sài Gòn Bạc</b><br>
-                    <span style="font-size: 0.88rem; color: #64748B;">Hãy tải lên một bức ảnh ở Bước 2 để xem trước chữ trên ảnh.</span>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )

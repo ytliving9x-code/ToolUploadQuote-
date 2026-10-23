@@ -775,12 +775,10 @@ def build_video(
         )
         input_args = ["-i", str(f_path)]
 
-    # Filter chữ:
-    # - Hiệu ứng Fade-in mượt mà từ giây 0.3 trong fade_in_d giây tạo cảm giác điện ảnh
-    fade_filter = f"fade=t=in:st=0.3:d={fade_in_d:.2f}:alpha=1"
+    # Chữ hiển thị ngay từ frame 0 rõ nét
     filter_complex = (
         f"{bg_filter};"
-        f"[1:v]format=rgba,{fade_filter}[text];"
+        f"[1:v]format=rgba[text];"
         f"[bg][text]overlay=0:0:shortest=1[outv]"
     )
 
