@@ -1,8 +1,4 @@
 {
-  "llm_provider": "gemini",
-  "gemini_model": "gemini-3.5-flash-lite",
-  "openai_model": "gpt-4o-mini",
-  "channel": "saigonbac",
   "branding": {
     "signature": "saigonbac",
     "signature_font_size": 24
@@ -19,49 +15,12 @@
   },
   "typography": {
     "font_family": "assets/fonts/BeVietnamPro-Bold.ttf",
-    "font_size": 54,
-    "line_spacing": 20,
-    "font_color": [
-      255,
-      255,
-      255,
-      255
-    ],
-    "shadow_color": [
-      0,
-      0,
-      0,
-      180
-    ],
-    "shadow_offset": [
-      3,
-      4
-    ],
-    "margin_horizontal": 85,
-    "safe_zone_top": 450,
-    "safe_zone_bottom": 260,
-    "fade_in_duration": 1.2,
-    "fade_out_duration": 0.8
-  },
-  "anti_duplicate": {
-    "similarity_threshold": 0.7
-  },
-  "channels": {
-    "saigonbac": {
-      "channel_name": "Sài Gòn Bạc",
-      "signature": "saigonbac",
-      "signature_font_size": 24,
-      "format": "photo_18s",
-      "output_folder": "output/saigonbac",
-      "style": "sad_introspective",
-      "topics": [
-        "Tĩnh Tại & Chữa Lành",
-        "Cô Độc Kiêu Hãnh",
-        "Người Cũ & Góc Phố",
-        "Rời Xa Trong Im Lặng",
-        "Bạn Cũ & Thời Gian",
-        "Khoảng Lặng Vô Thanh"
-      ]
-    }
+    "font_size": 42,
+    "line_spacing": 18,
+    "font_color": [255, 255, 255, 255],
+    "shadow_blur_radius": 3.5,
+    "stroke_width": 1,
+    "enable_gradient_scrim": true,
+    "scrim_max_alpha": 145
   }
-}
+}

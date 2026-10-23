@@ -19,47 +19,24 @@ except Exception:
     pass
 
 import streamlit as st
-from PIL import Image
+from PIL import Image, ImageOps
 
-# Cấu hình trang Streamlit ngay từ đầu
+from modules.video_engine import probe_video_metadata
+from modules.video_renderer import create_quote_overlay, render_18s_video
+
+# Cấu hình giao diện Streamlit
 st.set_page_config(
-    page_title="Sài Gòn Bạc - TikTok 18s Studio",
-    page_icon="☕",
+    page_title="TikTok Quote Studio - 18s Video",
+    page_icon="🎬",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
-# Tự động dọn dẹp RAM cache của Streamlit khi đang chạy app (không áp dụng khi chạy test suite)
-if hasattr(st, "runtime") and st.runtime.exists():
-    for _mod in list(sys.modules.keys()):
-        if _mod.startswith("modules.") or _mod == "modules":
-            sys.modules.pop(_mod, None)
-
-try:
-    from modules.history_db import init_db
-    from modules.quote_gen import (
-        generate_quote_from_user_prompt,
-        generate_quote_from_inspiration_image,
-    )
-    from modules.video_engine import (
-        generate_quote_preview_image,
-        probe_video_metadata,
-    )
-    from modules.video_renderer import render_18s_video
-
-    # Khởi tạo database
-    init_db()
-except Exception as _import_err:
-    st.error(f"❌ Lỗi nạp module: {_import_err}")
-    st.code(traceback.format_exc())
-    st.stop()
-
-# Cấu hình logging
+# Logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger("SaigonBac_Studio")
+logger = logging.getLogger("QuoteStudio")
 
-
-# Custom CSS phong cách Aesthetic Dark Mode sang trọng
+# Custom CSS giao diện tối giản, hiện đại và sang trọng
 st.markdown(
     """
     <style>
@@ -70,7 +47,7 @@ st.markdown(
     }
     
     .main-header {
-        font-size: 2.2rem;
+        font-size: 2.1rem;
         font-weight: 800;
         background: linear-gradient(135deg, #FFFFFF 0%, #38BDF8 60%, #818CF8 100%);
         -webkit-background-clip: text;
@@ -87,7 +64,7 @@ st.markdown(
     }
 
     .step-card {
-        background: rgba(15, 23, 42, 0.7);
+        background: rgba(15, 23, 42, 0.75);
         border: 1px solid rgba(56, 189, 248, 0.22);
         border-radius: 14px;
         padding: 1.2rem 1.4rem;
@@ -107,18 +84,18 @@ st.markdown(
         border: 1px solid rgba(56, 189, 248, 0.35);
     }
 
-    .btn-create-sg button {
+    .btn-create button {
         background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important;
         color: #FFFFFF !important;
         border: none !important;
-        font-size: 1.1rem !important;
+        font-size: 1.15rem !important;
         font-weight: 800 !important;
-        min-height: 54px !important;
+        min-height: 56px !important;
         border-radius: 14px !important;
         box-shadow: 0 8px 25px -4px rgba(2, 132, 199, 0.5) !important;
         transition: transform 0.2s, box-shadow 0.2s;
     }
-    .btn-create-sg button:hover {
+    .btn-create button:hover {
         transform: translateY(-2px);
         box-shadow: 0 12px 30px -4px rgba(2, 132, 199, 0.7) !important;
     }
@@ -169,24 +146,13 @@ def load_config() -> Dict[str, Any]:
         try:
             with open(cfg_path, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except Exception as e:
-            logger.error(f"Lỗi nạp config.json: {e}")
+        except Exception:
+            pass
     return {}
 
 
-def save_config(cfg: Dict[str, Any]) -> None:
-    """Lưu cấu hình cập nhật vào config.json."""
-    cfg_path = Path("config.json")
-    try:
-        with open(cfg_path, "w", encoding="utf-8") as f:
-            json.dump(cfg, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        logger.error(f"Lỗi ghi config.json: {e}")
-
-
 def crop_image_to_tiktok_portrait(image_path: Path, target_size=(1080, 1920)) -> Path:
-    """Cắt và căn giữa (Center-Crop) ảnh chính xác về khổ 1080x1920 (9:16)."""
-    from PIL import ImageOps
+    """Cắt và căn giữa (Center-Crop) ảnh chính xác về khổ dọc 1080x1920 (9:16)."""
     with Image.open(image_path) as img:
         try:
             img = ImageOps.exif_transpose(img)
@@ -217,226 +183,65 @@ def crop_image_to_tiktok_portrait(image_path: Path, target_size=(1080, 1920)) ->
 
 
 # ==============================================================================
-# KHỞI TẠO SESSION STATE
+# KHỞI TẠO STATE
 # ==============================================================================
 config = load_config()
 
 default_sample_bg = Path("assets/samples/curated_saigonbac/cafe_night.jpg")
 if not default_sample_bg.exists():
-    # Thử tìm ảnh bất kỳ trong folder sample
     samples_dir = Path("assets/samples/curated_saigonbac")
     if samples_dir.exists():
         found = list(samples_dir.glob("*.jpg"))
         if found:
             default_sample_bg = found[0]
 
-if "sg_quote_text" not in st.session_state:
-    st.session_state.sg_quote_text = ""
-if "sb_quote_text_area" not in st.session_state:
-    st.session_state.sb_quote_text_area = ""
-if "sg_last_gen_quote_source" not in st.session_state:
-    st.session_state.sg_last_gen_quote_source = None
-if "sg_user_prompt" not in st.session_state:
-    st.session_state.sg_user_prompt = ""
-if "sg_bg_image" not in st.session_state:
-    st.session_state.sg_bg_image = str(default_sample_bg) if default_sample_bg.exists() else None
-if "sg_last_uploaded_bg_name" not in st.session_state:
-    st.session_state.sg_last_uploaded_bg_name = None
-if "sg_last_insp_name" not in st.session_state:
-    st.session_state.sg_last_insp_name = None
-if "sg_rendered_video" not in st.session_state:
-    st.session_state.sg_rendered_video = None
-if "sg_signature" not in st.session_state:
-    st.session_state.sg_signature = config.get("branding", {}).get("signature", "saigonbac")
-if "sg_antiglare_level" not in st.session_state:
-    st.session_state.sg_antiglare_level = "Vừa Phải (Khuyên Dùng)"
-if "sg_toggle_antiglare" not in st.session_state:
-    st.session_state.sg_toggle_antiglare = True
+if "quote_text" not in st.session_state:
+    st.session_state.quote_text = "Thành phố này rộng lớn đến mức, chỉ cần quay lưng lại một cái là cả đời chẳng còn gặp lại nhau."
+if "bg_image" not in st.session_state:
+    st.session_state.bg_image = str(default_sample_bg) if default_sample_bg.exists() else None
+if "last_uploaded_bg_name" not in st.session_state:
+    st.session_state.last_uploaded_bg_name = None
+if "rendered_video" not in st.session_state:
+    st.session_state.rendered_video = None
+if "signature" not in st.session_state:
+    st.session_state.signature = config.get("branding", {}).get("signature", "saigonbac")
+if "enable_antiglare" not in st.session_state:
+    st.session_state.enable_antiglare = True
 
 
 # ==============================================================================
-# SIDEBAR: CẤU HÌNH & THIẾT LẬP KÊNH
+# GIAO DIỆN CHÍNH
 # ==============================================================================
-with st.sidebar:
-    st.markdown("### ☕ Sài Gòn Bạc Settings")
-    st.caption("Cấu hình thương hiệu & chất lượng video")
-
-    # Kiểm tra API Key
-    has_gemini = bool(os.getenv("GEMINI_API_KEY") or (hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets))
-    if has_gemini:
-        st.success("✅ Gemini API: Đã kết nối", icon="✨")
-    else:
-        st.warning("⚠️ Chưa có GEMINI_API_KEY trong .env", icon="🔑")
-
-    st.divider()
-
-    st.markdown("**1. Thương Hiệu Nhận Diện**")
-    sig_input = st.text_input(
-        "Chữ ký video (Signature):",
-        value=st.session_state.sg_signature,
-        key="sb_sig_input",
-    )
-    if sig_input != st.session_state.sg_signature:
-        st.session_state.sg_signature = sig_input
-        config.setdefault("branding", {})["signature"] = sig_input
-        save_config(config)
-
-    st.markdown("**2. Bộ Lọc Chống Loá Chữ**")
-    st.session_state.sg_toggle_antiglare = st.checkbox(
-        "Bật lớp Gradient Scrim chống loá",
-        value=st.session_state.sg_toggle_antiglare,
-        help="Thêm lớp phủ dốc mềm mại ở đáy giúp chữ luôn dễ đọc trên mọi bức ảnh sáng hay tối.",
-    )
-    st.session_state.sg_antiglare_level = st.selectbox(
-        "Cường độ chống loá:",
-        options=["Vừa Phải (Khuyên Dùng)", "Mạnh (Cho Nền Rất Sáng/Chói)", "Nhẹ (Cho Nền Tối)"],
-        index=0,
-    )
-
-    st.markdown("**3. Cấu Hình AI**")
-    sel_model = st.selectbox(
-        "Gemini Model:",
-        options=["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-flash-lite-latest"],
-        index=0,
-    )
-    if sel_model != config.get("gemini_model"):
-        config["gemini_model"] = sel_model
-        save_config(config)
-
-    st.divider()
-    out_dir = Path("output/saigonbac")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    existing_videos = list(out_dir.glob("*.mp4"))
-    st.markdown(f"📁 **Thư mục xuất:** `output/saigonbac/` ({len(existing_videos)} video)")
-    st.caption("Định dạng video: 1080x1920 (9:16), 30fps, H.264, 18.0s không tiếng.")
-
-
-# ==============================================================================
-# GIAO DIỆN CHÍNH (MAIN WORKSPACE)
-# ==============================================================================
-st.markdown('<div class="main-header">☕ SÀI GÒN BẠC STUDIO</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">🎬 TIKTOK QUOTE STUDIO</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="sub-header">Trạm dừng cảm xúc — Tạo video tĩnh 18s TikTok: Tự nhập Prompt cho AI viết quote + Tải ảnh nền chất lượng cao từ máy tính.</div>',
+    '<div class="sub-header">Tạo video tĩnh 18s TikTok Aesthetic: Tự nhập quote + Tải ảnh nền từ máy tính + Xuất video 1080x1920 chuẩn nét.</div>',
     unsafe_allow_html=True,
 )
 
-col_input, col_preview = st.columns([1.35, 1.0], gap="large")
+col_input, col_preview = st.columns([1.3, 1.0], gap="large")
 
 # ==============================================================================
-# CỘT TRÁI: BƯỚC 1 (QUOTE) & BƯỚC 2 (ẢNH NỀN)
+# CỘT TRÁI: NHẬP QUOTE & CHỌN ẢNH NỀN
 # ==============================================================================
 with col_input:
-    # --- BƯỚC 1: QUOTE ---
+    # --- BƯỚC 1: NHẬP CÂU QUOTE ---
     with st.container():
         st.markdown('<div class="step-badge">BƯỚC 1</div>', unsafe_allow_html=True)
-        st.subheader("Nhập Prompt / AI Sáng Tác Quote")
+        st.subheader("Nhập Nội Dung Câu Quote")
 
-        prompt_mode = st.radio(
-            "Chọn hình thức sáng tác quote:",
-            options=["✍️ Nhập Prompt Bằng Chữ", "🖼️ Copy Ý Tưởng Từ Ảnh (Gửi Ảnh Có Chữ)"],
-            horizontal=True,
-            key="sb_prompt_mode_select",
+        input_quote = st.text_area(
+            "Nội dung câu quote hiển thị trên video:",
+            value=st.session_state.quote_text,
+            placeholder="Gõ hoặc dán câu quote của bạn vào đây...",
+            height=110,
+            key="txt_quote_input",
         )
+        if input_quote != st.session_state.quote_text:
+            st.session_state.quote_text = input_quote
+            st.session_state.rendered_video = None
 
-        if prompt_mode == "✍️ Nhập Prompt Bằng Chữ":
-            user_prompt_input = st.text_area(
-                "Nhập Prompt của bạn cho AI:",
-                value=st.session_state.sg_user_prompt,
-                placeholder="Gõ prompt tự do của bạn tại đây... (Ví dụ: Hãy viết 1 câu quote ngắn 20 từ về sự im lặng của người trưởng thành khi rời đi, câu từ sâu sắc, không sến)",
-                height=90,
-                key="sb_prompt_area",
-            )
-            st.session_state.sg_user_prompt = user_prompt_input
-
-            btn_ai_gen = st.button("✨ GỬI PROMPT CHO AI VIẾT QUOTE", type="primary", use_container_width=True, key="btn_prompt_text")
-            if btn_ai_gen:
-                if not st.session_state.sg_user_prompt.strip():
-                    st.warning("⚠️ Vui lòng nhập nội dung prompt của bạn vào ô trên trước khi bấm gửi.")
-                else:
-                    with st.spinner("AI đang viết câu quote theo đúng prompt của bạn..."):
-                        try:
-                            res = generate_quote_from_user_prompt(
-                                user_prompt=st.session_state.sg_user_prompt,
-                                config=config,
-                            )
-                            st.session_state.sg_quote_text = res["quote"]
-                            st.session_state.sb_quote_text_area = res["quote"]
-                            st.session_state.sg_last_gen_quote_source = "text"
-                            st.session_state.sg_rendered_video = None
-                            st.toast("AI đã viết xong câu quote theo prompt của bạn!", icon="✨")
-                        except Exception as e:
-                            st.error(f"Lỗi khi gọi AI: {e}")
-
-            if st.session_state.get("sg_last_gen_quote_source") == "text" and st.session_state.get("sg_quote_text"):
-                st.success(f"✨ **AI đã sáng tác câu quote:**\n\n> *\"{st.session_state.sg_quote_text}\"*")
-
-        else:
-            st.caption("📸 **Tải ảnh có chữ/quote bạn thích (từ TikTok, Facebook, Pinterest...)**. AI Vision sẽ đọc nội dung trong ảnh và sáng tác lại 1 câu tương tự về ý tưởng, phong cách nhưng độc bản.")
-            insp_file = st.file_uploader(
-                "Chọn file ảnh chụp màn hình / ảnh có chữ (.jpg, .png, .webp, .jfif, .bmp):",
-                type=["jpg", "jpeg", "png", "webp", "jfif", "bmp"],
-                key="sb_insp_uploader",
-            )
-
-            # Đồng bộ hoá trạng thái xoá / đổi file ảnh tham khảo
-            if insp_file is None:
-                if st.session_state.get("sg_last_insp_name") is not None:
-                    st.session_state.sg_last_insp_name = None
-                    if st.session_state.get("sg_last_gen_quote_source") == "image":
-                        st.session_state.sg_last_gen_quote_source = None
-            else:
-                if insp_file.name != st.session_state.get("sg_last_insp_name"):
-                    st.session_state.sg_last_insp_name = insp_file.name
-                    if st.session_state.get("sg_last_gen_quote_source") == "image":
-                        st.session_state.sg_last_gen_quote_source = None
-
-                st.image(insp_file, caption=f"Ảnh tham khảo đã chọn: {insp_file.name}", width=220)
-
-            insp_note = st.text_input(
-                "Ghi chú thêm cho AI (Tùy chọn):",
-                placeholder="Ví dụ: Giữ ý chính nhưng viết giọng trầm hơn, sâu sắc hơn...",
-                key="sb_insp_note_input",
-            )
-
-            btn_insp_gen = st.button("🔍 ĐỌC CHỮ TRONG ẢNH & VIẾT QUOTE TƯƠNG TỰ", type="primary", use_container_width=True, key="btn_prompt_insp")
-            if btn_insp_gen:
-                if insp_file is None:
-                    st.warning("⚠️ Vui lòng tải lên 1 bức ảnh có chữ để AI phân tích.")
-                else:
-                    with st.spinner("AI Vision đang đọc chữ trong ảnh và sáng tác câu quote tương tự..."):
-                        try:
-                            file_bytes = insp_file.getvalue()
-                            res = generate_quote_from_inspiration_image(
-                                image_input=file_bytes,
-                                custom_instruction=insp_note,
-                                config=config,
-                            )
-                            st.session_state.sg_quote_text = res["quote"]
-                            st.session_state.sb_quote_text_area = res["quote"]
-                            st.session_state.sg_last_gen_quote_source = "image"
-                            st.session_state.sg_rendered_video = None
-                            st.toast("AI đã đọc ảnh và sáng tác câu quote tương tự thành công!", icon="🎉")
-                        except Exception as e:
-                            st.error(f"Lỗi phân tích ảnh: {e}")
-
-            if st.session_state.get("sg_last_gen_quote_source") == "image" and st.session_state.get("sg_quote_text"):
-                st.success(f"✨ **AI đã đọc chữ trong ảnh & sáng tác câu quote mới:**\n\n> *\"{st.session_state.sg_quote_text}\"*")
-
-        # Ô chỉnh sửa câu quote trực tiếp
-        current_quote = st.text_area(
-            "Câu quote sẽ hiển thị trên video (hoặc bạn có thể tự gõ/dán câu vào đây):",
-            value=st.session_state.sg_quote_text,
-            placeholder="Câu quote sau khi AI viết sẽ xuất hiện tại đây, hoặc bạn có thể tự gõ/dán trực tiếp vào đây...",
-            height=100,
-            key="sb_quote_text_area",
-        )
-        if current_quote != st.session_state.sg_quote_text:
-            st.session_state.sg_quote_text = current_quote
-            st.session_state.sg_rendered_video = None
-
-        # Đếm từ trực quan nếu có text
-        if current_quote.strip():
-            words = current_quote.strip().split()
+        if input_quote.strip():
+            words = input_quote.strip().split()
             word_count = len(words)
             if 15 <= word_count <= 26:
                 st.markdown(
@@ -445,168 +250,162 @@ with col_input:
                 )
             else:
                 st.markdown(
-                    f'<span class="word-badge-warn">ℹ️ Hiện tại: <b>{word_count} từ</b>. Khuyên dùng từ 15 đến 26 từ để người xem kịp đọc trọn vẹn và bố cục chữ cân đối nhất.</span>',
+                    f'<span class="word-badge-warn">ℹ️ Hiện tại: <b>{word_count} từ</b>. Khuyên dùng 15 - 26 từ để người xem kịp đọc trọn vẹn và bố cục đẹp nhất.</span>',
                     unsafe_allow_html=True,
                 )
 
-
     st.write("")
 
-    # --- BƯỚC 2: ẢNH NỀN TẢI TỪ MÁY ---
+    # --- BƯỚC 2: TẢI ẢNH NỀN TỪ MÁY TÍNH ---
     with st.container():
         st.markdown('<div class="step-badge">BƯỚC 2</div>', unsafe_allow_html=True)
-        st.subheader("Chọn / Tải Ảnh Nền Từ Máy Tính")
-        st.caption("Tải file ảnh đẹp (.jpg, .png, .webp). Hệ thống sẽ tự động crop và căn giữa chuẩn dọc 9:16 (1080x1920).")
+        st.subheader("Tải Ảnh Nền Từ Máy Tính")
+        st.caption("Tải file ảnh (.jpg, .png, .webp). Hệ thống sẽ tự động crop căn giữa về chuẩn dọc 9:16 (1080x1920).")
 
         up_file = st.file_uploader(
-            "Kéo thả hoặc duyệt file ảnh từ máy của bạn:",
+            "Chọn file ảnh từ máy của bạn:",
             type=["jpg", "jpeg", "png", "webp", "jfif", "bmp"],
-            key="sb_file_uploader",
+            key="file_bg_uploader",
         )
         if up_file is not None:
-            # Chỉ xử lý khi người dùng mới tải file lên hoặc đổi sang file khác
-            if up_file.name != st.session_state.get("sg_last_uploaded_bg_name"):
+            if up_file.name != st.session_state.get("last_uploaded_bg_name"):
                 try:
                     temp_dir = Path("temp")
                     temp_dir.mkdir(parents=True, exist_ok=True)
-                    # Dùng timestamp để tránh trùng file và phá bỏ hoàn toàn cache trình duyệt
                     file_ext = Path(up_file.name).suffix or ".jpg"
                     unique_bg_path = temp_dir / f"bg_{int(time.time() * 1000)}{file_ext}"
                     with open(unique_bg_path, "wb") as f_out:
                         f_out.write(up_file.getbuffer())
 
                     crop_path = crop_image_to_tiktok_portrait(unique_bg_path)
-                    st.session_state.sg_bg_image = str(crop_path)
-                    st.session_state.sg_last_uploaded_bg_name = up_file.name
-                    st.session_state.sg_rendered_video = None
-                    st.toast(f"Đã nạp và chuẩn hóa ảnh mới: {up_file.name}", icon="📸")
+                    st.session_state.bg_image = str(crop_path)
+                    st.session_state.last_uploaded_bg_name = up_file.name
+                    st.session_state.rendered_video = None
+                    st.toast(f"Đã nạp ảnh mới: {up_file.name}", icon="📸")
                 except Exception as e:
-                    st.error(f"Lỗi khi xử lý ảnh tải lên: {e}")
+                    st.error(f"Lỗi khi xử lý ảnh: {e}")
         else:
-            # Nếu người dùng bấm [X] trên file uploader để xoá ảnh tải lên
-            if st.session_state.get("sg_last_uploaded_bg_name") is not None:
-                st.session_state.sg_last_uploaded_bg_name = None
-                st.session_state.sg_bg_image = str(default_sample_bg) if default_sample_bg.exists() else None
-                st.session_state.sg_rendered_video = None
-                st.toast("Đã gỡ ảnh tải lên, chuyển về ảnh nền mặc định.", icon="🗑️")
+            if st.session_state.get("last_uploaded_bg_name") is not None:
+                st.session_state.last_uploaded_bg_name = None
+                st.session_state.bg_image = str(default_sample_bg) if default_sample_bg.exists() else None
+                st.session_state.rendered_video = None
 
-        # Hiển thị thông tin ảnh đang dùng + nút xoá nhanh nếu có
-        if st.session_state.get("sg_last_uploaded_bg_name"):
+        if st.session_state.get("last_uploaded_bg_name"):
             col_cur, col_del = st.columns([3, 1])
             with col_cur:
-                st.caption(f"✅ Đang dùng ảnh bạn tải lên: **{st.session_state.sg_last_uploaded_bg_name}**")
+                st.caption(f"✅ Đang dùng ảnh bạn tải lên: **{st.session_state.last_uploaded_bg_name}**")
             with col_del:
-                if st.button("🗑️ Xoá ảnh", key="sb_btn_del_bg_manual", help="Gỡ ảnh này để chọn ảnh khác"):
-                    st.session_state.sg_last_uploaded_bg_name = None
-                    st.session_state.sg_bg_image = str(default_sample_bg) if default_sample_bg.exists() else None
-                    st.session_state.sg_rendered_video = None
-                    st.toast("Đã xoá ảnh thành công!", icon="🗑️")
+                if st.button("🗑️ Đổi ảnh khác", key="btn_del_bg"):
+                    st.session_state.last_uploaded_bg_name = None
+                    st.session_state.bg_image = str(default_sample_bg) if default_sample_bg.exists() else None
+                    st.session_state.rendered_video = None
                     st.rerun()
 
-        # Nút nạp nhanh ảnh mẫu nếu cần
-        if default_sample_bg.exists():
-            with st.expander("Gợi ý: Dùng ảnh mẫu có sẵn trong kho", expanded=False):
-                st.caption(f"Ảnh mẫu hiện tại: `{default_sample_bg.name}`")
-                if st.button("🔄 Nạp lại ảnh mẫu này", key="sb_btn_reset_sample"):
-                    st.session_state.sg_bg_image = str(default_sample_bg)
-                    st.session_state.sg_last_uploaded_bg_name = None
-                    st.session_state.sg_rendered_video = None
-                    st.toast("Đã nạp ảnh mẫu saigonbac!", icon="☕")
-                    st.rerun()
+        elif default_sample_bg.exists():
+            st.caption(f"ℹ️ Đang dùng ảnh mẫu mặc định: `{default_sample_bg.name}`")
+
+    st.write("")
+
+    # --- TUỲ CHỌN BỔ SUNG (CHỮ KÝ & CHỐNG LOÁ) ---
+    with st.expander("⚙️ Tuỳ chọn chữ ký & hiển thị", expanded=False):
+        sig_input = st.text_input(
+            "Chữ ký video (Signature):",
+            value=st.session_state.signature,
+            key="txt_sig_input",
+            help="Chữ ký nhỏ xuất hiện bên dưới quote (ví dụ: saigonbac, @yourchannel...)",
+        )
+        if sig_input != st.session_state.signature:
+            st.session_state.signature = sig_input
+            st.session_state.rendered_video = None
+
+        st.session_state.enable_antiglare = st.checkbox(
+            "Bật bộ lọc chống loá chữ (Gradient Scrim & Drop Shadow)",
+            value=st.session_state.enable_antiglare,
+            help="Tạo lớp phủ dốc mềm ở đáy giúp chữ luôn dễ đọc trên mọi bức ảnh sáng hay tối.",
+        )
 
     st.write("")
     st.divider()
 
     # --- NÚT HÀNH ĐỘNG RENDER VIDEO ---
-    st.markdown('<div class="btn-create-sg">', unsafe_allow_html=True)
-    btn_create_video = st.button("🚀 TẠO VIDEO SAIGONBAC 18S", type="primary", use_container_width=True)
+    st.markdown('<div class="btn-create">', unsafe_allow_html=True)
+    btn_generate = st.button("🚀 TẠO VIDEO 18S TIKTOK", type="primary", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    if btn_create_video:
-        bg_target = st.session_state.sg_bg_image
+    if btn_generate:
+        bg_target = st.session_state.bg_image
         if not bg_target or not Path(bg_target).exists():
             st.error("Chưa có ảnh nền! Vui lòng tải một file ảnh từ máy tính ở Bước 2.")
-        elif not st.session_state.sg_quote_text.strip():
+        elif not st.session_state.quote_text.strip():
             st.error("Câu quote đang trống! Vui lòng nhập quote ở Bước 1.")
         else:
             out_folder = Path("output/saigonbac")
             out_folder.mkdir(parents=True, exist_ok=True)
-            out_vid = out_folder / f"tiktok_saigonbac_{int(time.time())}.mp4"
+            out_vid = out_folder / f"tiktok_video_{int(time.time())}.mp4"
 
-            with st.spinner("Đang ghép typography và render video 18.0s chuyển động Ken Burns cho saigonbac..."):
+            with st.spinner("Đang ghép typography và render video 18.0s chuẩn TikTok (Ken Burns chuyển động)..."):
                 try:
-                    ag_alpha_map = {"Vừa Phải (Khuyên Dùng)": 145, "Mạnh (Cho Nền Rất Sáng/Chói)": 190, "Nhẹ (Cho Nền Tối)": 95}
-                    ag_radius_map = {"Vừa Phải (Khuyên Dùng)": 3.5, "Mạnh (Cho Nền Rất Sáng/Chói)": 4.8, "Nhẹ (Cho Nền Tối)": 2.2}
-                    ag_stroke_map = {"Vừa Phải (Khuyên Dùng)": 1, "Mạnh (Cho Nền Rất Sáng/Chói)": 2, "Nhẹ (Cho Nền Tối)": 1}
-                    sel_level = st.session_state.get("sg_antiglare_level", "Vừa Phải (Khuyên Dùng)")
-                    is_ag = st.session_state.get("sg_toggle_antiglare", True)
-
                     render_18s_video(
                         image_path=bg_target,
-                        quote=st.session_state.sg_quote_text,
+                        quote=st.session_state.quote_text,
                         output_path=out_vid,
                         duration=18.0,
-                        signature=st.session_state.sg_signature or "saigonbac",
-                        enable_gradient_scrim=is_ag,
-                        scrim_max_alpha=ag_alpha_map.get(sel_level, 145),
-                        shadow_blur_radius=ag_radius_map.get(sel_level, 3.5),
-                        stroke_width=ag_stroke_map.get(sel_level, 1),
+                        signature=st.session_state.signature or "saigonbac",
+                        enable_gradient_scrim=st.session_state.enable_antiglare,
                     )
-                    st.session_state.sg_rendered_video = str(out_vid)
-                    st.toast("Dựng video saigonbac 18s hoàn tất 100%!", icon="🎉")
+                    st.session_state.rendered_video = str(out_vid)
+                    st.toast("Tạo video 18s hoàn tất thành công!", icon="🎉")
                     st.rerun()
                 except Exception as e:
                     st.error(f"Lỗi khi render video: {e}")
 
 
 # ==============================================================================
-# CỘT PHẢI: BƯỚC 3 (LIVE PREVIEW & XUẤT VIDEO)
+# CỘT PHẢI: XEM TRƯỚC (LIVE PREVIEW) & XUẤT VIDEO
 # ==============================================================================
 with col_preview:
     st.markdown('<div class="step-badge">BƯỚC 3</div>', unsafe_allow_html=True)
-    st.subheader("Xem Trước Chữ Trên Ảnh & Video")
+    st.subheader("Xem Trước & Video Thành Phẩm")
 
-    rendered_vid = st.session_state.sg_rendered_video
-    bg_img = st.session_state.sg_bg_image
-    quote_ready = bool(st.session_state.sg_quote_text.strip())
+    rendered_vid = st.session_state.rendered_video
+    bg_img = st.session_state.bg_image
+    quote_ready = bool(st.session_state.quote_text.strip())
 
-    # 1. Luôn hiển thị ảnh xem trước có chữ trực tiếp
+    # 1. ẢNH XEM TRƯỚC CÓ CHỮ (LIVE TYPOGRAPHY PREVIEW)
     if bg_img and Path(bg_img).exists():
         if quote_ready:
-            st.caption("👁️ **Ảnh xem trước có chữ (Live Typography 9:16 - Hiển thị chữ tức thì):**")
+            st.caption("👁️ **Ảnh xem trước có chữ (Live Typography 9:16):**")
             try:
-                prev_cfg = dict(config)
-                prev_cfg["branding"] = {"signature": st.session_state.sg_signature, "signature_font_size": 24}
-                ag_alpha_map = {"Vừa Phải (Khuyên Dùng)": 145, "Mạnh (Cho Nền Rất Sáng/Chói)": 190, "Nhẹ (Cho Nền Tối)": 95}
-                ag_radius_map = {"Vừa Phải (Khuyên Dùng)": 3.5, "Mạnh (Cho Nền Rất Sáng/Chói)": 4.8, "Nhẹ (Cho Nền Tối)": 2.2}
-                ag_stroke_map = {"Vừa Phải (Khuyên Dùng)": 1, "Mạnh (Cho Nền Rất Sáng/Chói)": 2, "Nhẹ (Cho Nền Tối)": 1}
-                sel_level = st.session_state.get("sg_antiglare_level", "Vừa Phải (Khuyên Dùng)")
-                is_ag = st.session_state.get("sg_toggle_antiglare", True)
-                prev_cfg["typography"] = {
-                    "enable_gradient_scrim": is_ag,
-                    "scrim_max_alpha": ag_alpha_map.get(sel_level, 145),
-                    "shadow_blur_radius": ag_radius_map.get(sel_level, 3.5),
-                    "stroke_width": ag_stroke_map.get(sel_level, 1),
-                }
-                prev_img = generate_quote_preview_image(image_path=bg_img, quote=st.session_state.sg_quote_text, config=prev_cfg)
-                # Dùng PIL Image để Streamlit hash pixel trực tiếp, loại bỏ 100% hiện tượng cache ảnh cũ
-                with Image.open(prev_img) as _pimg:
-                    st.image(_pimg.convert("RGB"), use_container_width=True)
+                # Ghép chữ trực tiếp lên ảnh bằng Pillow cho tốc độ tức thì
+                with Image.open(bg_img) as raw_bg:
+                    bg_rgba = raw_bg.convert("RGBA")
+                    # Đảm bảo đúng kích thước 1080x1920
+                    if bg_rgba.size != (1080, 1920):
+                        bg_rgba = bg_rgba.resize((1080, 1920), Image.Resampling.LANCZOS)
+
+                    # Tạo lớp phủ chữ với đúng cài đặt chữ ký và chống loá
+                    text_overlay = create_quote_overlay(
+                        quote=st.session_state.quote_text,
+                        signature=st.session_state.signature or "saigonbac",
+                        enable_gradient_scrim=st.session_state.enable_antiglare,
+                    )
+                    preview_composite = Image.alpha_composite(bg_rgba, text_overlay)
+                    st.image(preview_composite.convert("RGB"), use_container_width=True)
             except Exception as ex:
+                logger.warning(f"Lỗi tạo live preview: {ex}")
                 with Image.open(bg_img) as _bimg:
                     st.image(_bimg.convert("RGB"), use_container_width=True)
         else:
             with Image.open(bg_img) as _bimg:
                 st.image(_bimg.convert("RGB"), use_container_width=True)
             st.caption("🖼️ Ảnh nền đã sẵn sàng. Hãy nhập câu quote ở Bước 1 để hiển thị chữ trên ảnh.")
-
     else:
         st.markdown(
             """
             <div style="border: 2px dashed #475569; border-radius: 14px; height: 380px; display: flex; align-items: center; justify-content: center; color: #94A3B8; text-align: center; padding: 1.5rem;">
                 <div>
                     <div style="font-size: 2.5rem; margin-bottom: 0.6rem;">📱</div>
-                    <b>Khung Xem Trước Sài Gòn Bạc</b><br>
+                    <b>Khung Xem Trước</b><br>
                     <span style="font-size: 0.88rem; color: #64748B;">Hãy tải lên một bức ảnh ở Bước 2 để hiển thị chữ trên ảnh.</span>
                 </div>
             </div>
@@ -614,10 +413,10 @@ with col_preview:
             unsafe_allow_html=True,
         )
 
-    # 2. Hiển thị Video thành phẩm bên dưới (nếu đã bấm render)
+    # 2. VIDEO THÀNH PHẨM (SAU KHI BẤM RENDER)
     if rendered_vid and Path(rendered_vid).exists():
         st.divider()
-        st.markdown("🎬 **Video 18s Đã Tạo (Chữ xuất hiện ngay từ giây 0):**")
+        st.markdown("🎬 **Video 18s Đã Tạo:**")
         meta = probe_video_metadata(rendered_vid)
         st.video(str(rendered_vid))
         st.markdown(
@@ -630,13 +429,12 @@ with col_preview:
         )
         with open(rendered_vid, "rb") as vf:
             st.download_button(
-                label="⬇️ TẢI VIDEO SAIGONBAC (.MP4)",
+                label="⬇️ TẢI VIDEO XUỐNG (.MP4)",
                 data=vf.read(),
-                file_name=f"tiktok_saigonbac_{int(time.time())}.mp4",
+                file_name=f"tiktok_quote_{int(time.time())}.mp4",
                 mime="video/mp4",
                 type="primary",
                 use_container_width=True,
-                key="sb_btn_download",
+                key="btn_download_video",
             )
-        st.caption(f"Đã lưu tại: `{rendered_vid}`")
-
+        st.caption(f"File lưu tại: `{rendered_vid}`")

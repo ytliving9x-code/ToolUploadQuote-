@@ -18,9 +18,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-logger = logging.getLogger("tiktok_tool.video_renderer")
-
-FFMPEG_EXE = shutil.which("ffmpeg") or "ffmpeg"
+try:
+    FFMPEG_EXE = shutil.which("ffmpeg")
+    if not FFMPEG_EXE:
+        import imageio_ffmpeg
+        FFMPEG_EXE = imageio_ffmpeg.get_ffmpeg_exe()
+except Exception:
+    FFMPEG_EXE = shutil.which("ffmpeg") or "ffmpeg"
 DEFAULT_FONT = Path("assets/fonts/BeVietnamPro-Bold.ttf")
 
 

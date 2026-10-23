@@ -945,11 +945,14 @@ def render_lang_dynamic_video(
         tmp_payoff_path = Path(tmp_p.name)
     img_payoff.save(tmp_payoff_path, format="PNG")
 
-    # 4. Tạo âm thanh tự động (Voiceover + Ambient Drone)
-    from modules.audio_engine import generate_voiceover_edge_tts, mix_voice_and_ambient
-    full_speech = f"{hook_text}. {payoff_text}"
-    voice_p = generate_voiceover_edge_tts(full_speech) if with_voiceover else None
-    audio_track = mix_voice_and_ambient(voice_p, duration=duration)
+    # 4. Âm thanh (nếu có module audio_engine)
+    try:
+        from modules.audio_engine import generate_voiceover_edge_tts, mix_voice_and_ambient
+        full_speech = f"{hook_text}. {payoff_text}"
+        voice_p = generate_voiceover_edge_tts(full_speech) if with_voiceover else None
+        audio_track = mix_voice_and_ambient(voice_p, duration=duration)
+    except Exception:
+        audio_track = None
 
     # 5. Dựng video bằng FFmpeg với filter timing
     is_image = f_path.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp"]
