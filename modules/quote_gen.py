@@ -13,14 +13,17 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 
 from modules.history_db import is_quote_duplicate, save_quote
 
 logger = logging.getLogger("tiktok_tool.quote_gen")
 
-# Tải biến môi trường từ .env
-load_dotenv()
+
 
 # ==============================================================================
 # HỆ THỐNG 6 DANH MỤC ĐỘC QUYỀN & MICRO-SCENARIO CHO TỪNG KÊNH

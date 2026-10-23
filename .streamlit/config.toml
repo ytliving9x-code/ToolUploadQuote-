@@ -1,5 +1,6 @@
 [client]
-showErrorDetails = true
+showErrorDetails = "full"
+
 
 [server]
 headless = true

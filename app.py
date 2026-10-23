@@ -1,18 +1,11 @@
 from __future__ import annotations
 
-"""
-Ứng dụng Web Streamlit: Sài Gòn Bạc Studio (app.py)
-Tập trung 100% cho kênh Sài Gòn Bạc (saigonbac):
-1. Nhập Prompt / Ý tưởng để AI sáng tác quote tĩnh tại, hoài niệm (hoặc tự gõ quote).
-2. Tải ảnh nền chất lượng cao từ máy tính (tự động crop chuẩn dọc 9:16 1080x1920).
-3. Live Preview chữ trên ảnh & Render Video 18s TikTok chuyển động Ken Burns chuẩn điện ảnh.
-"""
-
 import json
 import logging
 import os
 import sys
 import time
+import traceback
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -28,32 +21,37 @@ except Exception:
 import streamlit as st
 from PIL import Image
 
-from modules.history_db import init_db
-from modules.quote_gen import (
-    generate_quote_from_user_prompt,
-    generate_quote_from_inspiration_image,
-    review_viral_potential,
-)
-from modules.video_engine import (
-    generate_quote_preview_image,
-    probe_video_metadata,
-)
-from modules.video_renderer import render_18s_video
-
-# Khởi tạo database
-init_db()
-
-# Cấu hình logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger("SaigonBac_Studio")
-
-# Cấu hình trang Streamlit
+# Cấu hình trang Streamlit ngay từ đầu
 st.set_page_config(
     page_title="Sài Gòn Bạc - TikTok 18s Studio",
     page_icon="☕",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+try:
+    from modules.history_db import init_db
+    from modules.quote_gen import (
+        generate_quote_from_user_prompt,
+        generate_quote_from_inspiration_image,
+    )
+    from modules.video_engine import (
+        generate_quote_preview_image,
+        probe_video_metadata,
+    )
+    from modules.video_renderer import render_18s_video
+
+    # Khởi tạo database
+    init_db()
+except Exception as _import_err:
+    st.error(f"❌ Lỗi nạp module: {_import_err}")
+    st.code(traceback.format_exc())
+    st.stop()
+
+# Cấu hình logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("SaigonBac_Studio")
+
 
 # Custom CSS phong cách Aesthetic Dark Mode sang trọng
 st.markdown(
