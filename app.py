@@ -540,6 +540,8 @@ if "antiglare_preset" not in st.session_state:
     st.session_state.antiglare_preset = "✨ Chuẩn Điện Ảnh (Khuyên dùng)"
 if "font_preset" not in st.session_state:
     st.session_state.font_preset = "☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)"
+if "overlay_darkness" not in st.session_state:
+    st.session_state.overlay_darkness = 50
 
 
 # ==============================================================================
@@ -679,8 +681,24 @@ with col_input:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # ---------------- TUỲ CHỌN HIỂN THỊ, PHÔNG CHỮ & BỘ LỌC CHỐNG LOÁ ----------------
-    with st.expander("⚙️ Phông chữ, Chống loá & Chữ ký video", expanded=True):
+    # ---------------- TUỲ CHỌN HIỂN THỊ, ĐỘ TỐI NỀN, PHÔNG CHỮ & CHỐNG LOÁ ----------------
+    with st.expander("⚙️ Độ tối nền, Phông chữ & Chữ ký video", expanded=True):
+        st.markdown("<b style='color: #38BDF8; font-size: 0.92rem;'>🌙 Độ tối hình nền (Dark Overlay):</b>", unsafe_allow_html=True)
+        overlay_val = st.slider(
+            "Mức độ phủ tối hình nền:",
+            min_value=0,
+            max_value=90,
+            value=st.session_state.overlay_darkness,
+            step=5,
+            format="%d%%",
+            key="slider_dark_overlay",
+            help="Dìm tối hình nền để câu quote màu trắng nổi bật rõ nét và có chiều sâu.",
+        )
+        if overlay_val != st.session_state.overlay_darkness:
+            st.session_state.overlay_darkness = overlay_val
+            st.session_state.rendered_video = None
+        st.caption(f"💡 Đang phủ tối: **{st.session_state.overlay_darkness}%** (Mặc định 50% giúp chữ trắng nổi bật tối đa).")
+
         st.markdown("<b style='color: #38BDF8; font-size: 0.9rem;'>🔤 Phông chữ hiển thị:</b>", unsafe_allow_html=True)
         font_names = list(FONT_PRESETS.keys())
         default_font_idx = font_names.index(st.session_state.font_preset) if st.session_state.font_preset in font_names else 0
@@ -759,7 +777,19 @@ with col_input:
         else:
             out_folder = Path("output/saigonbac")
             out_folder.mkdir(parents=True, exist_ok=True)
-            out_vid = out_folder / f"tiktok_video_{int(time.time())}.mp4"
+            timestamp = int(time.time())
+            out_vid = out_folder / f"tiktok_video_{timestamp}.mp4"
+            out_txt = out_folder / f"tiktok_video_{timestamp}.txt"
+
+            # Tự động lưu kèm file .txt chứa câu quote trên video & hashtag viral
+            sig_tag = (st.session_state.signature or "saigonbac").replace("@", "").strip()
+            trending_hashtags = f"#{sig_tag} #tamtrang #suyngam #trietlycuocsong #cuocsong #xuhuong #fyp #viral #quotesvn #chill"
+            full_caption = f"{st.session_state.quote_text.strip()}\n\n{trending_hashtags}"
+            try:
+                with open(out_txt, "w", encoding="utf-8") as f_txt:
+                    f_txt.write(full_caption)
+            except Exception as txt_err:
+                logger.warning(f"Lỗi ghi file txt caption: {txt_err}")
 
             with st.spinner("Đang ghép typography chống loá và render video 18.0s chuẩn TikTok..."):
                 try:
@@ -768,6 +798,7 @@ with col_input:
                         quote=st.session_state.quote_text,
                         output_path=out_vid,
                         duration=18.0,
+                        overlay_opacity=st.session_state.overlay_darkness / 100.0,
                         signature=st.session_state.signature or "saigonbac",
                         enable_gradient_scrim=st.session_state.enable_antiglare,
                         scrim_max_alpha=active_cfg["scrim"],
@@ -831,7 +862,15 @@ with col_preview:
                     enhancer_b = ImageEnhance.Brightness(bg_rgb)
                     bg_graded = enhancer_b.enhance(0.90)
                     enhancer_c = ImageEnhance.Contrast(bg_graded)
-                    bg_ready = enhancer_c.enhance(1.08).convert("RGBA")
+                    bg_base = enhancer_c.enhance(1.08).convert("RGBA")
+
+                    # Phủ lớp tối theo đúng thanh trượt (mặc định 50%)
+                    dark_alpha = int(255 * (st.session_state.overlay_darkness / 100.0))
+                    if dark_alpha > 0:
+                        dark_layer = Image.new("RGBA", (1080, 1920), (0, 0, 0, dark_alpha))
+                        bg_ready = Image.alpha_composite(bg_base, dark_layer)
+                    else:
+                        bg_ready = bg_base
 
                     active_cfg = ANTIGLARE_PRESETS.get(
                         st.session_state.antiglare_preset,
@@ -915,7 +954,28 @@ with col_preview:
                 key="btn_download_video",
             )
             st.markdown('</div>', unsafe_allow_html=True)
-        st.caption(f"📁 Lưu tại: `{rendered_vid}`")
+        st.caption(f"📁 Video: `{rendered_vid}`")
+
+        # ---------------- KHUNG 1-CLICK COPY CAPTION & HASHTAGS ĐĂNG TIKTOK ----------------
+        sig_tag = (st.session_state.signature or "saigonbac").replace("@", "").strip()
+        trending_hashtags = f"#{sig_tag} #tamtrang #suyngam #trietlycuocsong #cuocsong #xuhuong #fyp #viral #quotesvn #chill"
+        full_caption = f"{st.session_state.quote_text.strip()}\n\n{trending_hashtags}"
+
+        st.markdown(
+            """
+            <div style="background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 14px; padding: 14px 16px; margin-top: 14px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.5);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="color: #38BDF8; font-weight: 700; font-size: 0.95rem;">📋 Caption & Hashtags Đăng TikTok</span>
+                    <span style="font-size: 0.76rem; color: #7DD3FC; background: rgba(56, 189, 248, 0.15); padding: 3px 8px; border-radius: 6px; font-weight: 600;">1-Click Copy 📋</span>
+                </div>
+                <div style="font-size: 0.82rem; color: #94A3B8; margin-bottom: 8px;">
+                    Đã tạo sẵn câu quote ở trên và bộ hashtag viral ở dưới. Bấm biểu tượng copy ở góc trên bên phải khung dưới để dán ngay lên TikTok:
+                </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.code(full_caption, language="")
+        st.markdown("</div>", unsafe_allow_html=True)
     else:
         st.markdown(
             """
@@ -925,3 +985,9 @@ with col_preview:
             """,
             unsafe_allow_html=True,
         )
+        if quote_ready:
+            with st.expander("📋 Xem trước Caption & Hashtags sẽ đăng", expanded=False):
+                sig_tag = (st.session_state.signature or "saigonbac").replace("@", "").strip()
+                trending_hashtags = f"#{sig_tag} #tamtrang #suyngam #trietlycuocsong #cuocsong #xuhuong #fyp #viral #quotesvn #chill"
+                full_caption = f"{st.session_state.quote_text.strip()}\n\n{trending_hashtags}"
+                st.code(full_caption, language="")

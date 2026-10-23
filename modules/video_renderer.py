@@ -224,7 +224,7 @@ def render_18s_video(
     quote: str,
     output_path: Path | str = Path("output/tiktok_18s_ready.mp4"),
     duration: float = 18.0,
-    overlay_opacity: float = 0.30,
+    overlay_opacity: float = 0.50,
     signature: Optional[str] = "saigonbac",
     enable_gradient_scrim: bool = True,
     scrim_max_alpha: int = 175,
@@ -289,12 +289,14 @@ def render_18s_video(
 
     vignette_f = "vignette=PI/5.5," if cinematic_vignette else ""
     dark_grading_f = "eq=contrast=1.16:brightness=-0.12:saturation=0.92,colorbalance=rs=-0.03:gs=-0.01:bs=0.04:rh=0.04:gh=0.02:bh=-0.02,"
+    dark_box = f"drawbox=x=0:y=0:w=iw:h=ih:color=black@{overlay_opacity:.2f}:t=fill," if overlay_opacity > 0 else ""
     filter_complex = (
         f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
         f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,"
         f"{motion_filter}"
         f"{dark_grading_f}"
         f"{vignette_f}"
+        f"{dark_box}"
         f"fps=30[bg];"
         f"[1:v]format=rgba[text];"
         f"[bg][text]overlay=0:0:shortest=1[outv]"
