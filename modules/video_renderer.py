@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+logger = logging.getLogger("tiktok_tool.video_renderer")
+
 try:
     FFMPEG_EXE = shutil.which("ffmpeg")
     if not FFMPEG_EXE:
