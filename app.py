@@ -497,17 +497,17 @@ ANTIGLARE_PRESETS = {
 # BỘ CẤU HÌNH PHÔNG CHỮ NỔI BẬT TRÊN HÌNH
 # ==============================================================================
 FONT_PRESETS = {
-    "🔥 Montserrat Black (Siêu Đậm - Nổi Bật Số 1)": {
+    "☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)": {
+        "path": "assets/fonts/BeVietnamPro-Bold.ttf",
+        "desc": "Phông chữ mặc định của kênh, nét thanh lịch, khoảng cách thoáng đãng, sâu lắng.",
+    },
+    "🔥 Montserrat Black (Siêu Đậm Nổi Bật)": {
         "path": "assets/fonts/Montserrat-Black.ttf",
         "desc": "Nét dày bản to, chữ cực kỳ bắt mắt và nổi bật trên mọi bức ảnh (chuẩn phong cách TikTok viral).",
     },
     "⚡ Montserrat Bold (Hiện Đại & Sắc Nét)": {
         "path": "assets/fonts/Montserrat-Bold.ttf",
         "desc": "Nét dày vừa vặn, hình khối hiện đại, thanh thoát và dễ đọc.",
-    },
-    "☕ Be Vietnam Pro Bold (Thanh Lịch Sài Gòn)": {
-        "path": "assets/fonts/BeVietnamPro-Bold.ttf",
-        "desc": "Font quốc dân cho video tâm trạng, khoảng cách chữ thoáng đãng, sâu lắng.",
     },
     "🎞️ Playfair Display Bold (Điện Ảnh Hoài Niệm)": {
         "path": "assets/fonts/PlayfairDisplay-Bold.ttf",
@@ -539,7 +539,7 @@ if "enable_antiglare" not in st.session_state:
 if "antiglare_preset" not in st.session_state:
     st.session_state.antiglare_preset = "✨ Chuẩn Điện Ảnh (Khuyên dùng)"
 if "font_preset" not in st.session_state:
-    st.session_state.font_preset = "🔥 Montserrat Black (Siêu Đậm - Nổi Bật Số 1)"
+    st.session_state.font_preset = "☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)"
 
 
 # ==============================================================================
@@ -742,7 +742,7 @@ with col_input:
     )
     active_font = FONT_PRESETS.get(
         st.session_state.font_preset,
-        FONT_PRESETS["🔥 Montserrat Black (Siêu Đậm - Nổi Bật Số 1)"],
+        FONT_PRESETS["☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)"],
     )
 
     # ---------------- NÚT HÀNH ĐỘNG HERO ----------------
@@ -839,7 +839,7 @@ with col_preview:
                     )
                     active_font = FONT_PRESETS.get(
                         st.session_state.font_preset,
-                        FONT_PRESETS["🔥 Montserrat Black (Siêu Đậm - Nổi Bật Số 1)"],
+                        FONT_PRESETS["☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)"],
                     )
 
                     text_overlay = create_quote_overlay(
