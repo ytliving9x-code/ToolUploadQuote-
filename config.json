@@ -62,22 +62,6 @@
         "Bạn Cũ & Thời Gian",
         "Khoảng Lặng Vô Thanh"
       ]
-    },
-    "new_channel": {
-      "channel_name": "Lặng",
-      "signature": "lang",
-      "signature_font_size": 24,
-      "format": "video_broll",
-      "output_folder": "output/kenh_moi",
-      "style": "deep_philosophical",
-      "topics": [
-        "Mưu lược Tư Mã Ý (Ẩn nhẫn)",
-        "Bản chất của Tiền & Vị thế",
-        "Thuật nhìn người & Mặt nạ",
-        "Kỷ luật trong cô độc",
-        "Kiểm soát cảm xúc",
-        "Luật chơi của Kẻ mạnh"
-      ]
     }
   }
 }

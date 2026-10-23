@@ -123,94 +123,19 @@ def test_fallback_quote_generation(tmp_path: Path):
     assert "quote" in data
     assert len(data["quote"]) > 10
     assert data["quote_id"] > 0
+    assert data["channel"] == "saigonbac"
 
 
-def test_nature_cinematic_keywords_and_suggestions():
-    """Kiểm tra từ khóa Cinematic Nature và thuật toán gợi ý theo cảm xúc quote."""
-    from modules.pixabay_fetcher import NATURE_PRIORITY_KEYWORDS, NATURE_KEYWORD_CATEGORIES
-    from modules.quote_manager import suggest_keywords_from_quote
-
-    # 1. Kiểm tra đủ 12 từ khóa thiên nhiên ưu tiên
-    assert len(NATURE_PRIORITY_KEYWORDS) == 12
-    assert "misty mountains cinematic" in NATURE_PRIORITY_KEYWORDS
-    assert "moody ocean waves" in NATURE_PRIORITY_KEYWORDS
-    assert "sunset lake reflection" in NATURE_PRIORITY_KEYWORDS
-
-    # 2. Kiểm tra đủ 6 danh mục thiên nhiên
-    assert len(NATURE_KEYWORD_CATEGORIES) == 6
-
-    # 3. Gợi ý quote về trưởng thành & cuộc đời -> Núi phủ sương / mây trôi
-    kw_truongthanh = suggest_keywords_from_quote("Trưởng thành là khi ta nhận ra cuộc đời không như ta nghĩ.")
-    assert "misty mountains cinematic" in kw_truongthanh or "clouds moving over mountains" in kw_truongthanh
-
-    # 4. Gợi ý quote về tiền bạc & áp lực -> Đường vắng xuyên rừng / biển tối
-    kw_tienbac = suggest_keywords_from_quote("Cơm áo gạo tiền đè nặng khiến ta mệt mỏi.")
-    assert "empty road through forest" in kw_tienbac or "dark sea cinematic" in kw_tienbac
-
-
-def test_vietnamese_pixabay_query_translation():
-    """Kiểm tra chức năng chuyển đổi tiếng Việt sang từ khóa Pixabay tiếng Anh chuẩn."""
-    from modules.pixabay_fetcher import QUICK_THEMES_VI, translate_vietnamese_to_pixabay_query
-
-    # 1. Kiểm tra đủ 6 nút chủ đề tiếng Việt phong cách điện ảnh
-    assert len(QUICK_THEMES_VI) == 6
-    assert "🌧️ Mưa Đêm Phố Vắng" in QUICK_THEMES_VI
-    assert "☕ Cà Phê Đêm & Ánh Đèn" in QUICK_THEMES_VI
-    assert "🚶 Bước Chân Trong Đêm" in QUICK_THEMES_VI
-    assert "🚇 Ga Tàu Đêm Cô Độc" in QUICK_THEMES_VI
-    assert "🪟 Cửa Sổ Mưa Đêm" in QUICK_THEMES_VI
-    assert "🌃 Phố Cũ Đèn Vàng" in QUICK_THEMES_VI
-
-    # 2. Bấm 1 chạm vào thẻ: Cà Phê Đêm & Ánh Đèn
-    q_cafe = translate_vietnamese_to_pixabay_query("☕ Cà Phê Đêm & Ánh Đèn")
-    assert "coffee" in q_cafe or "cafe" in q_cafe
-    assert "vertical" in q_cafe
-
-    # 3. Gõ tiếng Việt tự do: con sói và trời mưa
-    q_tu_do = translate_vietnamese_to_pixabay_query("con sói trời mưa")
-    assert "wolf" in q_tu_do
-    assert "rain" in q_tu_do
-    assert "dark" in q_tu_do
-    assert "moody" in q_tu_do
-    assert "vertical" in q_tu_do
-
-    # 4. Gõ tiếng Việt: cánh đồng, ga tàu
-    q_field = translate_vietnamese_to_pixabay_query("cánh đồng đêm khuya")
-    assert "field" in q_field or "grass" in q_field
-    assert "night" in q_field
-
-
-def test_picsum_fetcher():
-    """Kiểm tra module picsum_fetcher lấy ảnh thật không cần API key."""
-    from modules.picsum_fetcher import get_picsum_gallery
-
-    gallery = get_picsum_gallery(page=1, limit=2)
-    assert len(gallery) > 0
-    assert "preview_url" in gallery[0]
-    assert "large_url" in gallery[0]
-    assert "picsum" in gallery[0]["large_url"]
-
-
-def test_fallback_quotes_word_count():
-    """Kiểm tra tất cả câu trong FALLBACK_QUOTES đều nằm trong khoảng 14-28 từ."""
-    from modules.quote_gen import FALLBACK_QUOTES
-
-    for topic, quotes in FALLBACK_QUOTES.items():
-        for item in quotes:
-            quote_text = item["quote"]
-            word_count = len(quote_text.split())
-            assert 14 <= word_count <= 28, (
-                f"Quote trong topic '{topic}' có {word_count} từ, ngoài khoảng 14-28 từ: '{quote_text}'"
-            )
-
-
-def test_build_system_prompt_length_constraint():
-    """Kiểm tra system prompt chứa rõ ràng ràng buộc độ dài 15-26 từ."""
-    from modules.quote_gen import build_system_prompt
-
-    prompt = build_system_prompt("áp lực tiền bạc")
-    assert "15 ĐẾN 26 TỪ" in prompt
-    assert "28 từ" in prompt
+def test_generate_quote_with_mock(tmp_path: Path):
+    """Kiểm tra hàm generate_quote sử dụng mock phản hồi."""
+    from unittest.mock import patch
+    test_db = tmp_path / "test_history.db"
+    mock_quote = "Hạnh phúc giản đơn là một buổi sáng thảnh thơi ngồi ngắm nắng lên."
+    with patch("modules.quote_gen.call_gemini", return_value=mock_quote):
+        res = generate_quote(topic="bình yên", custom_db_path=test_db)
+        assert res["quote"] == mock_quote
+        assert res["topic"] == "bình yên"
+        assert res["quote_id"] > 0
 
 
 

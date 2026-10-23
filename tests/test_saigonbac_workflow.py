@@ -4,19 +4,12 @@ from unittest.mock import patch
 from PIL import Image
 
 from modules.quote_gen import (
-    build_custom_prompt_for_saigonbac,
     generate_quote_from_user_prompt,
     generate_quote_from_inspiration_image,
 )
 from modules.video_renderer import render_18s_video
 from modules.video_engine import probe_video_metadata
 from app import crop_image_to_tiktok_portrait
-
-
-def test_build_custom_prompt_for_saigonbac():
-    user_prompt = "Một buổi chiều mưa ngồi ngắm thành phố"
-    prompt = build_custom_prompt_for_saigonbac(user_prompt)
-    assert prompt == user_prompt
 
 
 

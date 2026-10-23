@@ -585,9 +585,7 @@ def fetch_pexels_photo(
     clean_query = query.strip() if query else "dark aesthetic moody"
 
     if not key:
-        logger.warning("Chưa cấu hình PEXELS_API_KEY, fallback sang Pixabay...")
-        from modules.pixabay_fetcher import fetch_pixabay_image
-        return fetch_pixabay_image(query=clean_query, output_path=out_file)
+        raise ValueError("Chưa cấu hình PEXELS_API_KEY để tải ảnh từ Pexels.")
 
     headers = {
         "Authorization": key,
@@ -626,13 +624,12 @@ def fetch_pexels_photo(
                 with open(out_file, "wb") as f_out:
                     f_out.write(img_resp.content)
 
-                from modules.pixabay_fetcher import resize_and_crop_to_tiktok
-                return resize_and_crop_to_tiktok(out_file, target_size=target_size)
+                from modules.video_engine import crop_image_to_tiktok_portrait
+                return crop_image_to_tiktok_portrait(out_file)
 
         raise ValueError(f"Không tìm thấy ảnh phù hợp trên Pexels cho '{clean_query}'.")
 
     except Exception as e:
-        logger.warning(f"Lỗi khi tìm ảnh Pexels: {e}. Đang fallback sang Pixabay...")
-        from modules.pixabay_fetcher import fetch_pixabay_image
-        return fetch_pixabay_image(query=clean_query, output_path=out_file)
+        logger.error(f"Lỗi khi tìm và tải ảnh Pexels: {e}")
+        raise
 
