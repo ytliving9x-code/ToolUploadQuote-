@@ -139,33 +139,48 @@ def create_quote_overlay(
 
     # 1. Lớp Gradient Scrim chuyển tối êm ái ở khu vực chữ (chống loá nền sáng)
     if enable_gradient_scrim and scrim_max_alpha > 0:
-        scrim_start_y = max(0, start_y - 180)
+        scrim_start_y = max(0, start_y - 220)
         scrim_draw = ImageDraw.Draw(img)
         for y in range(scrim_start_y, height):
             progress = (y - scrim_start_y) / (height - scrim_start_y)
-            alpha = int(scrim_max_alpha * (progress ** 1.35))
+            alpha = int(scrim_max_alpha * (progress ** 1.25))
             scrim_draw.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
 
-    # 2. Lớp Soft Blurred Shadow (đổ bóng mờ điện ảnh)
-    if shadow_blur_radius > 0:
-        shadow_layer = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
-        s_draw = ImageDraw.Draw(shadow_layer)
+    # 2. ĐỔ BÓNG KÉP ĐA TẦNG (DUAL-LAYER CINEMA SHADOW)
+    # Lớp 2a: Tight Shadow (bóng sát chân chữ tạo độ sắc cạnh, triệt tiêu loá hoàn toàn)
+    tight_layer = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
+    t_draw = ImageDraw.Draw(tight_layer)
+    curr_y = start_y
+    for line, w, h in line_metrics:
+        t_draw.text((start_x + 2, curr_y + 2), line, font=font, fill=(0, 0, 0, 245))
+        curr_y += h + line_spacing
 
+    if signature and sig_font:
+        curr_y += (sig_spacing - line_spacing) if lines else 0
+        sig_w = sig_bbox[2] - sig_bbox[0]
+        sig_x = (canvas_size[0] - margin_right) - sig_w
+        t_draw.text((sig_x + 2, curr_y + 2), signature, font=sig_font, fill=(0, 0, 0, 220))
+
+    blurred_tight = tight_layer.filter(ImageFilter.GaussianBlur(radius=1.2))
+    img = Image.alpha_composite(img, blurred_tight)
+
+    # Lớp 2b: Soft Ambient Shadow (bóng mờ lan tỏa tạo chiều sâu điện ảnh)
+    if shadow_blur_radius > 0:
+        soft_layer = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
+        s_draw = ImageDraw.Draw(soft_layer)
         curr_y = start_y
         for line, w, h in line_metrics:
-            s_draw.text((start_x + 2, curr_y + 3), line, font=font, fill=(0, 0, 0, 220))
+            s_draw.text((start_x + 1, curr_y + 4), line, font=font, fill=(0, 0, 0, 185))
             curr_y += h + line_spacing
 
         if signature and sig_font:
             curr_y += (sig_spacing - line_spacing) if lines else 0
-            sig_w = sig_bbox[2] - sig_bbox[0]
-            sig_x = (canvas_size[0] - margin_right) - sig_w
-            s_draw.text((sig_x + 2, curr_y + 3), signature, font=sig_font, fill=(0, 0, 0, 190))
+            s_draw.text((sig_x + 1, curr_y + 4), signature, font=sig_font, fill=(0, 0, 0, 160))
 
-        blurred_shadow = shadow_layer.filter(ImageFilter.GaussianBlur(radius=shadow_blur_radius))
-        img = Image.alpha_composite(img, blurred_shadow)
+        blurred_soft = soft_layer.filter(ImageFilter.GaussianBlur(radius=shadow_blur_radius))
+        img = Image.alpha_composite(img, blurred_soft)
 
-    # 3. Vẽ chữ trắng chính có viền nét siêu mảnh chống loá
+    # 3. Vẽ chữ Off-White cao cấp với đường viền sắc nét (Crisp Micro-Stroke)
     draw = ImageDraw.Draw(img)
     curr_y = start_y
     for line, w, h in line_metrics:
@@ -173,9 +188,9 @@ def create_quote_overlay(
             (start_x, curr_y),
             line,
             font=font,
-            fill=(255, 255, 255, 255),
+            fill=(248, 250, 252, 255),  # Off-white dịu mắt, chống optical halation
             stroke_width=stroke_width,
-            stroke_fill=(0, 0, 0, 85),
+            stroke_fill=(8, 12, 20, 215),  # Viền đen đậm nét, sắc sảo
         )
         curr_y += h + line_spacing
 
@@ -188,9 +203,9 @@ def create_quote_overlay(
             (sig_x, curr_y),
             signature,
             font=sig_font,
-            fill=(255, 255, 255, 210),
+            fill=(241, 245, 249, 215),
             stroke_width=max(0, stroke_width - 1),
-            stroke_fill=(0, 0, 0, 85),
+            stroke_fill=(8, 12, 20, 190),
         )
 
     return img
