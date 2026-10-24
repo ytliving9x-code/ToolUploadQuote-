@@ -17,8 +17,17 @@ try:
 except Exception:
     pass
 
+import importlib
+import inspect
+
 import streamlit as st
 from PIL import Image, ImageEnhance, ImageOps
+
+import modules.video_renderer
+try:
+    importlib.reload(modules.video_renderer)
+except Exception:
+    pass
 
 from modules.video_engine import probe_video_metadata
 from modules.video_renderer import create_quote_overlay, render_18s_video
@@ -814,20 +823,24 @@ with col_input:
 
             with st.spinner("Đang ghép typography chống loá và render video 18.0s chuẩn TikTok..."):
                 try:
-                    render_18s_video(
-                        image_path=bg_target,
-                        quote=st.session_state.quote_text,
-                        output_path=out_vid,
-                        duration=18.0,
-                        overlay_opacity=st.session_state.overlay_darkness / 100.0,
-                        signature=st.session_state.signature or "saigonbac",
-                        enable_gradient_scrim=st.session_state.enable_antiglare,
-                        scrim_max_alpha=active_cfg["scrim"],
-                        shadow_blur_radius=active_cfg["blur"],
-                        stroke_width=active_cfg["stroke"],
-                        font_path=active_font["path"],
-                        preserve_linebreaks=st.session_state.preserve_linebreaks,
-                    )
+                    render_args = {
+                        "image_path": bg_target,
+                        "quote": st.session_state.quote_text,
+                        "output_path": out_vid,
+                        "duration": 18.0,
+                        "overlay_opacity": st.session_state.overlay_darkness / 100.0,
+                        "signature": st.session_state.signature or "saigonbac",
+                        "enable_gradient_scrim": st.session_state.enable_antiglare,
+                        "scrim_max_alpha": active_cfg["scrim"],
+                        "shadow_blur_radius": active_cfg["blur"],
+                        "stroke_width": active_cfg["stroke"],
+                        "font_path": active_font["path"],
+                    }
+                    sig = inspect.signature(render_18s_video)
+                    if "preserve_linebreaks" in sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()):
+                        render_args["preserve_linebreaks"] = st.session_state.preserve_linebreaks
+
+                    render_18s_video(**render_args)
                     st.session_state.rendered_video = str(out_vid)
                     st.toast("Tạo video 18s hoàn tất thành công 100%!", icon="🎉")
                     st.rerun()
@@ -903,16 +916,20 @@ with col_preview:
                         FONT_PRESETS["☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)"],
                     )
 
-                    text_overlay = create_quote_overlay(
-                        quote=st.session_state.quote_text,
-                        signature=st.session_state.signature or "saigonbac",
-                        enable_gradient_scrim=st.session_state.enable_antiglare,
-                        scrim_max_alpha=active_cfg["scrim"],
-                        shadow_blur_radius=active_cfg["blur"],
-                        stroke_width=active_cfg["stroke"],
-                        font_path=active_font["path"],
-                        preserve_linebreaks=st.session_state.preserve_linebreaks,
-                    )
+                    overlay_args = {
+                        "quote": st.session_state.quote_text,
+                        "signature": st.session_state.signature or "saigonbac",
+                        "enable_gradient_scrim": st.session_state.enable_antiglare,
+                        "scrim_max_alpha": active_cfg["scrim"],
+                        "shadow_blur_radius": active_cfg["blur"],
+                        "stroke_width": active_cfg["stroke"],
+                        "font_path": active_font["path"],
+                    }
+                    overlay_sig = inspect.signature(create_quote_overlay)
+                    if "preserve_linebreaks" in overlay_sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in overlay_sig.parameters.values()):
+                        overlay_args["preserve_linebreaks"] = st.session_state.preserve_linebreaks
+
+                    text_overlay = create_quote_overlay(**overlay_args)
                     preview_composite = Image.alpha_composite(bg_ready, text_overlay)
                     st.image(preview_composite.convert("RGB"), use_container_width=True)
             except Exception as ex:

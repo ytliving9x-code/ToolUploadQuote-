@@ -56,6 +56,7 @@ def wrap_quote_to_lines(
     font: ImageFont.FreeTypeFont,
     max_width: int = 880,
     preserve_linebreaks: bool = True,
+    **kwargs: Any,
 ) -> List[str]:
     """
     Tự động ngắt dòng văn bản tiếng Việt an toàn theo chiều rộng màn hình.
@@ -135,6 +136,7 @@ def create_quote_overlay(
     stroke_width: int = 1,
     font_path: Optional[Path | str] = None,
     preserve_linebreaks: bool = True,
+    **kwargs: Any,
 ) -> Image.Image:
     """
     Tạo lớp ảnh chữ trong suốt RGBA (1080x1920) chứa câu quote và chữ ký nhỏ.
@@ -284,6 +286,7 @@ def render_18s_video(
     cinematic_vignette: bool = True,
     font_path: Optional[Path | str] = None,
     preserve_linebreaks: bool = True,
+    **kwargs: Any,
 ) -> Path:
     """
     Render video TikTok chuẩn 18 giây, tỷ lệ 9:16 (1080x1920), không có âm thanh.
