@@ -542,6 +542,8 @@ if "font_preset" not in st.session_state:
     st.session_state.font_preset = "☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)"
 if "overlay_darkness" not in st.session_state:
     st.session_state.overlay_darkness = 50
+if "preserve_linebreaks" not in st.session_state:
+    st.session_state.preserve_linebreaks = True
 
 
 # ==============================================================================
@@ -622,6 +624,25 @@ with col_input:
                 """,
                 unsafe_allow_html=True,
             )
+
+        st.markdown("<b style='color: #38BDF8; font-size: 0.9rem; margin-top: 0.5rem; display: block;'>📐 Kiểu xuống dòng / ngắt đoạn:</b>", unsafe_allow_html=True)
+        wrap_options = [
+            "↵ Giữ ngắt dòng theo phím Enter (Mặc định - đúng từng câu/đoạn bạn gõ)",
+            "🔄 Tự động nối liền & dàn đều (Chế độ cũ - dồn câu tự động)",
+        ]
+        chosen_wrap = st.radio(
+            "Kiểu ngắt dòng chữ:",
+            options=wrap_options,
+            index=0 if st.session_state.preserve_linebreaks else 1,
+            key="rb_wrap_mode",
+            label_visibility="collapsed",
+            help="Giữ nguyên dấu Enter xuống dòng của bạn, hoặc tự động nối liền thành một đoạn văn như trước.",
+        )
+        new_preserve = (chosen_wrap == wrap_options[0])
+        if new_preserve != st.session_state.preserve_linebreaks:
+            st.session_state.preserve_linebreaks = new_preserve
+            st.session_state.rendered_video = None
+            st.rerun()
 
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -805,6 +826,7 @@ with col_input:
                         shadow_blur_radius=active_cfg["blur"],
                         stroke_width=active_cfg["stroke"],
                         font_path=active_font["path"],
+                        preserve_linebreaks=st.session_state.preserve_linebreaks,
                     )
                     st.session_state.rendered_video = str(out_vid)
                     st.toast("Tạo video 18s hoàn tất thành công 100%!", icon="🎉")
@@ -889,6 +911,7 @@ with col_preview:
                         shadow_blur_radius=active_cfg["blur"],
                         stroke_width=active_cfg["stroke"],
                         font_path=active_font["path"],
+                        preserve_linebreaks=st.session_state.preserve_linebreaks,
                     )
                     preview_composite = Image.alpha_composite(bg_ready, text_overlay)
                     st.image(preview_composite.convert("RGB"), use_container_width=True)

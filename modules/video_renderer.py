@@ -51,32 +51,70 @@ def get_vietnamese_font(font_size: int = 54, font_path: Optional[Path | str] = N
         return ImageFont.load_default()
 
 
-def wrap_quote_to_lines(text: str, font: ImageFont.FreeTypeFont, max_width: int = 880) -> List[str]:
+def wrap_quote_to_lines(
+    text: str,
+    font: ImageFont.FreeTypeFont,
+    max_width: int = 880,
+    preserve_linebreaks: bool = True,
+) -> List[str]:
     """
-    Tự động ngắt dòng văn bản tiếng Việt thành 2 - 3 vế câu rõ ràng,
-    không để từ bị đứt gãy và không vượt quá chiều rộng an toàn 880px (1080 - 2*100).
+    Tự động ngắt dòng văn bản tiếng Việt an toàn theo chiều rộng màn hình.
+
+    Args:
+        text: Nội dung câu trích dẫn.
+        font: Font chữ đang dùng để đo kích thước.
+        max_width: Chiều rộng tối đa cho phép của vùng chữ (pixels).
+        preserve_linebreaks:
+            - True: Giữ nguyên các dấu Enter/xuống dòng do người dùng gõ, đồng thời
+              vẫn tự động bẻ dòng nếu 1 câu quá dài vượt quá max_width.
+            - False (chế độ cũ): Tự động dồn toàn bộ câu thành 1 đoạn văn liên tục
+              và dàn đều dòng theo max_width.
+
+    Returns:
+        Danh sách các dòng text đã ngắt.
     """
-    clean_text = " ".join(text.strip().split())
-    words = clean_text.split(" ")
+    dummy_img = Image.new("RGBA", (1, 1))
+    draw = ImageDraw.Draw(dummy_img)
+
+    def _wrap_single_segment(segment: str) -> List[str]:
+        words = segment.strip().split()
+        if not words:
+            return []
+        seg_lines: List[str] = []
+        curr = ""
+        for word in words:
+            test_line = f"{curr} {word}".strip() if curr else word
+            bbox = draw.textbbox((0, 0), test_line, font=font)
+            line_w = bbox[2] - bbox[0]
+            if line_w <= max_width:
+                curr = test_line
+            else:
+                if curr:
+                    seg_lines.append(curr)
+                curr = word
+        if curr:
+            seg_lines.append(curr)
+        return seg_lines
+
+    if not preserve_linebreaks:
+        clean_text = " ".join(text.strip().split())
+        return _wrap_single_segment(clean_text)
+
+    # Chế độ giữ nguyên ngắt dòng theo phím Enter
+    raw_lines = text.strip().splitlines()
     lines: List[str] = []
-    current_line = ""
+    for raw in raw_lines:
+        s = raw.strip()
+        if not s:
+            # Dòng trống phân đoạn (tránh nhiều dòng trống liền nhau)
+            if lines and lines[-1] != "":
+                lines.append("")
+            continue
+        wrapped = _wrap_single_segment(s)
+        lines.extend(wrapped)
 
-    for word in words:
-        test_line = f"{current_line} {word}".strip() if current_line else word
-        dummy_img = Image.new("RGBA", (1, 1))
-        draw = ImageDraw.Draw(dummy_img)
-        bbox = draw.textbbox((0, 0), test_line, font=font)
-        line_w = bbox[2] - bbox[0]
-
-        if line_w <= max_width:
-            current_line = test_line
-        else:
-            if current_line:
-                lines.append(current_line)
-            current_line = word
-
-    if current_line:
-        lines.append(current_line)
+    while lines and lines[-1] == "":
+        lines.pop()
 
     return lines
 
@@ -96,6 +134,7 @@ def create_quote_overlay(
     shadow_blur_radius: float = 5.0,
     stroke_width: int = 1,
     font_path: Optional[Path | str] = None,
+    preserve_linebreaks: bool = True,
 ) -> Image.Image:
     """
     Tạo lớp ảnh chữ trong suốt RGBA (1080x1920) chứa câu quote và chữ ký nhỏ.
@@ -109,12 +148,15 @@ def create_quote_overlay(
     max_text_width = canvas_size[0] - margin_left - margin_right
 
     font = get_vietnamese_font(font_size, font_path=font_path)
-    lines = wrap_quote_to_lines(quote, font, max_width=max_text_width)
+    lines = wrap_quote_to_lines(quote, font, max_width=max_text_width, preserve_linebreaks=preserve_linebreaks)
 
-    # Nếu câu dài hơn 3 dòng, tự động giảm nhẹ font size
-    if len(lines) > 3 and font_size > 36:
+    # Nếu câu dài nhiều dòng, tự động điều chỉnh font size để vừa vặn khung hình
+    if len(lines) > 5 and font_size > 34:
+        font = get_vietnamese_font(max(32, font_size - 6), font_path=font_path)
+        lines = wrap_quote_to_lines(quote, font, max_width=max_text_width, preserve_linebreaks=preserve_linebreaks)
+    elif len(lines) > 3 and font_size > 36:
         font = get_vietnamese_font(font_size - 4, font_path=font_path)
-        lines = wrap_quote_to_lines(quote, font, max_width=max_text_width)
+        lines = wrap_quote_to_lines(quote, font, max_width=max_text_width, preserve_linebreaks=preserve_linebreaks)
 
     # Tính toán kích thước từng dòng
     line_metrics = []
@@ -123,11 +165,16 @@ def create_quote_overlay(
     draw_dummy = ImageDraw.Draw(dummy_img)
 
     for line in lines:
-        bbox = draw_dummy.textbbox((0, 0), line, font=font)
-        w = bbox[2] - bbox[0]
-        h = bbox[3] - bbox[1]
-        line_metrics.append((line, w, h))
-        total_text_h += h
+        if not line:
+            blank_h = int(font.size * 0.4)
+            line_metrics.append(("", 0, blank_h))
+            total_text_h += blank_h
+        else:
+            bbox = draw_dummy.textbbox((0, 0), line, font=font)
+            w = bbox[2] - bbox[0]
+            h = bbox[3] - bbox[1]
+            line_metrics.append((line, w, h))
+            total_text_h += h
 
     total_text_h += (len(lines) - 1) * line_spacing
 
@@ -160,7 +207,8 @@ def create_quote_overlay(
     t_draw = ImageDraw.Draw(tight_layer)
     curr_y = start_y
     for line, w, h in line_metrics:
-        t_draw.text((start_x + 2, curr_y + 2), line, font=font, fill=(0, 0, 0, 245))
+        if line:
+            t_draw.text((start_x + 2, curr_y + 2), line, font=font, fill=(0, 0, 0, 245))
         curr_y += h + line_spacing
 
     if signature and sig_font:
@@ -178,7 +226,8 @@ def create_quote_overlay(
         s_draw = ImageDraw.Draw(soft_layer)
         curr_y = start_y
         for line, w, h in line_metrics:
-            s_draw.text((start_x + 1, curr_y + 4), line, font=font, fill=(0, 0, 0, 185))
+            if line:
+                s_draw.text((start_x + 1, curr_y + 4), line, font=font, fill=(0, 0, 0, 185))
             curr_y += h + line_spacing
 
         if signature and sig_font:
@@ -192,14 +241,15 @@ def create_quote_overlay(
     draw = ImageDraw.Draw(img)
     curr_y = start_y
     for line, w, h in line_metrics:
-        draw.text(
-            (start_x, curr_y),
-            line,
-            font=font,
-            fill=(248, 250, 252, 255),  # Off-white dịu mắt, chống optical halation
-            stroke_width=stroke_width,
-            stroke_fill=(8, 12, 20, 215),  # Viền đen đậm nét, sắc sảo
-        )
+        if line:
+            draw.text(
+                (start_x, curr_y),
+                line,
+                font=font,
+                fill=(248, 250, 252, 255),  # Off-white dịu mắt, chống optical halation
+                stroke_width=stroke_width,
+                stroke_fill=(8, 12, 20, 215),  # Viền đen đậm nét, sắc sảo
+            )
         curr_y += h + line_spacing
 
     # 4. Vẽ chữ ký nhỏ bên dưới câu quote
@@ -233,6 +283,7 @@ def render_18s_video(
     motion_type: str = "cinematic_drift",
     cinematic_vignette: bool = True,
     font_path: Optional[Path | str] = None,
+    preserve_linebreaks: bool = True,
 ) -> Path:
     """
     Render video TikTok chuẩn 18 giây, tỷ lệ 9:16 (1080x1920), không có âm thanh.
@@ -248,6 +299,7 @@ def render_18s_video(
         scrim_max_alpha: Độ sâu tối đa của lớp gradient scrim (0-255).
         shadow_blur_radius: Độ mờ của quầng bóng chữ (Gaussian blur).
         stroke_width: Nét viền siêu mảnh chống loá (1px).
+        preserve_linebreaks: True giữ ngắt dòng Enter, False dồn đoạn văn tự động.
 
     Returns:
         Path dẫn tới video thành phẩm.
@@ -268,6 +320,7 @@ def render_18s_video(
         shadow_blur_radius=shadow_blur_radius,
         stroke_width=stroke_width,
         font_path=font_path,
+        preserve_linebreaks=preserve_linebreaks,
     )
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_png:
         tmp_png_path = Path(tmp_png.name)
@@ -344,6 +397,7 @@ def render_video_from_footage(
     duration: Optional[float] = None,
     overlay_opacity: float = 0.25,
     signature: Optional[str] = "saigonbac",
+    preserve_linebreaks: bool = True,
 ) -> Path:
     """
     Render video TikTok hoàn chỉnh từ footage b-roll và câu quote typography:
@@ -373,7 +427,7 @@ def render_video_from_footage(
         actual_duration = max(6.0, min(orig_dur if orig_dur > 0 else 10.0, 60.0))
 
     # 2. Tạo ảnh chữ PNG tạm thời kèm chữ ký
-    overlay_img = create_quote_overlay(quote=quote, signature=signature)
+    overlay_img = create_quote_overlay(quote=quote, signature=signature, preserve_linebreaks=preserve_linebreaks)
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_png:
         tmp_png_path = Path(tmp_png.name)
     overlay_img.save(tmp_png_path, format="PNG")
