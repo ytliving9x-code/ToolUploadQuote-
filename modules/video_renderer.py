@@ -8,6 +8,7 @@ Module 3: Render Video Từ Ảnh & Chữ (video_renderer.py)
 - Tối ưu bằng FFmpeg nhanh gấp 10 lần MoviePy và hoàn toàn ổn định trên Windows.
 """
 
+import gc
 import json
 import logging
 import os
@@ -361,6 +362,7 @@ def render_18s_video(
     cmd = [
         FFMPEG_EXE,
         "-y",
+        "-threads", "2",
         "-loop", "1",
         "-t", str(duration),
         "-i", str(img_file),
@@ -369,8 +371,8 @@ def render_18s_video(
         "-filter_complex", filter_complex,
         "-map", "[outv]",
         "-c:v", "libx264",
-        "-preset", "slow",
-        "-crf", "16",  # Nâng cao chất lượng nén lên gần lossless (sắc nét tuyệt đối)
+        "-preset", "faster",
+        "-crf", "18",  # Tối ưu cân bằng sắc nét chuẩn TikTok & tốc độ render siêu tốc
         "-pix_fmt", "yuv420p",
         "-r", "30",
         "-t", str(duration),
@@ -388,6 +390,11 @@ def render_18s_video(
     finally:
         if tmp_png_path.exists():
             tmp_png_path.unlink()
+        try:
+            del overlay_img
+        except Exception:
+            pass
+        gc.collect()
 
     logger.info(f"Render video 18s thành công: {out_file} ({out_file.stat().st_size} bytes)")
     return out_file
@@ -453,14 +460,15 @@ def render_video_from_footage(
     cmd = [
         FFMPEG_EXE,
         "-y",
+        "-threads", "2",
         "-i", str(vid_file),
         "-loop", "1",
         "-i", str(tmp_png_path),
         "-filter_complex", filter_complex,
         "-map", "[outv]",
         "-c:v", "libx264",
-        "-preset", "slow",
-        "-crf", "17",
+        "-preset", "faster",
+        "-crf", "18",
         "-pix_fmt", "yuv420p",
         "-r", "30",
         "-t", str(actual_duration),
@@ -477,6 +485,11 @@ def render_video_from_footage(
     finally:
         if tmp_png_path.exists():
             tmp_png_path.unlink()
+        try:
+            del overlay_img
+        except Exception:
+            pass
+        gc.collect()
 
     logger.info(f"Render video footage thành công: {out_file} ({out_file.stat().st_size} bytes)")
     return out_file

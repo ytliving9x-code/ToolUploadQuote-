@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import gc
 import json
 import logging
 import os
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -42,6 +44,15 @@ st.set_page_config(
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("QuoteStudio")
+
+
+@st.cache_resource
+def get_render_lock() -> threading.Lock:
+    """Lock toàn cục ngăn ngừa chạy đồng thời nhiều tiến trình FFmpeg làm tràn RAM server."""
+    return threading.Lock()
+
+
+RENDER_LOCK = get_render_lock()
 
 # ==============================================================================
 # ULTRA-PREMIUM AESTHETIC CSS (MOBILE-FIRST OPTIMIZED & GLASSMORPHISM)
@@ -804,48 +815,54 @@ with col_input:
             st.error("Chưa có ảnh nền! Vui lòng tải một file ảnh từ máy tính ở Bước 2.")
         elif not st.session_state.quote_text.strip():
             st.error("Câu quote đang trống! Vui lòng nhập quote ở Bước 1.")
+        elif not RENDER_LOCK.acquire(blocking=False):
+            st.warning("⚠️ Máy chủ đang xử lý render một video khác! Vui lòng chờ 15-20 giây để hoàn tất, tránh bấm liên tục gây quá tải bộ nhớ.", icon="⏳")
         else:
-            out_folder = Path("output/saigonbac")
-            out_folder.mkdir(parents=True, exist_ok=True)
-            timestamp = int(time.time())
-            out_vid = out_folder / f"tiktok_video_{timestamp}.mp4"
-            out_txt = out_folder / f"tiktok_video_{timestamp}.txt"
-
-            # Tự động lưu kèm file .txt chứa câu quote trên video & hashtag viral
-            sig_tag = (st.session_state.signature or "saigonbac").replace("@", "").strip()
-            trending_hashtags = f"#{sig_tag} #tamtrang #suyngam #trietlycuocsong #cuocsong #xuhuong #fyp #viral #quotesvn #chill"
-            full_caption = f"{st.session_state.quote_text.strip()}\n\n{trending_hashtags}"
             try:
-                with open(out_txt, "w", encoding="utf-8") as f_txt:
-                    f_txt.write(full_caption)
-            except Exception as txt_err:
-                logger.warning(f"Lỗi ghi file txt caption: {txt_err}")
+                out_folder = Path("output/saigonbac")
+                out_folder.mkdir(parents=True, exist_ok=True)
+                timestamp = int(time.time())
+                out_vid = out_folder / f"tiktok_video_{timestamp}.mp4"
+                out_txt = out_folder / f"tiktok_video_{timestamp}.txt"
 
-            with st.spinner("Đang ghép typography chống loá và render video 18.0s chuẩn TikTok..."):
+                # Tự động lưu kèm file .txt chứa câu quote trên video & hashtag viral
+                sig_tag = (st.session_state.signature or "saigonbac").replace("@", "").strip()
+                trending_hashtags = f"#{sig_tag} #tamtrang #suyngam #trietlycuocsong #cuocsong #xuhuong #fyp #viral #quotesvn #chill"
+                full_caption = f"{st.session_state.quote_text.strip()}\n\n{trending_hashtags}"
                 try:
-                    render_args = {
-                        "image_path": bg_target,
-                        "quote": st.session_state.quote_text,
-                        "output_path": out_vid,
-                        "duration": 18.0,
-                        "overlay_opacity": st.session_state.overlay_darkness / 100.0,
-                        "signature": st.session_state.signature or "saigonbac",
-                        "enable_gradient_scrim": st.session_state.enable_antiglare,
-                        "scrim_max_alpha": active_cfg["scrim"],
-                        "shadow_blur_radius": active_cfg["blur"],
-                        "stroke_width": active_cfg["stroke"],
-                        "font_path": active_font["path"],
-                    }
-                    sig = inspect.signature(render_18s_video)
-                    if "preserve_linebreaks" in sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()):
-                        render_args["preserve_linebreaks"] = st.session_state.preserve_linebreaks
+                    with open(out_txt, "w", encoding="utf-8") as f_txt:
+                        f_txt.write(full_caption)
+                except Exception as txt_err:
+                    logger.warning(f"Lỗi ghi file txt caption: {txt_err}")
 
-                    render_18s_video(**render_args)
-                    st.session_state.rendered_video = str(out_vid)
-                    st.toast("Tạo video 18s hoàn tất thành công 100%!", icon="🎉")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Lỗi khi render video: {e}")
+                with st.spinner("Đang ghép typography chống loá và render video 18.0s chuẩn TikTok..."):
+                    try:
+                        render_args = {
+                            "image_path": bg_target,
+                            "quote": st.session_state.quote_text,
+                            "output_path": out_vid,
+                            "duration": 18.0,
+                            "overlay_opacity": st.session_state.overlay_darkness / 100.0,
+                            "signature": st.session_state.signature or "saigonbac",
+                            "enable_gradient_scrim": st.session_state.enable_antiglare,
+                            "scrim_max_alpha": active_cfg["scrim"],
+                            "shadow_blur_radius": active_cfg["blur"],
+                            "stroke_width": active_cfg["stroke"],
+                            "font_path": active_font["path"],
+                        }
+                        sig = inspect.signature(render_18s_video)
+                        if "preserve_linebreaks" in sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()):
+                            render_args["preserve_linebreaks"] = st.session_state.preserve_linebreaks
+
+                        render_18s_video(**render_args)
+                        st.session_state.rendered_video = str(out_vid)
+                        st.toast("Tạo video 18s hoàn tất thành công 100%!", icon="🎉")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Lỗi khi render video: {e}")
+            finally:
+                RENDER_LOCK.release()
+                gc.collect()
 
 
 # ==============================================================================
