@@ -564,6 +564,10 @@ if "overlay_darkness" not in st.session_state:
     st.session_state.overlay_darkness = 50
 if "preserve_linebreaks" not in st.session_state:
     st.session_state.preserve_linebreaks = True
+if "text_align" not in st.session_state:
+    st.session_state.text_align = "center"
+if "quote_font_size" not in st.session_state:
+    st.session_state.quote_font_size = 42
 
 
 # ==============================================================================
@@ -723,7 +727,48 @@ with col_input:
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ---------------- TUỲ CHỌN HIỂN THỊ, ĐỘ TỐI NỀN, PHÔNG CHỮ & CHỐNG LOÁ ----------------
-    with st.expander("⚙️ Độ tối nền, Phông chữ & Chữ ký video", expanded=True):
+    with st.expander("⚙️ Độ tối nền, Căn lề, Cỡ chữ & Phông chữ video", expanded=True):
+        col_align, col_size = st.columns([1.1, 1.0])
+        with col_align:
+            st.markdown("<b style='color: #38BDF8; font-size: 0.9rem;'>🎯 Căn lề chữ (Alignment):</b>", unsafe_allow_html=True)
+            align_map = {
+                "🎯 Trung tâm (Mặc định)": "center",
+                "➡️ Sang phải": "right",
+                "⬅️ Sang trái": "left",
+            }
+            align_labels = list(align_map.keys())
+            cur_label = next((k for k, v in align_map.items() if v == st.session_state.text_align), align_labels[0])
+            sel_label = st.selectbox(
+                "Chọn vị trí căn lề:",
+                options=align_labels,
+                index=align_labels.index(cur_label),
+                key="sb_align_select",
+                label_visibility="collapsed",
+            )
+            chosen_align = align_map[sel_label]
+            if chosen_align != st.session_state.text_align:
+                st.session_state.text_align = chosen_align
+                st.session_state.rendered_video = None
+
+        with col_size:
+            st.markdown("<b style='color: #38BDF8; font-size: 0.9rem;'>📏 Cỡ chữ (Font size):</b>", unsafe_allow_html=True)
+            sel_font_size = st.slider(
+                "Cỡ chữ câu quote:",
+                min_value=28,
+                max_value=72,
+                value=int(st.session_state.quote_font_size),
+                step=2,
+                format="%d px",
+                key="slider_quote_font_size",
+                label_visibility="collapsed",
+                help="Cỡ chữ hiển thị của câu quote. Mặc định là 42px.",
+            )
+            if sel_font_size != st.session_state.quote_font_size:
+                st.session_state.quote_font_size = sel_font_size
+                st.session_state.rendered_video = None
+
+        st.caption(f"💡 Đang chọn: Căn **{sel_label}**, cỡ chữ **{st.session_state.quote_font_size}px**")
+
         st.markdown("<b style='color: #38BDF8; font-size: 0.92rem;'>🌙 Độ tối hình nền (Dark Overlay):</b>", unsafe_allow_html=True)
         overlay_val = st.slider(
             "Mức độ phủ tối hình nền:",
@@ -849,6 +894,8 @@ with col_input:
                             "shadow_blur_radius": active_cfg["blur"],
                             "stroke_width": active_cfg["stroke"],
                             "font_path": active_font["path"],
+                            "text_align": st.session_state.text_align,
+                            "font_size": st.session_state.quote_font_size,
                         }
                         sig = inspect.signature(render_18s_video)
                         if "preserve_linebreaks" in sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()):
@@ -941,6 +988,8 @@ with col_preview:
                         "shadow_blur_radius": active_cfg["blur"],
                         "stroke_width": active_cfg["stroke"],
                         "font_path": active_font["path"],
+                        "text_align": st.session_state.text_align,
+                        "font_size": st.session_state.quote_font_size,
                     }
                     overlay_sig = inspect.signature(create_quote_overlay)
                     if "preserve_linebreaks" in overlay_sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in overlay_sig.parameters.values()):

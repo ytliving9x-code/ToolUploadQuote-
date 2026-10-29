@@ -137,6 +137,7 @@ def create_quote_overlay(
     stroke_width: int = 1,
     font_path: Optional[Path | str] = None,
     preserve_linebreaks: bool = True,
+    text_align: str = "center",  # "center" (mặc định), "right", "left"
     **kwargs: Any,
 ) -> Image.Image:
     """
@@ -148,7 +149,12 @@ def create_quote_overlay(
     """
     width, height = canvas_size
     img = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
-    max_text_width = canvas_size[0] - margin_left - margin_right
+
+    if text_align == "center":
+        safe_margin = max(margin_left, 110)
+        max_text_width = canvas_size[0] - 2 * safe_margin
+    else:
+        max_text_width = canvas_size[0] - margin_left - margin_right
 
     font = get_vietnamese_font(font_size, font_path=font_path)
     lines = wrap_quote_to_lines(quote, font, max_width=max_text_width, preserve_linebreaks=preserve_linebreaks)
@@ -193,7 +199,14 @@ def create_quote_overlay(
 
     # Vị trí Y: đặt ở góc dưới (cách đáy màn hình khoảng margin_bottom px)
     start_y = canvas_size[1] - margin_bottom - total_text_h
-    start_x = margin_left
+
+    def get_line_x(w: int) -> int:
+        if text_align == "center":
+            return (canvas_size[0] - w) // 2
+        elif text_align == "right":
+            return (canvas_size[0] - margin_right) - w
+        else:
+            return margin_left
 
     # 1. Lớp Gradient Scrim chuyển tối êm ái ở khu vực chữ (chống loá nền sáng)
     if enable_gradient_scrim and scrim_max_alpha > 0:
@@ -204,6 +217,17 @@ def create_quote_overlay(
             alpha = int(scrim_max_alpha * (progress ** 1.25))
             scrim_draw.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
 
+    # Tọa độ X của chữ ký
+    sig_x = 0
+    if signature and sig_font:
+        sig_w = sig_bbox[2] - sig_bbox[0]
+        if text_align == "center":
+            sig_x = (canvas_size[0] - sig_w) // 2
+        elif text_align == "right":
+            sig_x = (canvas_size[0] - margin_right) - sig_w
+        else:
+            sig_x = (canvas_size[0] - margin_right) - sig_w
+
     # 2. ĐỔ BÓNG KÉP ĐA TẦNG (DUAL-LAYER CINEMA SHADOW)
     # Lớp 2a: Tight Shadow (bóng sát chân chữ tạo độ sắc cạnh, triệt tiêu loá hoàn toàn)
     tight_layer = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
@@ -211,13 +235,12 @@ def create_quote_overlay(
     curr_y = start_y
     for line, w, h in line_metrics:
         if line:
-            t_draw.text((start_x + 2, curr_y + 2), line, font=font, fill=(0, 0, 0, 245))
+            lx = get_line_x(w)
+            t_draw.text((lx + 2, curr_y + 2), line, font=font, fill=(0, 0, 0, 245))
         curr_y += h + line_spacing
 
     if signature and sig_font:
         curr_y += (sig_spacing - line_spacing) if lines else 0
-        sig_w = sig_bbox[2] - sig_bbox[0]
-        sig_x = (canvas_size[0] - margin_right) - sig_w
         t_draw.text((sig_x + 2, curr_y + 2), signature, font=sig_font, fill=(0, 0, 0, 220))
 
     blurred_tight = tight_layer.filter(ImageFilter.GaussianBlur(radius=1.2))
@@ -230,7 +253,8 @@ def create_quote_overlay(
         curr_y = start_y
         for line, w, h in line_metrics:
             if line:
-                s_draw.text((start_x + 1, curr_y + 4), line, font=font, fill=(0, 0, 0, 185))
+                lx = get_line_x(w)
+                s_draw.text((lx + 1, curr_y + 4), line, font=font, fill=(0, 0, 0, 185))
             curr_y += h + line_spacing
 
         if signature and sig_font:
@@ -245,8 +269,9 @@ def create_quote_overlay(
     curr_y = start_y
     for line, w, h in line_metrics:
         if line:
+            lx = get_line_x(w)
             draw.text(
-                (start_x, curr_y),
+                (lx, curr_y),
                 line,
                 font=font,
                 fill=(248, 250, 252, 255),  # Off-white dịu mắt, chống optical halation
@@ -258,8 +283,6 @@ def create_quote_overlay(
     # 4. Vẽ chữ ký nhỏ bên dưới câu quote
     if signature and sig_font:
         curr_y += (sig_spacing - line_spacing) if lines else 0
-        sig_w = sig_bbox[2] - sig_bbox[0]
-        sig_x = (canvas_size[0] - margin_right) - sig_w
         draw.text(
             (sig_x, curr_y),
             signature,
@@ -287,6 +310,8 @@ def render_18s_video(
     cinematic_vignette: bool = True,
     font_path: Optional[Path | str] = None,
     preserve_linebreaks: bool = True,
+    text_align: str = "center",
+    font_size: int = 42,
     **kwargs: Any,
 ) -> Path:
     """
@@ -325,6 +350,8 @@ def render_18s_video(
         stroke_width=stroke_width,
         font_path=font_path,
         preserve_linebreaks=preserve_linebreaks,
+        text_align=text_align,
+        font_size=font_size,
     )
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_png:
         tmp_png_path = Path(tmp_png.name)
