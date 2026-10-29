@@ -732,9 +732,9 @@ with col_input:
         with col_align:
             st.markdown("<b style='color: #38BDF8; font-size: 0.9rem;'>🎯 Căn lề chữ (Alignment):</b>", unsafe_allow_html=True)
             align_map = {
-                "🎯 Trung tâm (Mặc định)": "center",
-                "➡️ Sang phải": "right",
-                "⬅️ Sang trái": "left",
+                "🎯 Trung tâm khung hình (Mặc định)": "center",
+                "➡️ Sang phải (Phía dưới)": "right",
+                "⬅️ Sang trái (Phía dưới)": "left",
             }
             align_labels = list(align_map.keys())
             cur_label = next((k for k, v in align_map.items() if v == st.session_state.text_align), align_labels[0])

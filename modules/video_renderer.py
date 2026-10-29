@@ -197,8 +197,13 @@ def create_quote_overlay(
         sig_h = sig_bbox[3] - sig_bbox[1]
         total_text_h += sig_spacing + sig_h
 
-    # Vị trí Y: đặt ở góc dưới (cách đáy màn hình khoảng margin_bottom px)
-    start_y = canvas_size[1] - margin_bottom - total_text_h
+    # Vị trí Y:
+    if text_align == "center":
+        # Trung tâm khung hình (cả chiều ngang lẫn chiều dọc chính giữa màn hình)
+        start_y = (canvas_size[1] - total_text_h) // 2
+    else:
+        # Đặt ở góc dưới (cách đáy màn hình khoảng margin_bottom px)
+        start_y = canvas_size[1] - margin_bottom - total_text_h
 
     def get_line_x(w: int) -> int:
         if text_align == "center":
@@ -210,12 +215,26 @@ def create_quote_overlay(
 
     # 1. Lớp Gradient Scrim chuyển tối êm ái ở khu vực chữ (chống loá nền sáng)
     if enable_gradient_scrim and scrim_max_alpha > 0:
-        scrim_start_y = max(0, start_y - 220)
-        scrim_draw = ImageDraw.Draw(img)
-        for y in range(scrim_start_y, height):
-            progress = (y - scrim_start_y) / (height - scrim_start_y)
-            alpha = int(scrim_max_alpha * (progress ** 1.25))
-            scrim_draw.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
+        if text_align == "center":
+            # Gradient tối êm dịu tập trung bao quanh khu vực chữ trung tâm khung hình
+            scrim_top = max(0, start_y - 180)
+            scrim_bottom = min(height, start_y + total_text_h + 180)
+            scrim_center_y = start_y + total_text_h // 2
+            half_span = max(1.0, (scrim_bottom - scrim_top) / 2.0)
+            scrim_draw = ImageDraw.Draw(img)
+            for y in range(scrim_top, scrim_bottom):
+                dist = abs(y - scrim_center_y) / half_span
+                alpha = int(scrim_max_alpha * 0.85 * max(0.0, 1.0 - (dist ** 1.35)))
+                if alpha > 0:
+                    scrim_draw.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
+        else:
+            # Lớp Bottom Gradient Scrim chuyển tối ở phần đáy màn hình
+            scrim_start_y = max(0, start_y - 220)
+            scrim_draw = ImageDraw.Draw(img)
+            for y in range(scrim_start_y, height):
+                progress = (y - scrim_start_y) / (height - scrim_start_y)
+                alpha = int(scrim_max_alpha * (progress ** 1.25))
+                scrim_draw.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
 
     # Tọa độ X của chữ ký
     sig_x = 0
