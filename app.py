@@ -698,7 +698,8 @@ with col_input:
                     file_ext = Path(up_file.name).suffix.lower() or ".jpg"
                     unique_bg_path = temp_dir / f"bg_{int(time.time() * 1000)}{file_ext}"
                     with open(unique_bg_path, "wb") as f_out:
-                        f_out.write(up_file.getbuffer())
+                        shutil.copyfileobj(up_file, f_out)
+                    gc.collect()
 
                     video_exts = {".mp4", ".mov", ".webm", ".avi", ".mkv"}
                     if file_ext in video_exts:

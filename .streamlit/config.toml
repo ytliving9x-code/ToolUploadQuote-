@@ -6,3 +6,4 @@ showErrorDetails = "full"
 headless = true
 enableCORS = false
 enableXsrfProtection = false
+maxUploadSize = 1024
