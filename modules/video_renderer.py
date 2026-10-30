@@ -59,6 +59,105 @@ def extract_video_frame(video_path: Path | str, timestamp_sec: float = 1.0) -> P
     return out_frame
 
 
+def determine_media_duration(media_path: Path | str) -> float:
+    """
+    Quy tắc thời lượng video/ảnh:
+    - Nếu là hình ảnh (jpg, png, webp, ...): Cố định 10.0 giây
+    - Nếu là video (mp4, mov, webm, avi, mkv):
+        + Lớn hơn 20 giây (> 20.0s): Tự động cắt về đúng 20.0s
+        + Nhỏ hơn hoặc bằng 20 giây (<= 20.0s): Giữ nguyên thời lượng gốc (round 2 chữ số)
+        + Fallback khi không probe được: 10.0s
+    """
+    p = Path(media_path)
+    if not p.exists():
+        return 10.0
+
+    video_exts = {".mp4", ".mov", ".webm", ".avi", ".mkv"}
+    if p.suffix.lower() in video_exts:
+        from modules.video_engine import probe_video_metadata
+        try:
+            meta = probe_video_metadata(p)
+            orig_dur = float(meta.get("duration", 0.0))
+            if orig_dur > 20.0:
+                return 20.0
+            elif orig_dur > 0:
+                return round(orig_dur, 2)
+            return 10.0
+        except Exception as e:
+            logger.warning(f"Lỗi probe metadata cho {p}: {e}")
+            return 10.0
+    return 10.0
+
+
+def get_media_duration_info(media_path: Path | str) -> Dict[str, Any]:
+    """
+    Trả về thông tin chi tiết về loại media, thời lượng gốc, thời lượng mục tiêu
+    và nhãn hiển thị trực quan cho giao diện người dùng.
+    """
+    p = Path(media_path)
+    if not p.exists():
+        return {
+            "is_video": False,
+            "orig_duration": 10.0,
+            "target_duration": 10.0,
+            "action": "image_fixed",
+            "badge_text": "📸 Ảnh nền: 10.0s (Hiệu ứng Ken Burns drift)",
+            "btn_suffix": "(10.0S)",
+        }
+
+    video_exts = {".mp4", ".mov", ".webm", ".avi", ".mkv"}
+    if p.suffix.lower() in video_exts:
+        from modules.video_engine import probe_video_metadata
+        try:
+            meta = probe_video_metadata(p)
+            orig_dur = float(meta.get("duration", 0.0))
+            if orig_dur > 20.0:
+                return {
+                    "is_video": True,
+                    "orig_duration": orig_dur,
+                    "target_duration": 20.0,
+                    "action": "video_trimmed",
+                    "badge_text": f"🎬 Video nền: Dài {orig_dur:.1f}s ➔ Tự động cắt về 20.0s",
+                    "btn_suffix": f"(20.0S - ĐÃ CẮT TỪ {orig_dur:.1f}S)",
+                }
+            elif orig_dur > 0:
+                target = round(orig_dur, 2)
+                return {
+                    "is_video": True,
+                    "orig_duration": orig_dur,
+                    "target_duration": target,
+                    "action": "video_kept",
+                    "badge_text": f"🎬 Video nền: Dài {orig_dur:.1f}s ➔ Giữ nguyên {orig_dur:.1f}s",
+                    "btn_suffix": f"({orig_dur:.1f}S - THEO VIDEO GỐC)",
+                }
+            else:
+                return {
+                    "is_video": True,
+                    "orig_duration": 10.0,
+                    "target_duration": 10.0,
+                    "action": "video_fallback",
+                    "badge_text": "🎬 Video nền: 10.0s (Mặc định)",
+                    "btn_suffix": "(10.0S)",
+                }
+        except Exception:
+            return {
+                "is_video": True,
+                "orig_duration": 10.0,
+                "target_duration": 10.0,
+                "action": "video_fallback",
+                "badge_text": "🎬 Video nền: 10.0s (Mặc định)",
+                "btn_suffix": "(10.0S)",
+            }
+    return {
+        "is_video": False,
+        "orig_duration": 10.0,
+        "target_duration": 10.0,
+        "action": "image_fixed",
+        "badge_text": "📸 Ảnh nền: 10.0s (Hiệu ứng Ken Burns drift)",
+        "btn_suffix": "(10.0S)",
+    }
+
+
 def get_vietnamese_font(font_size: int = 54, font_path: Optional[Path | str] = None) -> ImageFont.FreeTypeFont:
     """Tải font chữ tiếng Việt theo font_path hoặc Be Vietnam Pro / Montserrat dự phòng."""
     target = Path(font_path) if font_path else DEFAULT_FONT
@@ -478,7 +577,7 @@ def render_video_from_footage(
     footage_path: Path | str,
     quote: str,
     output_path: Path | str = Path("output/tiktok_video_ready.mp4"),
-    duration: Optional[float] = 10.0,
+    duration: Optional[float] = None,
     overlay_opacity: float = 0.50,
     signature: Optional[str] = "saigonbac",
     enable_gradient_scrim: bool = True,
@@ -506,7 +605,7 @@ def render_video_from_footage(
     out_file = Path(output_path)
     out_file.parent.mkdir(parents=True, exist_ok=True)
 
-    actual_duration = float(duration) if duration and duration > 0 else 10.0
+    actual_duration = float(duration) if (duration is not None and duration > 0) else determine_media_duration(vid_file)
 
     # 1. Đo độ dài footage để loop nếu cần
     from modules.video_engine import probe_video_metadata
@@ -591,7 +690,7 @@ def render_any_media_quote(
     media_path: Path | str,
     quote: str,
     output_path: Path | str = Path("output/tiktok_ready.mp4"),
-    duration: float = 10.0,
+    duration: Optional[float] = None,
     overlay_opacity: float = 0.50,
     signature: Optional[str] = "saigonbac",
     enable_gradient_scrim: bool = True,
@@ -608,6 +707,8 @@ def render_any_media_quote(
     Hàm tự động nhận diện định dạng ảnh tĩnh hay video để gọi hàm render phù hợp.
     """
     p = Path(media_path)
+    if duration is None or duration <= 0:
+        duration = determine_media_duration(p)
     video_exts = {".mp4", ".mov", ".webm", ".avi", ".mkv"}
     common_args = {
         "quote": quote,

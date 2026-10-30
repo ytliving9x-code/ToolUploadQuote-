@@ -33,7 +33,7 @@ except Exception:
     pass
 
 from modules.video_engine import probe_video_metadata
-from modules.video_renderer import create_quote_overlay, render_18s_video, render_any_media_quote, extract_video_frame
+from modules.video_renderer import create_quote_overlay, render_18s_video, render_any_media_quote, extract_video_frame, determine_media_duration, get_media_duration_info
 
 # Cấu hình giao diện Streamlit
 st.set_page_config(
@@ -735,6 +735,19 @@ with col_input:
                     st.session_state.rendered_video = None
                     st.rerun()
 
+            # Hiển thị thông tin nhận diện thời lượng động
+            if st.session_state.get("bg_image") and Path(st.session_state.bg_image).exists():
+                dur_info_b2 = get_media_duration_info(st.session_state.bg_image)
+                badge_bg = "rgba(56, 189, 248, 0.12)" if not dur_info_b2["is_video"] else "rgba(168, 85, 247, 0.15)"
+                badge_border = "#38BDF8" if not dur_info_b2["is_video"] else "#C084FC"
+                badge_text_color = "#7DD3FC" if not dur_info_b2["is_video"] else "#E9D5FF"
+                st.markdown(
+                    f"<div style='margin-top: 8px; padding: 7px 12px; background: {badge_bg}; border-left: 3px solid {badge_border}; border-radius: 6px; font-size: 0.85rem; color: {badge_text_color}; font-weight: 500;'>"
+                    f"{dur_info_b2['badge_text']}"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ---------------- TUỲ CHỌN HIỂN THỊ, ĐỘ TỐI NỀN, PHÔNG CHỮ & CHỐNG LOÁ ----------------
@@ -860,15 +873,23 @@ with col_input:
         FONT_PRESETS["☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)"],
     )
 
-    # ---------------- NÚT HÀNH ĐỘNG HERO ----------------
+    # ---------------- NÚT HÀNH ĐỘNG HERO (TỰ ĐỘNG THỜI LƯỢNG ĐỘNG) ----------------
+    if st.session_state.get("bg_image") and Path(st.session_state.bg_image).exists():
+        media_dur_info = get_media_duration_info(st.session_state.bg_image)
+        btn_label = f"✨ XUẤT VIDEO TIKTOK {media_dur_info['btn_suffix']} CHUẨN HD"
+        target_video_duration = media_dur_info["target_duration"]
+    else:
+        btn_label = "✨ XUẤT VIDEO TIKTOK (10.0S) CHUẨN HD"
+        target_video_duration = 10.0
+
     st.markdown('<div class="btn-render-hero">', unsafe_allow_html=True)
-    btn_generate = st.button("✨ XUẤT VIDEO TIKTOK 10S CHUẨN HD", type="primary", use_container_width=True)
+    btn_generate = st.button(btn_label, type="primary", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     if btn_generate:
         bg_target = st.session_state.bg_image
         if not bg_target or not Path(bg_target).exists():
-            st.error("Chưa có ảnh nền! Vui lòng tải một file ảnh từ máy tính ở Bước 2.")
+            st.error("Chưa có ảnh nền! Vui lòng tải một file ảnh hoặc video từ máy tính ở Bước 2.")
         elif not st.session_state.quote_text.strip():
             st.error("Câu quote đang trống! Vui lòng nhập quote ở Bước 1.")
         elif not RENDER_LOCK.acquire(blocking=False):
@@ -891,13 +912,13 @@ with col_input:
                 except Exception as txt_err:
                     logger.warning(f"Lỗi ghi file txt caption: {txt_err}")
 
-                with st.spinner("Đang ghép typography chống loá và render video 10.0s chuẩn TikTok..."):
+                with st.spinner(f"Đang ghép typography chống loá và render video {target_video_duration:.1f}s chuẩn TikTok..."):
                     try:
                         render_args = {
                             "media_path": bg_target,
                             "quote": st.session_state.quote_text,
                             "output_path": out_vid,
-                            "duration": 10.0,
+                            "duration": target_video_duration,
                             "overlay_opacity": st.session_state.overlay_darkness / 100.0,
                             "signature": st.session_state.signature or "saigonbac",
                             "enable_gradient_scrim": st.session_state.enable_antiglare,
@@ -912,7 +933,7 @@ with col_input:
 
                         render_any_media_quote(**render_args)
                         st.session_state.rendered_video = str(out_vid)
-                        st.toast("Tạo video 10s hoàn tất thành công 100%!", icon="🎉")
+                        st.toast(f"Tạo video {target_video_duration:.1f}s hoàn tất thành công 100%!", icon="🎉")
                         st.rerun()
                     except Exception as e:
                         st.error(f"Lỗi khi render video: {e}")
