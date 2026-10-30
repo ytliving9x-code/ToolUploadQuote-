@@ -31,6 +31,34 @@ except Exception:
 DEFAULT_FONT = Path("assets/fonts/BeVietnamPro-Bold.ttf")
 
 
+def extract_video_frame(video_path: Path | str, timestamp_sec: float = 1.0) -> Path:
+    """
+    Trích xuất 1 khung hình (1080x1920) từ video footage làm ảnh xem trước.
+    """
+    v_path = Path(video_path)
+    if not v_path.exists():
+        raise FileNotFoundError(f"Không tìm thấy video: {v_path}")
+
+    out_dir = Path("temp")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_frame = out_dir / f"frame_{v_path.stem}_{int(timestamp_sec * 10)}.jpg"
+
+    cmd = [
+        FFMPEG_EXE, "-y",
+        "-ss", str(timestamp_sec),
+        "-i", str(v_path),
+        "-vframes", "1",
+        "-vf", "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2",
+        "-q:v", "2",
+        str(out_frame),
+    ]
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if proc.returncode != 0 or not out_frame.exists():
+        logger.error(f"Lỗi trích xuất frame từ video {v_path}: {proc.stderr.decode('utf-8', errors='ignore')}")
+        raise RuntimeError(f"Không thể trích xuất khung hình từ video: {v_path.name}")
+    return out_frame
+
+
 def get_vietnamese_font(font_size: int = 54, font_path: Optional[Path | str] = None) -> ImageFont.FreeTypeFont:
     """Tải font chữ tiếng Việt theo font_path hoặc Be Vietnam Pro / Montserrat dự phòng."""
     target = Path(font_path) if font_path else DEFAULT_FONT
@@ -450,18 +478,26 @@ def render_video_from_footage(
     footage_path: Path | str,
     quote: str,
     output_path: Path | str = Path("output/tiktok_video_ready.mp4"),
-    duration: Optional[float] = None,
-    overlay_opacity: float = 0.25,
+    duration: Optional[float] = 10.0,
+    overlay_opacity: float = 0.50,
     signature: Optional[str] = "saigonbac",
+    enable_gradient_scrim: bool = True,
+    scrim_max_alpha: int = 175,
+    shadow_blur_radius: float = 5.0,
+    stroke_width: int = 1,
+    font_path: Optional[Path | str] = None,
     preserve_linebreaks: bool = True,
+    text_align: str = "center",
+    font_size: int = 42,
+    **kwargs: Any,
 ) -> Path:
     """
-    Render video TikTok hoàn chỉnh từ footage b-roll và câu quote typography:
+    Render video TikTok hoàn chỉnh từ footage video và câu quote typography:
     - Scale & Center-Crop về đúng chuẩn dọc 1080x1920 (9:16).
-    - Phủ lớp tối nhẹ (overlay_opacity) để chữ trắng luôn nổi bật, sắc nét.
-    - Ghép typography tiếng Việt và chữ ký thương hiệu.
+    - Tự động lặp (loop) nếu video ngắn hơn thời lượng xuất (mặc định 10.0s).
+    - Phủ lớp tối (overlay_opacity) theo thanh trượt để chữ luôn nổi bật.
+    - Ghép typography căn lề (center/right/left) và cỡ chữ tùy chọn.
     - Tắt hoàn toàn audio stream (-an).
-    - Xuất video H.264 30fps chuẩn TikTok.
     """
     vid_file = Path(footage_path)
     if not vid_file.exists():
@@ -470,29 +506,39 @@ def render_video_from_footage(
     out_file = Path(output_path)
     out_file.parent.mkdir(parents=True, exist_ok=True)
 
-    # 1. Đo độ dài footage
+    actual_duration = float(duration) if duration and duration > 0 else 10.0
+
+    # 1. Đo độ dài footage để loop nếu cần
     from modules.video_engine import probe_video_metadata
     meta = probe_video_metadata(vid_file)
     orig_dur = meta.get("duration", 0.0)
 
-    # Xác định thời lượng video xuất ra:
-    if duration and duration > 0:
-        actual_duration = duration if orig_dur <= 0 else min(duration, orig_dur)
+    inputs = []
+    if orig_dur > 0 and orig_dur < actual_duration:
+        loop_count = int(actual_duration // orig_dur) + 2
+        inputs.extend(["-stream_loop", str(loop_count), "-i", str(vid_file)])
     else:
-        # Mặc định lấy theo thời lượng footage (tối thiểu 6s, tối đa 60s)
-        actual_duration = max(6.0, min(orig_dur if orig_dur > 0 else 10.0, 60.0))
+        inputs.extend(["-i", str(vid_file)])
 
-    # 2. Tạo ảnh chữ PNG tạm thời kèm chữ ký
-    overlay_img = create_quote_overlay(quote=quote, signature=signature, preserve_linebreaks=preserve_linebreaks)
+    # 2. Tạo ảnh chữ PNG tạm thời kèm chữ ký với đầy đủ typography mới
+    overlay_img = create_quote_overlay(
+        quote=quote,
+        signature=signature,
+        enable_gradient_scrim=enable_gradient_scrim,
+        scrim_max_alpha=scrim_max_alpha,
+        shadow_blur_radius=shadow_blur_radius,
+        stroke_width=stroke_width,
+        font_path=font_path,
+        preserve_linebreaks=preserve_linebreaks,
+        text_align=text_align,
+        font_size=font_size,
+    )
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_png:
         tmp_png_path = Path(tmp_png.name)
     overlay_img.save(tmp_png_path, format="PNG")
 
     # 3. Filter FFmpeg
-    if overlay_opacity > 0:
-        dark_box = f",drawbox=x=0:y=0:w=iw:h=ih:color=black@{overlay_opacity:.2f}:t=fill"
-    else:
-        dark_box = ""
+    dark_box = f",drawbox=x=0:y=0:w=iw:h=ih:color=black@{overlay_opacity:.2f}:t=fill" if overlay_opacity > 0 else ""
 
     filter_complex = (
         f"[0:v]trim=0:{actual_duration},setpts=PTS-STARTPTS,"
@@ -507,7 +553,7 @@ def render_video_from_footage(
         FFMPEG_EXE,
         "-y",
         "-threads", "2",
-        "-i", str(vid_file),
+        *inputs,
         "-loop", "1",
         "-i", str(tmp_png_path),
         "-filter_complex", filter_complex,
@@ -545,29 +591,42 @@ def render_any_media_quote(
     media_path: Path | str,
     quote: str,
     output_path: Path | str = Path("output/tiktok_ready.mp4"),
-    duration: float = 18.0,
+    duration: float = 10.0,
+    overlay_opacity: float = 0.50,
     signature: Optional[str] = "saigonbac",
+    enable_gradient_scrim: bool = True,
+    scrim_max_alpha: int = 175,
+    shadow_blur_radius: float = 5.0,
+    stroke_width: int = 1,
+    font_path: Optional[Path | str] = None,
+    preserve_linebreaks: bool = True,
+    text_align: str = "center",
+    font_size: int = 42,
+    **kwargs: Any,
 ) -> Path:
     """
     Hàm tự động nhận diện định dạng ảnh tĩnh hay video để gọi hàm render phù hợp.
     """
     p = Path(media_path)
     video_exts = {".mp4", ".mov", ".webm", ".avi", ".mkv"}
+    common_args = {
+        "quote": quote,
+        "output_path": output_path,
+        "duration": duration,
+        "overlay_opacity": overlay_opacity,
+        "signature": signature,
+        "enable_gradient_scrim": enable_gradient_scrim,
+        "scrim_max_alpha": scrim_max_alpha,
+        "shadow_blur_radius": shadow_blur_radius,
+        "stroke_width": stroke_width,
+        "font_path": font_path,
+        "preserve_linebreaks": preserve_linebreaks,
+        "text_align": text_align,
+        "font_size": font_size,
+    }
     if p.suffix.lower() in video_exts:
-        return render_video_from_footage(
-            footage_path=p,
-            quote=quote,
-            output_path=output_path,
-            duration=duration,
-            signature=signature,
-        )
-    return render_18s_video(
-        image_path=p,
-        quote=quote,
-        output_path=output_path,
-        duration=duration,
-        signature=signature,
-    )
+        return render_video_from_footage(footage_path=p, **common_args, **kwargs)
+    return render_18s_video(image_path=p, **common_args, **kwargs)
 
 
 

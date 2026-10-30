@@ -32,7 +32,7 @@ except Exception:
     pass
 
 from modules.video_engine import probe_video_metadata
-from modules.video_renderer import create_quote_overlay, render_18s_video
+from modules.video_renderer import create_quote_overlay, render_18s_video, render_any_media_quote, extract_video_frame
 
 # Cấu hình giao diện Streamlit
 st.set_page_config(
@@ -670,24 +670,24 @@ with col_input:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # ---------------- BƯỚC 2: ẢNH NỀN ----------------
+    # ---------------- BƯỚC 2: ẢNH HOẶC VIDEO NỀN ----------------
     with st.container():
         st.markdown(
             """
             <div class="glass-card">
                 <div class="step-header">
                     <div class="step-number">02</div>
-                    <div class="step-title">Tải Ảnh Nền Từ Điện Thoại / Máy Tính</div>
+                    <div class="step-title">Tải Ảnh Hoặc Video Nền Từ Thiết Bị</div>
                 </div>
             """,
             unsafe_allow_html=True,
         )
 
         up_file = st.file_uploader(
-            "Chọn file ảnh từ thư viện (.jpg, .png, .webp):",
-            type=["jpg", "jpeg", "png", "webp", "jfif", "bmp"],
+            "Chọn file ảnh hoặc video từ máy tính (.jpg, .png, .mp4, .mov...):",
+            type=["jpg", "jpeg", "png", "webp", "jfif", "bmp", "mp4", "mov", "webm", "avi", "mkv"],
             key="file_bg_uploader",
-            help="Hệ thống tự động canh giữa và crop chuẩn dọc 9:16 (1080x1920).",
+            help="Hệ thống tự động canh giữa và crop chuẩn dọc 9:16 (1080x1920), video tự động khớp 10 giây.",
         )
 
         if up_file is not None:
@@ -695,18 +695,25 @@ with col_input:
                 try:
                     temp_dir = Path("temp")
                     temp_dir.mkdir(parents=True, exist_ok=True)
-                    file_ext = Path(up_file.name).suffix or ".jpg"
+                    file_ext = Path(up_file.name).suffix.lower() or ".jpg"
                     unique_bg_path = temp_dir / f"bg_{int(time.time() * 1000)}{file_ext}"
                     with open(unique_bg_path, "wb") as f_out:
                         f_out.write(up_file.getbuffer())
 
-                    crop_path = crop_image_to_tiktok_portrait(unique_bg_path)
-                    st.session_state.bg_image = str(crop_path)
-                    st.session_state.last_uploaded_bg_name = up_file.name
-                    st.session_state.rendered_video = None
-                    st.toast(f"Đã nạp và chuẩn hóa ảnh: {up_file.name}", icon="📸")
+                    video_exts = {".mp4", ".mov", ".webm", ".avi", ".mkv"}
+                    if file_ext in video_exts:
+                        st.session_state.bg_image = str(unique_bg_path)
+                        st.session_state.last_uploaded_bg_name = up_file.name
+                        st.session_state.rendered_video = None
+                        st.toast(f"Đã nạp video nền: {up_file.name}", icon="🎬")
+                    else:
+                        crop_path = crop_image_to_tiktok_portrait(unique_bg_path)
+                        st.session_state.bg_image = str(crop_path)
+                        st.session_state.last_uploaded_bg_name = up_file.name
+                        st.session_state.rendered_video = None
+                        st.toast(f"Đã nạp và chuẩn hóa ảnh: {up_file.name}", icon="📸")
                 except Exception as e:
-                    st.error(f"Lỗi khi xử lý ảnh tải lên: {e}")
+                    st.error(f"Lỗi khi xử lý file tải lên: {e}")
         else:
             if st.session_state.get("last_uploaded_bg_name") is not None:
                 st.session_state.last_uploaded_bg_name = None
@@ -715,10 +722,12 @@ with col_input:
 
         if st.session_state.get("last_uploaded_bg_name"):
             col_cur, col_del = st.columns([3, 1])
+            is_vid = Path(st.session_state.get("last_uploaded_bg_name", "")).suffix.lower() in [".mp4", ".mov", ".webm", ".avi", ".mkv"]
+            icon_badge = "🎬 Video:" if is_vid else "📸 Ảnh:"
             with col_cur:
-                st.markdown(f"<span style='color: #38BDF8; font-size: 0.88rem;'>📸 Đang dùng: <b>{st.session_state.last_uploaded_bg_name}</b></span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: #38BDF8; font-size: 0.88rem;'>{icon_badge} <b>{st.session_state.last_uploaded_bg_name}</b></span>", unsafe_allow_html=True)
             with col_del:
-                if st.button("🗑️ Đổi ảnh", key="btn_del_bg", use_container_width=True):
+                if st.button("🗑️ Đổi file", key="btn_del_bg", use_container_width=True):
                     st.session_state.last_uploaded_bg_name = None
                     st.session_state.bg_image = None
                     st.session_state.rendered_video = None
@@ -883,7 +892,7 @@ with col_input:
                 with st.spinner("Đang ghép typography chống loá và render video 10.0s chuẩn TikTok..."):
                     try:
                         render_args = {
-                            "image_path": bg_target,
+                            "media_path": bg_target,
                             "quote": st.session_state.quote_text,
                             "output_path": out_vid,
                             "duration": 10.0,
@@ -896,12 +905,10 @@ with col_input:
                             "font_path": active_font["path"],
                             "text_align": st.session_state.text_align,
                             "font_size": st.session_state.quote_font_size,
+                            "preserve_linebreaks": st.session_state.preserve_linebreaks,
                         }
-                        sig = inspect.signature(render_18s_video)
-                        if "preserve_linebreaks" in sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()):
-                            render_args["preserve_linebreaks"] = st.session_state.preserve_linebreaks
 
-                        render_18s_video(**render_args)
+                        render_any_media_quote(**render_args)
                         st.session_state.rendered_video = str(out_vid)
                         st.toast("Tạo video 10s hoàn tất thành công 100%!", icon="🎉")
                         st.rerun()
@@ -949,62 +956,74 @@ with col_preview:
     if rendered_vid and Path(rendered_vid).exists():
         st.video(str(rendered_vid))
     elif bg_img and Path(bg_img).exists():
+        def _get_safe_bg_preview(path_target: Path | str) -> Image.Image:
+            p_obj = Path(path_target)
+            v_exts = {".mp4", ".mov", ".webm", ".avi", ".mkv"}
+            if p_obj.suffix.lower() in v_exts:
+                f_path = extract_video_frame(p_obj, timestamp_sec=1.0)
+                return Image.open(f_path).convert("RGBA")
+            return Image.open(p_obj).convert("RGBA")
+
         if quote_ready:
             try:
-                with Image.open(bg_img) as raw_bg:
-                    bg_rgba = raw_bg.convert("RGBA")
-                    if bg_rgba.size != (1080, 1920):
-                        bg_rgba = bg_rgba.resize((1080, 1920), Image.Resampling.LANCZOS)
+                raw_bg = _get_safe_bg_preview(bg_img)
+                bg_rgba = raw_bg
+                if bg_rgba.size != (1080, 1920):
+                    bg_rgba = bg_rgba.resize((1080, 1920), Image.Resampling.LANCZOS)
 
-                    # Làm dịu nền nhẹ tương đương FFmpeg để ảnh trên live preview không bị chói
-                    bg_rgb = bg_rgba.convert("RGB")
-                    enhancer_b = ImageEnhance.Brightness(bg_rgb)
-                    bg_graded = enhancer_b.enhance(0.90)
-                    enhancer_c = ImageEnhance.Contrast(bg_graded)
-                    bg_base = enhancer_c.enhance(1.08).convert("RGBA")
+                # Làm dịu nền nhẹ tương đương FFmpeg để ảnh trên live preview không bị chói
+                bg_rgb = bg_rgba.convert("RGB")
+                enhancer_b = ImageEnhance.Brightness(bg_rgb)
+                bg_graded = enhancer_b.enhance(0.90)
+                enhancer_c = ImageEnhance.Contrast(bg_graded)
+                bg_base = enhancer_c.enhance(1.08).convert("RGBA")
 
-                    # Phủ lớp tối theo đúng thanh trượt (mặc định 50%)
-                    dark_alpha = int(255 * (st.session_state.overlay_darkness / 100.0))
-                    if dark_alpha > 0:
-                        dark_layer = Image.new("RGBA", (1080, 1920), (0, 0, 0, dark_alpha))
-                        bg_ready = Image.alpha_composite(bg_base, dark_layer)
-                    else:
-                        bg_ready = bg_base
+                # Phủ lớp tối theo đúng thanh trượt (mặc định 50%)
+                dark_alpha = int(255 * (st.session_state.overlay_darkness / 100.0))
+                if dark_alpha > 0:
+                    dark_layer = Image.new("RGBA", (1080, 1920), (0, 0, 0, dark_alpha))
+                    bg_ready = Image.alpha_composite(bg_base, dark_layer)
+                else:
+                    bg_ready = bg_base
 
-                    active_cfg = ANTIGLARE_PRESETS.get(
-                        st.session_state.antiglare_preset,
-                        ANTIGLARE_PRESETS["✨ Chuẩn Điện Ảnh (Khuyên dùng)"],
-                    )
-                    active_font = FONT_PRESETS.get(
-                        st.session_state.font_preset,
-                        FONT_PRESETS["☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)"],
-                    )
+                active_cfg = ANTIGLARE_PRESETS.get(
+                    st.session_state.antiglare_preset,
+                    ANTIGLARE_PRESETS["✨ Chuẩn Điện Ảnh (Khuyên dùng)"],
+                )
+                active_font = FONT_PRESETS.get(
+                    st.session_state.font_preset,
+                    FONT_PRESETS["☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)"],
+                )
 
-                    overlay_args = {
-                        "quote": st.session_state.quote_text,
-                        "signature": st.session_state.signature or "saigonbac",
-                        "enable_gradient_scrim": st.session_state.enable_antiglare,
-                        "scrim_max_alpha": active_cfg["scrim"],
-                        "shadow_blur_radius": active_cfg["blur"],
-                        "stroke_width": active_cfg["stroke"],
-                        "font_path": active_font["path"],
-                        "text_align": st.session_state.text_align,
-                        "font_size": st.session_state.quote_font_size,
-                    }
-                    overlay_sig = inspect.signature(create_quote_overlay)
-                    if "preserve_linebreaks" in overlay_sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in overlay_sig.parameters.values()):
-                        overlay_args["preserve_linebreaks"] = st.session_state.preserve_linebreaks
+                overlay_args = {
+                    "quote": st.session_state.quote_text,
+                    "signature": st.session_state.signature or "saigonbac",
+                    "enable_gradient_scrim": st.session_state.enable_antiglare,
+                    "scrim_max_alpha": active_cfg["scrim"],
+                    "shadow_blur_radius": active_cfg["blur"],
+                    "stroke_width": active_cfg["stroke"],
+                    "font_path": active_font["path"],
+                    "text_align": st.session_state.text_align,
+                    "font_size": st.session_state.quote_font_size,
+                    "preserve_linebreaks": st.session_state.preserve_linebreaks,
+                }
 
-                    text_overlay = create_quote_overlay(**overlay_args)
-                    preview_composite = Image.alpha_composite(bg_ready, text_overlay)
-                    st.image(preview_composite.convert("RGB"), use_container_width=True)
+                text_overlay = create_quote_overlay(**overlay_args)
+                preview_composite = Image.alpha_composite(bg_ready, text_overlay)
+                st.image(preview_composite.convert("RGB"), use_container_width=True)
             except Exception as ex:
                 logger.warning(f"Lỗi live preview: {ex}")
-                with Image.open(bg_img) as _bimg:
-                    st.image(_bimg.convert("RGB"), use_container_width=True)
+                try:
+                    fb_img = _get_safe_bg_preview(bg_img)
+                    st.image(fb_img.convert("RGB"), use_container_width=True)
+                except Exception:
+                    pass
         else:
-            with Image.open(bg_img) as _bimg:
-                st.image(_bimg.convert("RGB"), use_container_width=True)
+            try:
+                fb_img = _get_safe_bg_preview(bg_img)
+                st.image(fb_img.convert("RGB"), use_container_width=True)
+            except Exception:
+                pass
     else:
         st.markdown(
             """
@@ -1012,7 +1031,7 @@ with col_preview:
                 <div>
                     <div style="font-size: 2.8rem; margin-bottom: 0.8rem;">📱</div>
                     <b style="color: #94A3B8;">Chưa có ảnh nền</b><br>
-                    <span style="font-size: 0.85rem;">Tải ảnh ở Bước 2 để hiển thị chữ trực tiếp trên khung.</span>
+                    <span style="font-size: 0.85rem;">Tải ảnh hoặc video ở Bước 2 để hiển thị chữ trực tiếp trên khung.</span>
                 </div>
             </div>
             """,
