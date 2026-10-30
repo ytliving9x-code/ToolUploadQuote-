@@ -317,8 +317,8 @@ def create_quote_overlay(
 def render_18s_video(
     image_path: Path | str,
     quote: str,
-    output_path: Path | str = Path("output/tiktok_18s_ready.mp4"),
-    duration: float = 18.0,
+    output_path: Path | str = Path("output/tiktok_10s_ready.mp4"),
+    duration: float = 10.0,
     overlay_opacity: float = 0.50,
     signature: Optional[str] = "saigonbac",
     enable_gradient_scrim: bool = True,
@@ -334,13 +334,13 @@ def render_18s_video(
     **kwargs: Any,
 ) -> Path:
     """
-    Render video TikTok chuẩn 18 giây, tỷ lệ 9:16 (1080x1920), không có âm thanh.
+    Render video TikTok chuẩn 10 giây, tỷ lệ 9:16 (1080x1920), không có âm thanh.
 
     Args:
         image_path: Đường dẫn ảnh nền JPEG/PNG.
         quote: Nội dung câu trích dẫn hiển thị trên video.
         output_path: Đường dẫn file video xuất ra (mặc định output/tiktok_18s_ready.mp4).
-        duration: Thời lượng video (cố định 18.0s).
+        duration: Thời lượng video (cố định 10.0s).
         overlay_opacity: Độ tối lớp phủ đen (mặc định 30% = 0.30).
         signature: Chữ ký thương hiệu nhỏ (mặc định 'saigonbac').
         enable_gradient_scrim: Bật lớp gradient scrim ở đáy chống loá cho nền sáng.
@@ -376,7 +376,7 @@ def render_18s_video(
         tmp_png_path = Path(tmp_png.name)
     overlay_img.save(tmp_png_path, format="PNG")
 
-    # 2. Xây dựng lệnh FFmpeg biến ảnh tĩnh thành video 18 giây
+    # 2. Xây dựng lệnh FFmpeg biến ảnh tĩnh thành video 10 giây
     # Fade in 1.2s lúc đầu và Fade out 0.8s ở giây 17.2
     fade_out_start = max(1.5, duration - 0.8)
 
@@ -427,7 +427,7 @@ def render_18s_video(
     ]
 
     try:
-        logger.info(f"Đang render video 18s TikTok -> {out_file.name}...")
+        logger.info(f"Đang render video 10s TikTok -> {out_file.name}...")
         proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         if proc.returncode != 0:
             logger.error(f"Lỗi FFmpeg:\n{proc.stderr}")
@@ -442,7 +442,7 @@ def render_18s_video(
             pass
         gc.collect()
 
-    logger.info(f"Render video 18s thành công: {out_file} ({out_file.stat().st_size} bytes)")
+    logger.info(f"Render video 10s thành công: {out_file} ({out_file.stat().st_size} bytes)")
     return out_file
 
 
@@ -569,3 +569,7 @@ def render_any_media_quote(
         signature=signature,
     )
 
+
+
+# Alias cho phiên bản 10 giây
+render_10s_video = render_18s_video

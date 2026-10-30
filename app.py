@@ -36,7 +36,7 @@ from modules.video_renderer import create_quote_overlay, render_18s_video
 
 # Cấu hình giao diện Streamlit
 st.set_page_config(
-    page_title="TikTok 18s Quote Studio",
+    page_title="TikTok 10s Quote Studio",
     page_icon="🎬",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -577,15 +577,15 @@ st.markdown(
     """
     <div class="hero-top-badge">
         <span class="hero-dot"></span>
-        TIKTOK 18S STUDIO • HIGH DEFINITION ENGINE
+        TIKTOK 10S STUDIO • HIGH DEFINITION ENGINE
     </div>
     <div class="main-title">AESTHETIC QUOTE VIDEO CREATOR</div>
     <div class="main-subtitle">
-        Tạo video tĩnh 18s TikTok chuẩn điện ảnh: Tự nhập câu quote, tự tải ảnh nền từ điện thoại/máy tính và xuất video 1080x1920 sắc nét không loá.
+        Tạo video tĩnh 10s TikTok chuẩn điện ảnh: Tự nhập câu quote, tự tải ảnh nền từ điện thoại/máy tính và xuất video 1080x1920 sắc nét không loá.
     </div>
     <div class="feature-tags-row">
         <div class="feature-tag-pill">📐 Khổ dọc 1080x1920 (9:16)</div>
-        <div class="feature-tag-pill">⏱️ Thời lượng 18.0s TikTok</div>
+        <div class="feature-tag-pill">⏱️ Thời lượng 10.0s TikTok</div>
         <div class="feature-tag-pill">🛡️ Chống Loá Đa Tầng (Anti-Glare)</div>
         <div class="feature-tag-pill">🎬 Ken Burns Cinematic Drift</div>
         <div class="feature-tag-pill">⚡ FFmpeg H.264 Lossless CRF 16</div>
@@ -633,7 +633,7 @@ with col_input:
                 f"""
                 <div class="word-counter-box">
                     <span class="word-badge-ok">✓ Độ dài lý tưởng ({count} từ)</span>
-                    <span style="color: #94A3B8;">Chuẩn 15 - 26 từ cho nhịp đọc 18 giây TikTok</span>
+                    <span style="color: #94A3B8;">Chuẩn 12 - 25 từ cho nhịp đọc 10 giây TikTok</span>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -851,7 +851,7 @@ with col_input:
 
     # ---------------- NÚT HÀNH ĐỘNG HERO ----------------
     st.markdown('<div class="btn-render-hero">', unsafe_allow_html=True)
-    btn_generate = st.button("✨ XUẤT VIDEO TIKTOK 18S CHUẨN HD", type="primary", use_container_width=True)
+    btn_generate = st.button("✨ XUẤT VIDEO TIKTOK 10S CHUẨN HD", type="primary", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     if btn_generate:
@@ -880,13 +880,13 @@ with col_input:
                 except Exception as txt_err:
                     logger.warning(f"Lỗi ghi file txt caption: {txt_err}")
 
-                with st.spinner("Đang ghép typography chống loá và render video 18.0s chuẩn TikTok..."):
+                with st.spinner("Đang ghép typography chống loá và render video 10.0s chuẩn TikTok..."):
                     try:
                         render_args = {
                             "image_path": bg_target,
                             "quote": st.session_state.quote_text,
                             "output_path": out_vid,
-                            "duration": 18.0,
+                            "duration": 10.0,
                             "overlay_opacity": st.session_state.overlay_darkness / 100.0,
                             "signature": st.session_state.signature or "saigonbac",
                             "enable_gradient_scrim": st.session_state.enable_antiglare,
@@ -903,7 +903,7 @@ with col_input:
 
                         render_18s_video(**render_args)
                         st.session_state.rendered_video = str(out_vid)
-                        st.toast("Tạo video 18s hoàn tất thành công 100%!", icon="🎉")
+                        st.toast("Tạo video 10s hoàn tất thành công 100%!", icon="🎉")
                         st.rerun()
                     except Exception as e:
                         st.error(f"Lỗi khi render video: {e}")
@@ -1032,7 +1032,7 @@ with col_preview:
                     <div class="meta-item-lbl">Độ phân giải</div>
                 </div>
                 <div>
-                    <div class="meta-item-val">{meta.get('duration', 18.0)}s</div>
+                    <div class="meta-item-val">{meta.get('duration', 10.0)}s</div>
                     <div class="meta-item-lbl">Thời lượng</div>
                 </div>
                 <div>
