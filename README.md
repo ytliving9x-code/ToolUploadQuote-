@@ -1,6 +1,6 @@
-# 🎬 TikTok Quote Studio 18s — Tool Sản Xuất Video Quote Nền Tối Chữ Trắng Chuẩn TikTok
+# 🎬 TikTok Quote Studio 10s — Tool Sản Xuất Video Quote Nền Tối Chữ Trắng Chuẩn TikTok
 
-Hệ thống phần mềm xây dựng bằng **Python & Streamlit**, chuyên sản xuất video ngắn TikTok dạng **Aesthetic Quote 18s (Nền tối dìm sáng 50% & Chữ trắng nổi bật)**, tối ưu hoàn hảo cho thuật toán giữ chân người xem (Watch Time & Completion Rate) của TikTok.
+Hệ thống phần mềm xây dựng bằng **Python & Streamlit**, chuyên sản xuất video ngắn TikTok dạng **Aesthetic Quote 10s (Nền tối dìm sáng & Chữ trắng nổi bật, hỗ trợ cả Ảnh & Video)**, tối ưu hoàn hảo cho thuật toán giữ chân người xem (Watch Time & Completion Rate) của TikTok.
 
 ---
 
@@ -23,7 +23,7 @@ Hệ thống phần mềm xây dựng bằng **Python & Streamlit**, chuyên s�
 
 ## 1. Triết Lý Sản Phẩm & Quy Chuẩn TikTok
 
-- **Định dạng video tĩnh 18 giây**: Thời lượng 18.0s là "điểm vàng" cho video quote TikTok: đủ dài để người xem đọc và suy ngẫm, nhưng đủ ngắn để xem hết (thậm chí lặp lại 2 lần), giúp tăng điểm tương tác mạnh mẽ.
+- **Định dạng video 10 giây**: Thời lượng 10.0s là "thời lượng vàng" tối ưu giữ chân người xem cho video quote TikTok: đủ dài để người xem đọc và suy ngẫm, nhưng đủ ngắn để xem hết (thậm chí lặp lại 2 lần), giúp tăng điểm tương tác mạnh mẽ.
 - **Nền tối dìm sáng (Dark Moody Aesthetic)**: Sử dụng lớp phủ đen mờ (mặc định 50%) kết hợp tối 4 góc (Vignette). Bất kể ảnh gốc sáng chói hay phức tạp, toàn bộ nền đều chìm xuống làm hậu cảnh, giúp câu quote màu trắng nổi bật tuyệt đối, không gây mỏi mắt.
 - **Không Audio Track (`No Audio / Mute`)**: Video xuất ra cố ý **không gắn nhạc nền** để người dùng tự chọn nhạc xu hướng (Trending Sound) trực tiếp trong ứng dụng TikTok khi đăng. Đây là mẹo SEO quan trọng nhất để video dễ được thuật toán TikTok phân phối lên For You Page (FYP).
 
@@ -99,7 +99,7 @@ ToolUploalQuote/
 - Cột bên phải giả lập khung điện thoại chuẩn tỷ lệ 9:16.
 - Cập nhật thời gian thực nội dung câu quote, phông chữ, chữ ký và độ tối hình nền ngay khi bạn vừa gõ chữ hoặc kéo thanh trượt.
 
-### F. Engine Render Video Tĩnh 18.0 Giây (FFmpeg)
+### F. Engine Render Video Đa Phương Tiện 10.0 Giây (FFmpeg)
 - Render video tốc độ cao (chỉ mất 2 – 5 giây cho video 18 giây).
 - Tích hợp hiệu ứng chuyển động chậm **Ken Burns Cinematic Drift** (zoom nhẹ từ 1.0 đến 1.05) giúp video sống động, không bị đơ cứng như ảnh tĩnh đơn thuần.
 - Thêm hiệu ứng tối 4 góc **Cinematic Vignette** tập trung ánh nhìn.
@@ -120,7 +120,7 @@ ToolUploalQuote/
 
 ```text
 Độ phân giải:       1080 x 1920 px (Khổ dọc chuẩn TikTok 9:16)
-Thời lượng:         Chính xác 18.0 giây (30.0 fps)
+Thời lượng:         Chính xác 10.0 giây (30.0 fps)
 Video Codec:        H.264 / AVC (Profile High, Level 4.1)
 Pixel Format:       yuv420p (Tương thích 100% mọi thiết bị iOS / Android)
 Chất lượng nén:     CRF 16 (Gần như lossless, chữ cực kỳ sắc nét)
