@@ -74,9 +74,16 @@ st.markdown(
         color: #F4F4F5;
     }
 
-    /* Container tối ưu không gian Studio */
+    /* Đảm bảo thanh điều hướng Streamlit không che khuất Header */
+    header[data-testid="stHeader"] {
+        background: rgba(9, 9, 11, 0.75) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+    }
+
+    /* Container chuẩn không gian, tránh bị che bởi thanh điều hướng Streamlit */
     .block-container {
-        padding-top: 1.2rem !important;
+        padding-top: 4.2rem !important;
         padding-bottom: 2.5rem !important;
         max-width: 1360px !important;
     }
@@ -332,10 +339,10 @@ st.markdown(
     /* ========================================================================= */
     @media (max-width: 768px) {
         .block-container {
-            padding-top: 0.5rem !important;
+            padding-top: 3.2rem !important;
             padding-bottom: 2rem !important;
-            padding-left: 0.6rem !important;
-            padding-right: 0.6rem !important;
+            padding-left: 0.65rem !important;
+            padding-right: 0.65rem !important;
         }
         .studio-header {
             padding: 0.6rem 0.85rem !important;
