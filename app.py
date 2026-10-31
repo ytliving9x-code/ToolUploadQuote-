@@ -360,85 +360,84 @@ st.markdown(
     /* ========================================================================= */
     @media (max-width: 768px) {
         .block-container {
-            padding-top: 1rem !important;
-            padding-bottom: 2.2rem !important;
-            padding-left: 0.85rem !important;
-            padding-right: 0.85rem !important;
+            padding-top: 0.6rem !important;
+            padding-bottom: 2rem !important;
+            padding-left: 0.65rem !important;
+            padding-right: 0.65rem !important;
         }
         .hero-top-badge {
-            font-size: 0.7rem !important;
-            padding: 4px 10px !important;
-            margin-bottom: 0.4rem !important;
+            font-size: 0.68rem !important;
+            padding: 3px 8px !important;
+            margin-bottom: 0.25rem !important;
         }
         .main-title {
-            font-size: 1.65rem !important;
-            line-height: 1.25 !important;
-            letter-spacing: -0.4px !important;
+            font-size: 1.35rem !important;
+            line-height: 1.2 !important;
+            letter-spacing: -0.3px !important;
+            margin-bottom: 0.2rem !important;
         }
+        /* Ẩn bớt subtitle và tag thừa trên mobile để tiết kiệm diện tích */
         .main-subtitle {
-            font-size: 0.86rem !important;
-            line-height: 1.45 !important;
-            margin-bottom: 1rem !important;
+            display: none !important;
         }
         .feature-tags-row {
-            gap: 6px !important;
-            margin-bottom: 1.2rem !important;
-        }
-        .feature-tag-pill {
-            font-size: 0.72rem !important;
-            padding: 3px 8px !important;
-            border-radius: 6px !important;
+            display: none !important;
         }
         .glass-card {
-            padding: 1.05rem 1.1rem !important;
-            border-radius: 15px !important;
-            margin-bottom: 1rem !important;
+            padding: 0.9rem 0.95rem !important;
+            border-radius: 14px !important;
+            margin-bottom: 0.85rem !important;
+        }
+        .step-header {
+            margin-bottom: 0.5rem !important;
         }
         .step-number {
-            width: 26px !important;
-            height: 26px !important;
-            font-size: 0.78rem !important;
-            border-radius: 7px !important;
+            width: 24px !important;
+            height: 24px !important;
+            font-size: 0.74rem !important;
+            border-radius: 6px !important;
         }
         .step-title {
-            font-size: 1rem !important;
+            font-size: 0.96rem !important;
         }
         .btn-render-hero button {
             min-height: 52px !important;
-            font-size: 1.02rem !important;
+            font-size: 1.05rem !important;
             border-radius: 14px !important;
+            margin-top: 0.3rem !important;
+            margin-bottom: 0.6rem !important;
         }
         .phone-mockup-wrapper {
-            border-width: 1.5px !important;
-            border-radius: 20px !important;
-            padding: 7px !important;
+            border-width: 1px !important;
+            border-radius: 16px !important;
+            padding: 4px !important;
             max-width: 100% !important;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7) !important;
         }
+        /* Ẩn notch giả lập trên mobile để khung xem trước tối đa diện tích */
         .phone-notch {
-            width: 75px !important;
-            height: 12px !important;
-            margin-bottom: 6px !important;
+            display: none !important;
         }
         .phone-mockup-wrapper video,
         .phone-mockup-wrapper .stImage img {
-            max-height: 480px !important;
-            border-radius: 14px !important;
+            max-height: 460px !important;
+            border-radius: 12px !important;
+            width: 100% !important;
         }
         .meta-dashboard {
-            padding: 0.55rem 0.4rem !important;
-            margin-top: 0.6rem !important;
-            margin-bottom: 0.8rem !important;
+            padding: 0.5rem 0.3rem !important;
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.7rem !important;
         }
         .meta-item-val {
-            font-size: 0.82rem !important;
+            font-size: 0.8rem !important;
         }
         .meta-item-lbl {
-            font-size: 0.65rem !important;
+            font-size: 0.62rem !important;
         }
         .btn-download button {
-            min-height: 48px !important;
-            font-size: 0.96rem !important;
+            min-height: 50px !important;
+            font-size: 0.98rem !important;
         }
     }
     </style>
@@ -578,18 +577,17 @@ st.markdown(
     """
     <div class="hero-top-badge">
         <span class="hero-dot"></span>
-        TIKTOK 10S STUDIO • HIGH DEFINITION ENGINE
+        TIKTOK STUDIO • DYNAMIC VIDEO ENGINE
     </div>
-    <div class="main-title">AESTHETIC QUOTE VIDEO CREATOR</div>
+    <div class="main-title">Aesthetic Quote Video</div>
     <div class="main-subtitle">
-        Tạo video tĩnh 10s TikTok chuẩn điện ảnh: Tự nhập câu quote, tự tải ảnh nền từ điện thoại/máy tính và xuất video 1080x1920 sắc nét không loá.
+        Tạo video quote chuẩn 9:16 TikTok: Gõ câu chữ, tải ảnh hoặc video nền từ điện thoại và xuất video sắc nét, chống loá.
     </div>
     <div class="feature-tags-row">
-        <div class="feature-tag-pill">📐 Khổ dọc 1080x1920 (9:16)</div>
-        <div class="feature-tag-pill">⏱️ Thời lượng 10.0s TikTok</div>
-        <div class="feature-tag-pill">🛡️ Chống Loá Đa Tầng (Anti-Glare)</div>
-        <div class="feature-tag-pill">🎬 Ken Burns Cinematic Drift</div>
-        <div class="feature-tag-pill">⚡ FFmpeg H.264 Lossless CRF 16</div>
+        <div class="feature-tag-pill">📐 Khổ dọc 9:16 (1080x1920)</div>
+        <div class="feature-tag-pill">⏱️ Thời lượng động (10s - 20s)</div>
+        <div class="feature-tag-pill">🛡️ Chống loá quang học</div>
+        <div class="feature-tag-pill">⚡ Xuất nhanh H.264</div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -618,7 +616,7 @@ with col_input:
             "Nhập câu quote của bạn:",
             value=st.session_state.quote_text,
             placeholder="Gõ hoặc dán câu quote của bạn tại đây...",
-            height=120,
+            height=85,
             key="txt_quote_input",
             label_visibility="collapsed",
         )
@@ -626,15 +624,15 @@ with col_input:
             st.session_state.quote_text = input_quote
             st.session_state.rendered_video = None
 
-        # Đếm từ trực quan
+        # Đếm từ trực quan tinh gọn
         current_words = input_quote.strip().split() if input_quote.strip() else []
         count = len(current_words)
         if 15 <= count <= 26:
             st.markdown(
                 f"""
                 <div class="word-counter-box">
-                    <span class="word-badge-ok">✓ Độ dài lý tưởng ({count} từ)</span>
-                    <span style="color: #94A3B8;">Chuẩn 12 - 25 từ cho nhịp đọc 10 giây TikTok</span>
+                    <span class="word-badge-ok">✓ Lý tưởng ({count} từ)</span>
+                    <span style="color: #94A3B8; font-size: 0.78rem;">Chuẩn nhịp đọc TikTok</span>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -644,26 +642,18 @@ with col_input:
                 f"""
                 <div class="word-counter-box">
                     <span class="word-badge-warn">ℹ️ {count} từ</span>
-                    <span style="color: #94A3B8;">Khuyên dùng 15 - 26 từ để bố cục thoáng đẹp nhất</span>
+                    <span style="color: #94A3B8; font-size: 0.78rem;">Khuyên dùng 15 - 26 từ</span>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
 
-        st.markdown("<b style='color: #38BDF8; font-size: 0.9rem; margin-top: 0.5rem; display: block;'>📐 Kiểu xuống dòng / ngắt đoạn:</b>", unsafe_allow_html=True)
-        wrap_options = [
-            "↵ Giữ ngắt dòng theo phím Enter (Mặc định - đúng từng câu/đoạn bạn gõ)",
-            "🔄 Tự động nối liền & dàn đều (Chế độ cũ - dồn câu tự động)",
-        ]
-        chosen_wrap = st.radio(
-            "Kiểu ngắt dòng chữ:",
-            options=wrap_options,
-            index=0 if st.session_state.preserve_linebreaks else 1,
-            key="rb_wrap_mode",
-            label_visibility="collapsed",
-            help="Giữ nguyên dấu Enter xuống dòng của bạn, hoặc tự động nối liền thành một đoạn văn như trước.",
+        new_preserve = st.checkbox(
+            "↵ Giữ ngắt dòng theo phím Enter (Gõ gì hiện nấy)",
+            value=st.session_state.preserve_linebreaks,
+            key="chk_preserve_linebreaks",
+            help="Bật: Giữ nguyên các dấu Enter xuống dòng bạn gõ. Tắt: Tự động dồn câu liên tục.",
         )
-        new_preserve = (chosen_wrap == wrap_options[0])
         if new_preserve != st.session_state.preserve_linebreaks:
             st.session_state.preserve_linebreaks = new_preserve
             st.session_state.rendered_video = None
@@ -750,8 +740,97 @@ with col_input:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # ---------------- TUỲ CHỌN HIỂN THỊ, ĐỘ TỐI NỀN, PHÔNG CHỮ & CHỐNG LOÁ ----------------
-    with st.expander("⚙️ Độ tối nền, Căn lề, Cỡ chữ & Phông chữ video", expanded=True):
+    # Lấy thông số chống loá và font chữ hiện tại
+    active_cfg = ANTIGLARE_PRESETS.get(
+        st.session_state.antiglare_preset,
+        ANTIGLARE_PRESETS["✨ Chuẩn Điện Ảnh (Khuyên dùng)"],
+    )
+    active_font = FONT_PRESETS.get(
+        st.session_state.font_preset,
+        FONT_PRESETS["☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)"],
+    )
+
+    # ---------------- NÚT HÀNH ĐỘNG HERO (ĐẶT NGAY DƯỚI BƯỚC 2 - TỐI ƯU MOBILE-FIRST) ----------------
+    if st.session_state.get("bg_image") and Path(st.session_state.bg_image).exists():
+        media_dur_info = get_media_duration_info(st.session_state.bg_image)
+        btn_label = f"✨ XUẤT VIDEO TIKTOK {media_dur_info['btn_suffix']} CHUẨN HD"
+        target_video_duration = media_dur_info["target_duration"]
+    else:
+        btn_label = "✨ XUẤT VIDEO TIKTOK (10.0S) CHUẨN HD"
+        target_video_duration = 10.0
+
+    st.markdown('<div class="btn-render-hero">', unsafe_allow_html=True)
+    btn_generate = st.button(btn_label, type="primary", use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Thông báo trạng thái nhanh sau khi render trên Mobile
+    if st.session_state.get("rendered_video") and Path(st.session_state.rendered_video).exists():
+        st.markdown(
+            """
+            <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 10px; padding: 8px 12px; margin-top: 6px; margin-bottom: 10px; text-align: center; color: #6EE7B7; font-size: 0.88rem; font-weight: 700;">
+                🎉 Video đã tạo xong! Xem & tải xuống ngay bên dưới ⬇️
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    if btn_generate:
+        bg_target = st.session_state.bg_image
+        if not bg_target or not Path(bg_target).exists():
+            st.error("Chưa có ảnh nền! Vui lòng tải một file ảnh hoặc video từ máy tính ở Bước 2.")
+        elif not st.session_state.quote_text.strip():
+            st.error("Câu quote đang trống! Vui lòng nhập quote ở Bước 1.")
+        elif not RENDER_LOCK.acquire(blocking=False):
+            st.warning("⚠️ Máy chủ đang xử lý render một video khác! Vui lòng chờ 15-20 giây để hoàn tất, tránh bấm liên tục gây quá tải bộ nhớ.", icon="⏳")
+        else:
+            try:
+                out_folder = Path("output/saigonbac")
+                out_folder.mkdir(parents=True, exist_ok=True)
+                timestamp = int(time.time())
+                out_vid = out_folder / f"tiktok_video_{timestamp}.mp4"
+                out_txt = out_folder / f"tiktok_video_{timestamp}.txt"
+
+                # Tự động lưu kèm file .txt chứa câu quote trên video & hashtag viral
+                sig_tag = (st.session_state.signature or "saigonbac").replace("@", "").strip()
+                trending_hashtags = f"#{sig_tag} #tamtrang #suyngam #trietlycuocsong #cuocsong #xuhuong #fyp #viral #quotesvn #chill"
+                full_caption = f"{st.session_state.quote_text.strip()}\n\n{trending_hashtags}"
+                try:
+                    with open(out_txt, "w", encoding="utf-8") as f_txt:
+                        f_txt.write(full_caption)
+                except Exception as txt_err:
+                    logger.warning(f"Lỗi ghi file txt caption: {txt_err}")
+
+                with st.spinner(f"Đang ghép typography chống loá và render video {target_video_duration:.1f}s chuẩn TikTok..."):
+                    try:
+                        render_args = {
+                            "media_path": bg_target,
+                            "quote": st.session_state.quote_text,
+                            "output_path": out_vid,
+                            "duration": target_video_duration,
+                            "overlay_opacity": st.session_state.overlay_darkness / 100.0,
+                            "signature": st.session_state.signature or "saigonbac",
+                            "enable_gradient_scrim": st.session_state.enable_antiglare,
+                            "scrim_max_alpha": active_cfg["scrim"],
+                            "shadow_blur_radius": active_cfg["blur"],
+                            "stroke_width": active_cfg["stroke"],
+                            "font_path": active_font["path"],
+                            "text_align": st.session_state.text_align,
+                            "font_size": st.session_state.quote_font_size,
+                            "preserve_linebreaks": st.session_state.preserve_linebreaks,
+                        }
+
+                        render_any_media_quote(**render_args)
+                        st.session_state.rendered_video = str(out_vid)
+                        st.toast(f"Tạo video {target_video_duration:.1f}s hoàn tất thành công 100%!", icon="🎉")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Lỗi khi render video: {e}")
+            finally:
+                RENDER_LOCK.release()
+                gc.collect()
+
+    # ---------------- TUỲ CHỌN NÂNG CAO (MẶC ĐỊNH THU GỌN EXPANDED=FALSE ĐỂ TIẾT KIỆM KHÔNG GIAN MOBILE) ----------------
+    with st.expander("⚙️ Tùy Chỉnh Nâng Cao (Cỡ chữ, Font, Độ tối nền, Chống loá)", expanded=False):
         col_align, col_size = st.columns([1.1, 1.0])
         with col_align:
             st.markdown("<b style='color: #38BDF8; font-size: 0.9rem;'>🎯 Căn lề chữ (Alignment):</b>", unsafe_allow_html=True)
@@ -860,86 +939,6 @@ with col_input:
                 value=st.session_state.enable_antiglare,
                 help="Bật lớp gradient chuyển tối ở chân chữ để luôn nổi bật trên nền.",
             )
-
-    st.write("")
-
-    # Lấy thông số chống loá và font chữ hiện tại
-    active_cfg = ANTIGLARE_PRESETS.get(
-        st.session_state.antiglare_preset,
-        ANTIGLARE_PRESETS["✨ Chuẩn Điện Ảnh (Khuyên dùng)"],
-    )
-    active_font = FONT_PRESETS.get(
-        st.session_state.font_preset,
-        FONT_PRESETS["☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)"],
-    )
-
-    # ---------------- NÚT HÀNH ĐỘNG HERO (TỰ ĐỘNG THỜI LƯỢNG ĐỘNG) ----------------
-    if st.session_state.get("bg_image") and Path(st.session_state.bg_image).exists():
-        media_dur_info = get_media_duration_info(st.session_state.bg_image)
-        btn_label = f"✨ XUẤT VIDEO TIKTOK {media_dur_info['btn_suffix']} CHUẨN HD"
-        target_video_duration = media_dur_info["target_duration"]
-    else:
-        btn_label = "✨ XUẤT VIDEO TIKTOK (10.0S) CHUẨN HD"
-        target_video_duration = 10.0
-
-    st.markdown('<div class="btn-render-hero">', unsafe_allow_html=True)
-    btn_generate = st.button(btn_label, type="primary", use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    if btn_generate:
-        bg_target = st.session_state.bg_image
-        if not bg_target or not Path(bg_target).exists():
-            st.error("Chưa có ảnh nền! Vui lòng tải một file ảnh hoặc video từ máy tính ở Bước 2.")
-        elif not st.session_state.quote_text.strip():
-            st.error("Câu quote đang trống! Vui lòng nhập quote ở Bước 1.")
-        elif not RENDER_LOCK.acquire(blocking=False):
-            st.warning("⚠️ Máy chủ đang xử lý render một video khác! Vui lòng chờ 15-20 giây để hoàn tất, tránh bấm liên tục gây quá tải bộ nhớ.", icon="⏳")
-        else:
-            try:
-                out_folder = Path("output/saigonbac")
-                out_folder.mkdir(parents=True, exist_ok=True)
-                timestamp = int(time.time())
-                out_vid = out_folder / f"tiktok_video_{timestamp}.mp4"
-                out_txt = out_folder / f"tiktok_video_{timestamp}.txt"
-
-                # Tự động lưu kèm file .txt chứa câu quote trên video & hashtag viral
-                sig_tag = (st.session_state.signature or "saigonbac").replace("@", "").strip()
-                trending_hashtags = f"#{sig_tag} #tamtrang #suyngam #trietlycuocsong #cuocsong #xuhuong #fyp #viral #quotesvn #chill"
-                full_caption = f"{st.session_state.quote_text.strip()}\n\n{trending_hashtags}"
-                try:
-                    with open(out_txt, "w", encoding="utf-8") as f_txt:
-                        f_txt.write(full_caption)
-                except Exception as txt_err:
-                    logger.warning(f"Lỗi ghi file txt caption: {txt_err}")
-
-                with st.spinner(f"Đang ghép typography chống loá và render video {target_video_duration:.1f}s chuẩn TikTok..."):
-                    try:
-                        render_args = {
-                            "media_path": bg_target,
-                            "quote": st.session_state.quote_text,
-                            "output_path": out_vid,
-                            "duration": target_video_duration,
-                            "overlay_opacity": st.session_state.overlay_darkness / 100.0,
-                            "signature": st.session_state.signature or "saigonbac",
-                            "enable_gradient_scrim": st.session_state.enable_antiglare,
-                            "scrim_max_alpha": active_cfg["scrim"],
-                            "shadow_blur_radius": active_cfg["blur"],
-                            "stroke_width": active_cfg["stroke"],
-                            "font_path": active_font["path"],
-                            "text_align": st.session_state.text_align,
-                            "font_size": st.session_state.quote_font_size,
-                            "preserve_linebreaks": st.session_state.preserve_linebreaks,
-                        }
-
-                        render_any_media_quote(**render_args)
-                        st.session_state.rendered_video = str(out_vid)
-                        st.toast(f"Tạo video {target_video_duration:.1f}s hoàn tất thành công 100%!", icon="🎉")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Lỗi khi render video: {e}")
-            finally:
-                RENDER_LOCK.release()
-                gc.collect()
 
 
 # ==============================================================================
