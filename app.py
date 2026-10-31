@@ -511,48 +511,6 @@ def crop_image_to_tiktok_portrait(image_path: Path, target_size=(1080, 1920)) ->
 
 
 # ==============================================================================
-# BỘ PRESET PHONG CÁCH 1 CHẠM (1-TAP PRO STYLE PRESETS)
-# ==============================================================================
-STYLE_PRESETS = {
-    "☕ Sài Gòn Mưa": {
-        "title": "☕ Sài Gòn Mưa",
-        "desc": "Tone cafe trầm ấm, thanh lịch, font Be Vietnam Pro",
-        "font_preset": "☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)",
-        "font_size": 42,
-        "text_align": "center",
-        "overlay_darkness": 50,
-        "antiglare_preset": "✨ Chuẩn Điện Ảnh (Khuyên dùng)",
-    },
-    "🔥 TikTok Viral": {
-        "title": "🔥 TikTok Viral",
-        "desc": "Chữ to bản Montserrat Black, chống loá cực đại",
-        "font_preset": "🔥 Montserrat Black (Siêu Đậm Nổi Bật)",
-        "font_size": 52,
-        "text_align": "center",
-        "overlay_darkness": 55,
-        "antiglare_preset": "🛡️ Siêu Chống Loá (Nền Sáng / Rất Chói)",
-    },
-    "🎞️ Indie Hoài Niệm": {
-        "title": "🎞️ Indie Hoài Niệm",
-        "desc": "Cổ điển điện ảnh, font Playfair có chân, căn trái",
-        "font_preset": "🎞️ Playfair Display Bold (Điện Ảnh Hoài Niệm)",
-        "font_size": 40,
-        "text_align": "left",
-        "overlay_darkness": 45,
-        "antiglare_preset": "✨ Chuẩn Điện Ảnh (Khuyên dùng)",
-    },
-    "🍃 Tâm Sự Đêm": {
-        "title": "🍃 Tâm Sự Đêm",
-        "desc": "Viết tay Itim nhẹ nhàng, dìm tối sâu 60%",
-        "font_preset": "🍃 Itim (Viết Tay Dễ Thương / Nhẹ Nhàng)",
-        "font_size": 46,
-        "text_align": "center",
-        "overlay_darkness": 60,
-        "antiglare_preset": "🌿 Tự Nhiên (Nền Tối / Ban Đêm)",
-    },
-}
-
-# ==============================================================================
 # BỘ CẤU HÌNH MỨC ĐỘ CHỐNG LOÁ QUANG HỌC
 # ==============================================================================
 ANTIGLARE_PRESETS = {
@@ -810,22 +768,6 @@ with col_input:
         FONT_PRESETS["☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)"],
     )
 
-
-    # ---------------- BỘ PRESET PHONG CÁCH 1 CHẠM (1-TAP PRO STYLES) ----------------
-    st.markdown("<b style='color: #F4F4F5; font-size: 0.88rem; display: block; margin-top: 6px; margin-bottom: 6px;'>⚡ Phong Cách 1 Chạm (Quick Styles):</b>", unsafe_allow_html=True)
-    p_cols = st.columns(4)
-    preset_items = list(STYLE_PRESETS.items())
-    for p_idx, (p_name, p_data) in enumerate(preset_items):
-        with p_cols[p_idx]:
-            if st.button(p_name, key=f"btn_style_preset_{p_idx}", use_container_width=True, help=p_data["desc"]):
-                st.session_state.font_preset = p_data["font_preset"]
-                st.session_state.quote_font_size = p_data["font_size"]
-                st.session_state.text_align = p_data["text_align"]
-                st.session_state.overlay_darkness = p_data["overlay_darkness"]
-                st.session_state.antiglare_preset = p_data["antiglare_preset"]
-                st.session_state.rendered_video = None
-                st.toast(f"Đã chọn: {p_name}", icon="✨")
-                st.rerun()
 
     # ---------------- NÚT HÀNH ĐỘNG HERO (ĐẶT NGAY DƯỚI BƯỚC 2 - TỐI ƯU MOBILE-FIRST) ----------------
     if st.session_state.get("bg_image") and Path(st.session_state.bg_image).exists():
