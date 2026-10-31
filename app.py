@@ -24,7 +24,7 @@ import importlib
 import inspect
 
 import streamlit as st
-from PIL import Image, ImageEnhance, ImageOps
+from PIL import Image, ImageDraw, ImageEnhance, ImageOps
 
 import modules.video_renderer
 try:
@@ -65,129 +65,121 @@ st.markdown(
     
     html, body, [class*="css"], .stApp {
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-        background-color: #070B12 !important;
+        background-color: #09090B !important;
         background-image: 
-            radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
-            radial-gradient(circle at 90% 20%, rgba(129, 140, 248, 0.09) 0%, transparent 45%),
-            radial-gradient(circle at 50% 90%, rgba(14, 165, 233, 0.06) 0%, transparent 50%) !important;
+            radial-gradient(circle at 12% 10%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+            radial-gradient(circle at 88% 18%, rgba(14, 165, 233, 0.07) 0%, transparent 45%),
+            radial-gradient(circle at 50% 90%, rgba(99, 102, 241, 0.05) 0%, transparent 50%) !important;
         background-attachment: fixed !important;
-        color: #F1F5F9;
+        color: #F4F4F5;
     }
 
-    /* Container chung tối ưu cho Desktop */
+    /* Container tối ưu không gian Studio */
     .block-container {
-        padding-top: 1.6rem !important;
-        padding-bottom: 3rem !important;
+        padding-top: 1.2rem !important;
+        padding-bottom: 2.5rem !important;
         max-width: 1360px !important;
     }
 
-    /* Header & Branding */
-    .hero-top-badge {
-        display: inline-flex;
+    /* Studio Header Pro Bar */
+    .studio-header {
+        display: flex;
         align-items: center;
-        gap: 8px;
-        background: rgba(14, 165, 233, 0.12);
-        border: 1px solid rgba(56, 189, 248, 0.35);
-        color: #38BDF8;
-        padding: 5px 13px;
-        border-radius: 9999px;
-        font-size: 0.76rem;
-        font-weight: 700;
-        letter-spacing: 0.8px;
-        text-transform: uppercase;
-        margin-bottom: 0.6rem;
-        box-shadow: 0 0 20px -3px rgba(56, 189, 248, 0.3);
+        justify-content: space-between;
+        padding: 0.75rem 1.1rem;
+        background: rgba(18, 18, 23, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        margin-bottom: 1.2rem;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
     }
-    .hero-dot {
-        width: 8px;
-        height: 8px;
-        background-color: #38BDF8;
+    .studio-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .studio-title {
+        font-size: 1.12rem;
+        font-weight: 800;
+        letter-spacing: -0.3px;
+        color: #FFFFFF;
+    }
+    .studio-badge-pro {
+        font-size: 0.65rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+        color: #FFFFFF;
+        padding: 2px 7px;
+        border-radius: 6px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        vertical-align: middle;
+    }
+    .studio-status {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 0.78rem;
+        color: #A1A1AA;
+        font-weight: 600;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .status-dot {
+        width: 7px;
+        height: 7px;
+        background-color: #10B981;
         border-radius: 50%;
-        box-shadow: 0 0 10px #38BDF8;
-        animation: pulse-dot 2s infinite ease-in-out;
+        box-shadow: 0 0 8px #10B981;
+        animation: pulse-dot 2.2s infinite ease-in-out;
     }
     @keyframes pulse-dot {
         0%, 100% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.4; transform: scale(0.85); }
     }
 
-    .main-title {
-        font-size: 2.2rem;
-        font-weight: 900;
-        letter-spacing: -0.7px;
-        background: linear-gradient(135deg, #FFFFFF 20%, #7DD3FC 60%, #C084FC 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.3rem;
-        line-height: 1.2;
-    }
-
-    .main-subtitle {
-        color: #94A3B8;
-        font-size: 0.95rem;
-        margin-bottom: 1.5rem;
-        line-height: 1.5;
-        max-width: 850px;
-    }
-
-    /* Feature tags ngang */
-    .feature-tags-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 1.5rem;
-    }
-    .feature-tag-pill {
-        background: rgba(30, 41, 59, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 8px;
-        padding: 4px 10px;
-        font-size: 0.8rem;
-        color: #CBD5E1;
-        font-weight: 500;
-    }
-
-    /* Step Card Glassmorphism */
+    /* Cards cấu trúc Studio Pro */
     .glass-card {
-        background: rgba(15, 23, 42, 0.68);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        border: 1px solid rgba(255, 255, 255, 0.09);
-        border-radius: 18px;
-        padding: 1.3rem 1.4rem;
-        margin-bottom: 1.2rem;
-        box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.45);
-        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        background: rgba(18, 18, 23, 0.75);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 1.15rem 1.2rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
     .glass-card:hover {
-        border-color: rgba(56, 189, 248, 0.3);
-        box-shadow: 0 12px 35px -5px rgba(14, 165, 233, 0.12);
+        border-color: rgba(99, 102, 241, 0.35);
+        box-shadow: 0 6px 25px -3px rgba(99, 102, 241, 0.1);
     }
 
-    /* Step Badge */
+    /* Step Badge Metallic */
     .step-header {
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-bottom: 0.8rem;
+        margin-bottom: 0.65rem;
     }
     .step-number {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 30px;
-        height: 30px;
-        background: linear-gradient(135deg, #0284C7 0%, #38BDF8 100%);
-        color: #FFFFFF;
-        font-size: 0.85rem;
+        width: 26px;
+        height: 26px;
+        background: #27272A;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #F4F4F5;
+        font-size: 0.76rem;
         font-weight: 800;
-        border-radius: 9px;
-        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+        border-radius: 7px;
     }
     .step-title {
-        font-size: 1.1rem;
+        font-size: 1.02rem;
         font-weight: 700;
-        color: #F8FAFC;
+        color: #F4F4F5;
         letter-spacing: -0.2px;
     }
 
@@ -197,10 +189,11 @@ st.markdown(
         align-items: center;
         justify-content: space-between;
         margin-top: 6px;
-        padding: 6px 10px;
+        padding: 5px 10px;
         border-radius: 8px;
-        background: rgba(30, 41, 59, 0.5);
-        font-size: 0.82rem;
+        background: #18181B;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 0.8rem;
     }
     .word-badge-ok {
         color: #34D399;
@@ -213,21 +206,21 @@ st.markdown(
 
     /* Hero Action Button */
     .btn-render-hero button {
-        background: linear-gradient(135deg, #0284C7 0%, #2563EB 50%, #4F46E5 100%) !important;
+        background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%) !important;
         color: #FFFFFF !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        font-size: 1.12rem !important;
+        border: 1px solid rgba(255, 255, 255, 0.18) !important;
+        font-size: 1.08rem !important;
         font-weight: 800 !important;
-        min-height: 56px !important;
-        border-radius: 16px !important;
-        box-shadow: 0 10px 30px -4px rgba(37, 99, 235, 0.55) !important;
+        min-height: 54px !important;
+        border-radius: 14px !important;
+        box-shadow: 0 4px 18px rgba(79, 70, 229, 0.4) !important;
         transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        letter-spacing: 0.3px !important;
+        letter-spacing: 0.2px !important;
     }
     .btn-render-hero button:hover {
-        transform: translateY(-2px) scale(1.01) !important;
-        box-shadow: 0 14px 40px -4px rgba(56, 189, 248, 0.75) !important;
-        border-color: rgba(255, 255, 255, 0.4) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6) !important;
+        border-color: rgba(255, 255, 255, 0.35) !important;
     }
     .btn-render-hero button:active {
         transform: scale(0.98) !important;
@@ -236,185 +229,151 @@ st.markdown(
     /* Phone Mockup Frame cho Live Preview & Video */
     .phone-mockup-wrapper {
         background: #000000;
-        border: 2.5px solid rgba(255, 255, 255, 0.12);
-        border-radius: 26px;
-        padding: 10px;
-        box-shadow: 
-            0 0 0 1px rgba(0, 0, 0, 0.8),
-            0 25px 60px -15px rgba(0, 0, 0, 0.9),
-            0 0 35px -5px rgba(56, 189, 248, 0.2);
+        border: 1.5px solid rgba(255, 255, 255, 0.12);
+        border-radius: 22px;
+        padding: 8px;
+        box-shadow: 0 15px 45px -10px rgba(0, 0, 0, 0.85);
         position: relative;
         max-width: 440px;
         margin: 0 auto;
     }
     .phone-notch {
-        width: 90px;
-        height: 16px;
-        background: #0F172A;
-        border-radius: 0 0 12px 12px;
-        margin: 0 auto 8px auto;
+        width: 80px;
+        height: 14px;
+        background: #18181B;
+        border-radius: 0 0 10px 10px;
+        margin: 0 auto 6px auto;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
+        gap: 5px;
     }
     .phone-lens {
-        width: 7px;
-        height: 7px;
-        background: #1E293B;
+        width: 6px;
+        height: 6px;
+        background: #27272A;
         border-radius: 50%;
-        box-shadow: inset 0 0 2px #38BDF8;
     }
     .phone-speaker {
-        width: 30px;
-        height: 4px;
-        background: #334155;
-        border-radius: 4px;
+        width: 25px;
+        height: 3px;
+        background: #3F3F46;
+        border-radius: 3px;
     }
 
-    /* Style media bên trong */
     .phone-mockup-wrapper video,
     .phone-mockup-wrapper .stImage img {
-        border-radius: 18px !important;
+        border-radius: 14px !important;
         max-height: 520px !important;
         width: auto !important;
         margin: 0 auto !important;
         display: block !important;
         object-fit: cover !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
-    }
-
-    /* Status badge trên preview */
-    .preview-pill-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(15, 23, 42, 0.85);
-        border: 1px solid rgba(56, 189, 248, 0.3);
-        color: #38BDF8;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.78rem;
-        font-weight: 700;
-        margin-bottom: 0.7rem;
     }
 
     /* Dashboard thông số */
     .meta-dashboard {
         display: flex;
         justify-content: space-around;
-        background: rgba(15, 23, 42, 0.85);
+        background: #121217;
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 0.75rem;
-        margin-top: 0.8rem;
-        margin-bottom: 1rem;
+        border-radius: 10px;
+        padding: 0.65rem;
+        margin-top: 0.7rem;
+        margin-bottom: 0.85rem;
         text-align: center;
     }
     .meta-item-val {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         font-weight: 800;
-        color: #38BDF8;
+        color: #818CF8;
         font-family: 'JetBrains Mono', monospace;
     }
     .meta-item-lbl {
-        font-size: 0.72rem;
-        color: #94A3B8;
+        font-size: 0.7rem;
+        color: #A1A1AA;
         text-transform: uppercase;
         margin-top: 2px;
     }
 
     /* Download button */
     .btn-download button {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+        background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
         color: #FFFFFF !important;
         border: none !important;
         font-weight: 800 !important;
-        font-size: 1.05rem !important;
-        min-height: 52px !important;
-        border-radius: 14px !important;
-        box-shadow: 0 8px 25px -4px rgba(16, 185, 129, 0.45) !important;
+        font-size: 1.02rem !important;
+        min-height: 50px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 18px rgba(5, 150, 105, 0.4) !important;
         transition: transform 0.2s !important;
     }
     .btn-download button:hover {
         transform: translateY(-2px) !important;
-        box-shadow: 0 12px 30px -4px rgba(16, 185, 129, 0.65) !important;
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.55) !important;
     }
 
-    /* Tinh chỉnh input form streamlit */
+    /* Inputs tinh chỉnh */
     .stTextArea textarea, .stTextInput input, .stSelectbox [data-baseweb="select"] {
-        background-color: rgba(15, 23, 42, 0.75) !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
-        color: #F8FAFC !important;
-        border-radius: 12px !important;
-        font-size: 16px !important; /* Ngăn iOS Safari tự zoom in */
-        transition: border-color 0.2s, box-shadow 0.2s !important;
+        background-color: #121217 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #F4F4F5 !important;
+        border-radius: 10px !important;
+        font-size: 16px !important;
+        transition: border-color 0.2s !important;
     }
     .stTextArea textarea:focus, .stTextInput input:focus {
-        border-color: #38BDF8 !important;
-        box-shadow: 0 0 14px rgba(56, 189, 248, 0.3) !important;
+        border-color: #6366F1 !important;
+        box-shadow: 0 0 10px rgba(99, 102, 241, 0.25) !important;
     }
 
     /* ========================================================================= */
-    /* MOBILE-FIRST RESPONSIVE OPTIMIZATION (ĐIỆN THOẠI DI ĐỘNG & TABLET)        */
+    /* RESPONSIVE MOBILE TỐI ƯU                                                  */
     /* ========================================================================= */
     @media (max-width: 768px) {
         .block-container {
-            padding-top: 0.6rem !important;
+            padding-top: 0.5rem !important;
             padding-bottom: 2rem !important;
-            padding-left: 0.65rem !important;
-            padding-right: 0.65rem !important;
+            padding-left: 0.6rem !important;
+            padding-right: 0.6rem !important;
         }
-        .hero-top-badge {
-            font-size: 0.68rem !important;
-            padding: 3px 8px !important;
-            margin-bottom: 0.25rem !important;
+        .studio-header {
+            padding: 0.6rem 0.85rem !important;
+            margin-bottom: 0.75rem !important;
         }
-        .main-title {
-            font-size: 1.35rem !important;
-            line-height: 1.2 !important;
-            letter-spacing: -0.3px !important;
-            margin-bottom: 0.2rem !important;
+        .studio-title {
+            font-size: 0.98rem !important;
         }
-        /* Ẩn bớt subtitle và tag thừa trên mobile để tiết kiệm diện tích */
-        .main-subtitle {
-            display: none !important;
-        }
-        .feature-tags-row {
-            display: none !important;
+        .studio-status {
+            font-size: 0.7rem !important;
         }
         .glass-card {
-            padding: 0.9rem 0.95rem !important;
-            border-radius: 14px !important;
-            margin-bottom: 0.85rem !important;
+            padding: 0.85rem 0.9rem !important;
+            border-radius: 12px !important;
+            margin-bottom: 0.75rem !important;
         }
         .step-header {
-            margin-bottom: 0.5rem !important;
+            margin-bottom: 0.45rem !important;
         }
         .step-number {
             width: 24px !important;
             height: 24px !important;
-            font-size: 0.74rem !important;
-            border-radius: 6px !important;
+            font-size: 0.72rem !important;
         }
         .step-title {
-            font-size: 0.96rem !important;
+            font-size: 0.95rem !important;
         }
         .btn-render-hero button {
-            min-height: 52px !important;
-            font-size: 1.05rem !important;
-            border-radius: 14px !important;
-            margin-top: 0.3rem !important;
-            margin-bottom: 0.6rem !important;
+            min-height: 50px !important;
+            font-size: 1rem !important;
+            border-radius: 12px !important;
         }
         .phone-mockup-wrapper {
             border-width: 1px !important;
             border-radius: 16px !important;
             padding: 4px !important;
             max-width: 100% !important;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7) !important;
         }
-        /* Ẩn notch giả lập trên mobile để khung xem trước tối đa diện tích */
         .phone-notch {
             display: none !important;
         }
@@ -425,19 +384,19 @@ st.markdown(
             width: 100% !important;
         }
         .meta-dashboard {
-            padding: 0.5rem 0.3rem !important;
+            padding: 0.45rem 0.3rem !important;
             margin-top: 0.5rem !important;
-            margin-bottom: 0.7rem !important;
+            margin-bottom: 0.65rem !important;
         }
         .meta-item-val {
-            font-size: 0.8rem !important;
+            font-size: 0.78rem !important;
         }
         .meta-item-lbl {
-            font-size: 0.62rem !important;
+            font-size: 0.6rem !important;
         }
         .btn-download button {
-            min-height: 50px !important;
-            font-size: 0.98rem !important;
+            min-height: 48px !important;
+            font-size: 0.95rem !important;
         }
     }
     </style>
@@ -457,6 +416,67 @@ def load_config() -> Dict[str, Any]:
             pass
     return {}
 
+
+
+def get_tiktok_safe_zone_overlay(size=(1080, 1920)) -> Image.Image:
+    """
+    Tạo lớp phủ bán trong suốt mô phỏng giao diện chuẩn của TikTok:
+    - Vùng Safe-Zone an toàn tuyệt đối (không bị các nút TikTok che khuất)
+    - Mô phỏng các nút: Avatar, Tim, Bình luận, Bookmark, Chia sẻ, Đĩa nhạc và Caption đáy.
+    """
+    w, h = size
+    overlay = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+
+    # 1. Khung Safe Zone (vùng an toàn 100% cho Typography)
+    box_l, box_r, box_t, box_b = 85, 930, 240, 1560
+
+    # Corner brackets (Góc căn lề chuyên nghiệp)
+    c_len = 40
+    c_color = (99, 102, 241, 180)  # Indigo
+    # Top-Left
+    draw.line([(box_l, box_t), (box_l + c_len, box_t)], fill=c_color, width=3)
+    draw.line([(box_l, box_t), (box_l, box_t + c_len)], fill=c_color, width=3)
+    # Top-Right
+    draw.line([(box_r, box_t), (box_r - c_len, box_t)], fill=c_color, width=3)
+    draw.line([(box_r, box_t), (box_r, box_t + c_len)], fill=c_color, width=3)
+    # Bottom-Left
+    draw.line([(box_l, box_b), (box_l + c_len, box_b)], fill=c_color, width=3)
+    draw.line([(box_l, box_b), (box_l, box_b - c_len)], fill=c_color, width=3)
+    # Bottom-Right
+    draw.line([(box_r, box_b), (box_r - c_len, box_b)], fill=c_color, width=3)
+    draw.line([(box_r, box_b), (box_r, box_b - c_len)], fill=c_color, width=3)
+
+    # Đường viền Safe-Zone mờ
+    border_color = (99, 102, 241, 55)
+    draw.rectangle([box_l, box_t, box_r, box_b], outline=border_color, width=1)
+
+    # 2. Mô phỏng icon TikTok cột phải (Semi-transparent white)
+    ui_color = (255, 255, 255, 110)
+    # Avatar
+    draw.ellipse([950, 780, 1020, 850], outline=ui_color, width=2)
+    draw.ellipse([975, 840, 995, 860], fill=(239, 68, 68, 180))  # Nút follow đỏ
+    # Heart
+    draw.ellipse([960, 920, 1010, 970], outline=ui_color, width=2)
+    # Comment
+    draw.ellipse([960, 1050, 1010, 1100], outline=ui_color, width=2)
+    # Bookmark
+    draw.ellipse([960, 1180, 1010, 1230], outline=ui_color, width=2)
+    # Share
+    draw.ellipse([960, 1310, 1010, 1360], outline=ui_color, width=2)
+    # Music disc
+    draw.ellipse([960, 1450, 1010, 1500], outline=ui_color, width=2)
+    draw.ellipse([980, 1470, 990, 1480], fill=ui_color)
+
+    # 3. Mô phỏng Bottom Caption & Username
+    draw.rectangle([85, 1620, 340, 1642], fill=(255, 255, 255, 85))   # Username @saigonbac
+    draw.rectangle([85, 1660, 680, 1678], fill=(255, 255, 255, 60))   # Caption line 1
+    draw.rectangle([85, 1695, 480, 1710], fill=(255, 255, 255, 50))   # Sound track name
+
+    # Top Tabs: Đang Follow | Dành cho bạn
+    draw.rectangle([450, 115, 630, 132], fill=(255, 255, 255, 85))
+
+    return overlay
 
 def crop_image_to_tiktok_portrait(image_path: Path, target_size=(1080, 1920)) -> Path:
     """Cắt và căn giữa (Center-Crop) ảnh chính xác về khổ dọc 1080x1920 (9:16)."""
@@ -488,6 +508,49 @@ def crop_image_to_tiktok_portrait(image_path: Path, target_size=(1080, 1920)) ->
 
     return image_path
 
+
+
+# ==============================================================================
+# BỘ PRESET PHONG CÁCH 1 CHẠM (1-TAP PRO STYLE PRESETS)
+# ==============================================================================
+STYLE_PRESETS = {
+    "☕ Sài Gòn Mưa": {
+        "title": "☕ Sài Gòn Mưa",
+        "desc": "Tone cafe trầm ấm, thanh lịch, font Be Vietnam Pro",
+        "font_preset": "☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)",
+        "font_size": 42,
+        "text_align": "center",
+        "overlay_darkness": 50,
+        "antiglare_preset": "✨ Chuẩn Điện Ảnh (Khuyên dùng)",
+    },
+    "🔥 TikTok Viral": {
+        "title": "🔥 TikTok Viral",
+        "desc": "Chữ to bản Montserrat Black, chống loá cực đại",
+        "font_preset": "🔥 Montserrat Black (Siêu Đậm Nổi Bật)",
+        "font_size": 52,
+        "text_align": "center",
+        "overlay_darkness": 55,
+        "antiglare_preset": "🛡️ Siêu Chống Loá (Nền Sáng / Rất Chói)",
+    },
+    "🎞️ Indie Hoài Niệm": {
+        "title": "🎞️ Indie Hoài Niệm",
+        "desc": "Cổ điển điện ảnh, font Playfair có chân, căn trái",
+        "font_preset": "🎞️ Playfair Display Bold (Điện Ảnh Hoài Niệm)",
+        "font_size": 40,
+        "text_align": "left",
+        "overlay_darkness": 45,
+        "antiglare_preset": "✨ Chuẩn Điện Ảnh (Khuyên dùng)",
+    },
+    "🍃 Tâm Sự Đêm": {
+        "title": "🍃 Tâm Sự Đêm",
+        "desc": "Viết tay Itim nhẹ nhàng, dìm tối sâu 60%",
+        "font_preset": "🍃 Itim (Viết Tay Dễ Thương / Nhẹ Nhàng)",
+        "font_size": 46,
+        "text_align": "center",
+        "overlay_darkness": 60,
+        "antiglare_preset": "🌿 Tự Nhiên (Nền Tối / Ban Đêm)",
+    },
+}
 
 # ==============================================================================
 # BỘ CẤU HÌNH MỨC ĐỘ CHỐNG LOÁ QUANG HỌC
@@ -568,6 +631,8 @@ if "text_align" not in st.session_state:
     st.session_state.text_align = "center"
 if "quote_font_size" not in st.session_state:
     st.session_state.quote_font_size = 42
+if "show_safe_zone" not in st.session_state:
+    st.session_state.show_safe_zone = False
 
 
 # ==============================================================================
@@ -575,19 +640,14 @@ if "quote_font_size" not in st.session_state:
 # ==============================================================================
 st.markdown(
     """
-    <div class="hero-top-badge">
-        <span class="hero-dot"></span>
-        TIKTOK STUDIO • DYNAMIC VIDEO ENGINE
-    </div>
-    <div class="main-title">Aesthetic Quote Video</div>
-    <div class="main-subtitle">
-        Tạo video quote chuẩn 9:16 TikTok: Gõ câu chữ, tải ảnh hoặc video nền từ điện thoại và xuất video sắc nét, chống loá.
-    </div>
-    <div class="feature-tags-row">
-        <div class="feature-tag-pill">📐 Khổ dọc 9:16 (1080x1920)</div>
-        <div class="feature-tag-pill">⏱️ Thời lượng động (10s - 20s)</div>
-        <div class="feature-tag-pill">🛡️ Chống loá quang học</div>
-        <div class="feature-tag-pill">⚡ Xuất nhanh H.264</div>
+    <div class="studio-header">
+        <div class="studio-brand">
+            <span style="font-size: 1.25rem;">🎬</span>
+            <span class="studio-title">QUOTE STUDIO <span class="studio-badge-pro">PRO</span></span>
+        </div>
+        <div class="studio-status">
+            <span class="status-dot"></span> 9:16 DYNAMIC ENGINE
+        </div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -749,6 +809,23 @@ with col_input:
         st.session_state.font_preset,
         FONT_PRESETS["☕ Be Vietnam Pro Bold (Mặc Định - Thanh Lịch Sài Gòn)"],
     )
+
+
+    # ---------------- BỘ PRESET PHONG CÁCH 1 CHẠM (1-TAP PRO STYLES) ----------------
+    st.markdown("<b style='color: #F4F4F5; font-size: 0.88rem; display: block; margin-top: 6px; margin-bottom: 6px;'>⚡ Phong Cách 1 Chạm (Quick Styles):</b>", unsafe_allow_html=True)
+    p_cols = st.columns(4)
+    preset_items = list(STYLE_PRESETS.items())
+    for p_idx, (p_name, p_data) in enumerate(preset_items):
+        with p_cols[p_idx]:
+            if st.button(p_name, key=f"btn_style_preset_{p_idx}", use_container_width=True, help=p_data["desc"]):
+                st.session_state.font_preset = p_data["font_preset"]
+                st.session_state.quote_font_size = p_data["font_size"]
+                st.session_state.text_align = p_data["text_align"]
+                st.session_state.overlay_darkness = p_data["overlay_darkness"]
+                st.session_state.antiglare_preset = p_data["antiglare_preset"]
+                st.session_state.rendered_video = None
+                st.toast(f"Đã chọn: {p_name}", icon="✨")
+                st.rerun()
 
     # ---------------- NÚT HÀNH ĐỘNG HERO (ĐẶT NGAY DƯỚI BƯỚC 2 - TỐI ƯU MOBILE-FIRST) ----------------
     if st.session_state.get("bg_image") and Path(st.session_state.bg_image).exists():
@@ -945,18 +1022,16 @@ with col_input:
 # CỘT PHẢI: PHONE MOCKUP XEM TRƯỚC (LIVE PREVIEW) & VIDEO THÀNH PHẨM
 # ==============================================================================
 with col_preview:
-    st.markdown(
-        """
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
-            <div class="step-title" style="font-size: 1.1rem;">Khung Xem Trước Trực Quan</div>
-            <div class="preview-pill-badge">
-                <span style="display:inline-block; width:6px; height:6px; background:#38BDF8; border-radius:50%;"></span>
-                LIVE 9:16
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    col_prev_t, col_prev_safe = st.columns([1.2, 1.0])
+    with col_prev_t:
+        st.markdown('<div class="step-title" style="font-size: 1.02rem; padding-top: 4px;">Khung Xem Trước 9:16</div>', unsafe_allow_html=True)
+    with col_prev_safe:
+        st.session_state.show_safe_zone = st.toggle(
+            "📐 TikTok Safe-Zone",
+            value=st.session_state.show_safe_zone,
+            help="Bật/Tắt lưới mô phỏng các icon TikTok (Like, Comment, Caption) để đảm bảo chữ không bị che.",
+            key="tg_safe_zone",
+        )
 
     rendered_vid = st.session_state.rendered_video
     bg_img = st.session_state.bg_image
@@ -1032,6 +1107,9 @@ with col_preview:
 
                 text_overlay = create_quote_overlay(**overlay_args)
                 preview_composite = Image.alpha_composite(bg_ready, text_overlay)
+                if st.session_state.get("show_safe_zone", False):
+                    sz_ov = get_tiktok_safe_zone_overlay((1080, 1920))
+                    preview_composite = Image.alpha_composite(preview_composite, sz_ov)
                 st.image(preview_composite.convert("RGB"), use_container_width=True)
             except Exception as ex:
                 logger.warning(f"Lỗi live preview: {ex}")
@@ -1043,6 +1121,10 @@ with col_preview:
         else:
             try:
                 fb_img = _get_safe_bg_preview(bg_img)
+                if st.session_state.get("show_safe_zone", False):
+                    fb_img = fb_img.resize((1080, 1920), Image.Resampling.LANCZOS)
+                    sz_ov = get_tiktok_safe_zone_overlay((1080, 1920))
+                    fb_img = Image.alpha_composite(fb_img, sz_ov)
                 st.image(fb_img.convert("RGB"), use_container_width=True)
             except Exception:
                 pass
