@@ -637,14 +637,18 @@ with col_input:
             unsafe_allow_html=True,
         )
 
+        # Khởi tạo widget lần đầu với giá trị từ session_state (tránh conflict value vs key)
+        if "txt_quote_input" not in st.session_state:
+            st.session_state["txt_quote_input"] = st.session_state.quote_text
+
         input_quote = st.text_area(
             "Nhập câu quote của bạn:",
-            value=st.session_state.quote_text,
             placeholder="Gõ hoặc dán câu quote của bạn tại đây...",
             height=85,
             key="txt_quote_input",
             label_visibility="collapsed",
         )
+        # Đồng bộ: lấy thẳng từ widget key (Streamlit quản lý), không dùng value=
         if input_quote != st.session_state.quote_text:
             st.session_state.quote_text = input_quote
             st.session_state.rendered_video = None

@@ -225,6 +225,9 @@ def wrap_quote_to_lines(
             seg_lines.append(curr)
         return seg_lines
 
+    # Normalize line endings từ Windows (\r\n) và Mac cũ (\r) về Unix (\n)
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+
     if not preserve_linebreaks:
         clean_text = " ".join(text.strip().split())
         return _wrap_single_segment(clean_text)
