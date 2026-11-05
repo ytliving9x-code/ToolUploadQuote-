@@ -337,8 +337,16 @@ def create_quote_overlay(
         # Đặt ở góc dưới (cách đáy màn hình khoảng margin_bottom px)
         start_y = canvas_size[1] - margin_bottom - total_text_h
 
+    # Tính toán lề chuẩn: Thẳng hàng đầu dòng (Block-Centered Left-Aligned)
+    max_line_w = max((w for _, w, _ in line_metrics if w > 0), default=0)
+    block_left_x = (canvas_size[0] - max_line_w) // 2
+
     def get_line_x(w: int) -> int:
-        if text_align == "center":
+        if text_align in ["center", "straight_left", "block_center"]:
+            # MẶC ĐỊNH: Tất cả đầu dòng thẳng hàng nhau 100%, cả khối cân đối ở giữa màn hình
+            return block_left_x
+        elif text_align == "pure_center":
+            # Căn giữa từng dòng riêng biệt
             return (canvas_size[0] - w) // 2
         elif text_align == "right":
             return (canvas_size[0] - margin_right) - w
@@ -372,51 +380,38 @@ def create_quote_overlay(
     sig_x = 0
     if signature and sig_font:
         sig_w = sig_bbox[2] - sig_bbox[0]
-        if text_align == "center":
+        if text_align in ["center", "straight_left", "block_center"]:
+            sig_x = block_left_x + max_line_w - sig_w
+        elif text_align == "pure_center":
             sig_x = (canvas_size[0] - sig_w) // 2
         elif text_align == "right":
             sig_x = (canvas_size[0] - margin_right) - sig_w
         else:
-            sig_x = (canvas_size[0] - margin_right) - sig_w
+            sig_x = margin_left
 
-    # 2. ĐỔ BÓNG KÉP ĐA TẦNG (DUAL-LAYER CINEMA SHADOW)
-    # Lớp 2a: Tight Shadow (bóng sát chân chữ tạo độ sắc cạnh, triệt tiêu loá hoàn toàn)
-    tight_layer = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
-    t_draw = ImageDraw.Draw(tight_layer)
+    # 2. ĐỔ BÓNG ĐIỆN ẢNH SẮC NÉT (SHARP DIRECTIONAL SHADOW - KHÔNG MỜ NHÒE)
+    shadow_layer = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
+    s_draw = ImageDraw.Draw(shadow_layer)
     curr_y = start_y
     for line, w, h in line_metrics:
         if line:
             lx = get_line_x(w)
-            t_draw.text((lx + 2, curr_y + 2), line, font=font, fill=(0, 0, 0, 245))
+            # Bóng đổ định hướng sắc cạnh (x+2, y+3) tạo độ nổi 3D tách biệt khỏi nền
+            s_draw.text((lx + 2, curr_y + 3), line, font=font, fill=(0, 0, 0, 240))
         curr_y += h + line_spacing
 
     if signature and sig_font:
         curr_y += (sig_spacing - line_spacing) if lines else 0
-        t_draw.text((sig_x + 2, curr_y + 2), signature, font=sig_font, fill=(0, 0, 0, 220))
+        s_draw.text((sig_x + 2, curr_y + 2), signature, font=sig_font, fill=(0, 0, 0, 200))
 
-    blurred_tight = tight_layer.filter(ImageFilter.GaussianBlur(radius=1.2))
-    img = Image.alpha_composite(img, blurred_tight)
+    # Blur cực nhẹ (1.2px) để bóng êm dịu mà TUYỆT ĐỐI KHÔNG làm mờ rìa chữ
+    sharp_blur_radius = max(0.8, min(1.8, shadow_blur_radius * 0.35))
+    blurred_shadow = shadow_layer.filter(ImageFilter.GaussianBlur(radius=sharp_blur_radius))
+    img = Image.alpha_composite(img, blurred_shadow)
 
-    # Lớp 2b: Soft Ambient Shadow (bóng mờ lan tỏa tạo chiều sâu điện ảnh)
-    if shadow_blur_radius > 0:
-        soft_layer = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
-        s_draw = ImageDraw.Draw(soft_layer)
-        curr_y = start_y
-        for line, w, h in line_metrics:
-            if line:
-                lx = get_line_x(w)
-                s_draw.text((lx + 1, curr_y + 4), line, font=font, fill=(0, 0, 0, 185))
-            curr_y += h + line_spacing
-
-        if signature and sig_font:
-            curr_y += (sig_spacing - line_spacing) if lines else 0
-            s_draw.text((sig_x + 1, curr_y + 4), signature, font=sig_font, fill=(0, 0, 0, 160))
-
-        blurred_soft = soft_layer.filter(ImageFilter.GaussianBlur(radius=shadow_blur_radius))
-        img = Image.alpha_composite(img, blurred_soft)
-
-    # 3. Vẽ chữ Off-White cao cấp với đường viền sắc nét (Crisp Micro-Stroke)
+    # 3. VẼ CHỮ TRẮNG TINH KHIẾT SẮC NÉT 100% (CRYSTAL CLEAR ULTRA-SHARP)
     draw = ImageDraw.Draw(img)
+    effective_stroke = max(1, stroke_width)
     curr_y = start_y
     for line, w, h in line_metrics:
         if line:
@@ -425,9 +420,9 @@ def create_quote_overlay(
                 (lx, curr_y),
                 line,
                 font=font,
-                fill=(248, 250, 252, 255),  # Off-white dịu mắt, chống optical halation
-                stroke_width=stroke_width,
-                stroke_fill=(8, 12, 20, 215),  # Viền đen đậm nét, sắc sảo
+                fill=(255, 255, 255, 255),  # Trắng tinh khiết 100% không bị đục
+                stroke_width=effective_stroke,
+                stroke_fill=(0, 0, 0, 255),  # Viền đen sắc lẹm, triệt tiêu hoàn toàn mờ nhòe
             )
         curr_y += h + line_spacing
 
@@ -438,9 +433,9 @@ def create_quote_overlay(
             (sig_x, curr_y),
             signature,
             font=sig_font,
-            fill=(241, 245, 249, 215),
-            stroke_width=max(0, stroke_width - 1),
-            stroke_fill=(8, 12, 20, 190),
+            fill=(245, 245, 250, 230),
+            stroke_width=1,
+            stroke_fill=(0, 0, 0, 220),
         )
 
     return img
@@ -550,7 +545,7 @@ def render_18s_video(
         "-map", "[outv]",
         "-c:v", "libx264",
         "-preset", "faster",
-        "-crf", "18",  # Tối ưu cân bằng sắc nét chuẩn TikTok & tốc độ render siêu tốc
+        "-crf", "16",  # Tối ưu cân bằng sắc nét chuẩn TikTok & tốc độ render siêu tốc
         "-pix_fmt", "yuv420p",
         "-r", "30",
         "-t", str(duration),
@@ -664,7 +659,7 @@ def render_video_from_footage(
         "-map", "[outv]",
         "-c:v", "libx264",
         "-preset", "faster",
-        "-crf", "18",
+        "-crf", "16",
         "-pix_fmt", "yuv420p",
         "-r", "30",
         "-t", str(actual_duration),

@@ -595,7 +595,7 @@ if "preserve_linebreaks" not in st.session_state:
 if "text_align" not in st.session_state:
     st.session_state.text_align = "center"
 if "quote_font_size" not in st.session_state:
-    st.session_state.quote_font_size = 42
+    st.session_state.quote_font_size = 44
 if "show_safe_zone" not in st.session_state:
     st.session_state.show_safe_zone = False
 
@@ -865,9 +865,10 @@ with col_input:
         with col_align:
             st.markdown("<b style='color: #38BDF8; font-size: 0.9rem;'>🎯 Căn lề chữ (Alignment):</b>", unsafe_allow_html=True)
             align_map = {
-                "🎯 Trung tâm khung hình (Mặc định)": "center",
-                "➡️ Sang phải (Phía dưới)": "right",
+                "🎯 Thẳng hàng đầu dòng (Cân đối giữa màn hình - Mặc định)": "center",
+                "↔️ Căn giữa từng câu (Center riêng từng dòng)": "pure_center",
                 "⬅️ Sang trái (Phía dưới)": "left",
+                "➡️ Sang phải (Phía dưới)": "right",
             }
             align_labels = list(align_map.keys())
             cur_label = next((k for k, v in align_map.items() if v == st.session_state.text_align), align_labels[0])
