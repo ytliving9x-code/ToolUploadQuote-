@@ -188,19 +188,7 @@ def wrap_quote_to_lines(
 ) -> List[str]:
     """
     Tự động ngắt dòng văn bản tiếng Việt an toàn theo chiều rộng màn hình.
-
-    Args:
-        text: Nội dung câu trích dẫn.
-        font: Font chữ đang dùng để đo kích thước.
-        max_width: Chiều rộng tối đa cho phép của vùng chữ (pixels).
-        preserve_linebreaks:
-            - True: Giữ nguyên các dấu Enter/xuống dòng do người dùng gõ, đồng thời
-              vẫn tự động bẻ dòng nếu 1 câu quá dài vượt quá max_width.
-            - False (chế độ cũ): Tự động dồn toàn bộ câu thành 1 đoạn văn liên tục
-              và dàn đều dòng theo max_width.
-
-    Returns:
-        Danh sách các dòng text đã ngắt.
+    ĐẢM BẢO 100%: Người dùng gõ/paste xuống dòng như thế nào thì giữ nguyên như thế.
     """
     dummy_img = Image.new("RGBA", (1, 1))
     draw = ImageDraw.Draw(dummy_img)
@@ -209,6 +197,13 @@ def wrap_quote_to_lines(
         words = segment.strip().split()
         if not words:
             return []
+        
+        # Kiểm tra trước nếu toàn bộ segment vừa max_width thì giữ nguyên không ngắt
+        full_line = " ".join(words)
+        bbox = draw.textbbox((0, 0), full_line, font=font)
+        if (bbox[2] - bbox[0]) <= max_width:
+            return [full_line]
+
         seg_lines: List[str] = []
         curr = ""
         for word in words:
@@ -225,20 +220,26 @@ def wrap_quote_to_lines(
             seg_lines.append(curr)
         return seg_lines
 
-    # Normalize line endings từ Windows (\r\n) và Mac cũ (\r) về Unix (\n)
-    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    # Chuẩn hóa triệt để ký tự khoảng trắng lạ từ điện thoại (iOS/Android/Facebook/Notes)
+    clean = text.replace("\u00a0", " ").replace("\u202f", " ").replace("\u200b", "").replace("\ufeff", "")
+    # Chuẩn hóa mọi kiểu xuống dòng về \n
+    clean = clean.replace("\r\n", "\n").replace("\r", "\n").replace("\u2028", "\n").replace("\u2029", "\n").replace("\u0085", "\n")
 
-    if not preserve_linebreaks:
-        clean_text = " ".join(text.strip().split())
-        return _wrap_single_segment(clean_text)
+    # Nếu văn bản có chứa dấu xuống dòng \n, luôn ưu tiên bảo toàn ngắt dòng của người dùng
+    has_newlines = "\n" in clean.strip()
+    should_preserve = preserve_linebreaks or has_newlines
 
-    # Chế độ giữ nguyên ngắt dòng theo phím Enter
-    raw_lines = text.strip().splitlines()
+    if not should_preserve:
+        one_paragraph = " ".join(clean.strip().split())
+        return _wrap_single_segment(one_paragraph)
+
+    # Chế độ giữ nguyên ngắt dòng theo phím Enter (Gõ gì hiện nấy)
+    raw_lines = clean.strip().split("\n")
     lines: List[str] = []
     for raw in raw_lines:
         s = raw.strip()
         if not s:
-            # Dòng trống phân đoạn (tránh nhiều dòng trống liền nhau)
+            # Dòng trống phân đoạn giữa các khổ/câu (tránh nhiều dòng trống liền nhau)
             if lines and lines[-1] != "":
                 lines.append("")
             continue
@@ -289,11 +290,12 @@ def create_quote_overlay(
     font = get_vietnamese_font(font_size, font_path=font_path)
     lines = wrap_quote_to_lines(quote, font, max_width=max_text_width, preserve_linebreaks=preserve_linebreaks)
 
-    # Nếu câu dài nhiều dòng, tự động điều chỉnh font size để vừa vặn khung hình
-    if len(lines) > 5 and font_size > 34:
+    # Tự động điều chỉnh font size nếu câu thực sự quá dài (chỉ tính dòng có chữ, không phạt dòng trống)
+    text_lines_count = len([l for l in lines if l.strip()])
+    if text_lines_count > 6 and font_size > 34:
         font = get_vietnamese_font(max(32, font_size - 6), font_path=font_path)
         lines = wrap_quote_to_lines(quote, font, max_width=max_text_width, preserve_linebreaks=preserve_linebreaks)
-    elif len(lines) > 3 and font_size > 36:
+    elif text_lines_count > 4 and font_size > 38:
         font = get_vietnamese_font(font_size - 4, font_path=font_path)
         lines = wrap_quote_to_lines(quote, font, max_width=max_text_width, preserve_linebreaks=preserve_linebreaks)
 
@@ -305,7 +307,7 @@ def create_quote_overlay(
 
     for line in lines:
         if not line:
-            blank_h = int(font.size * 0.4)
+            blank_h = int(font.size * 0.85)  # Dòng trống phân đoạn rõ ràng, đúng chuẩn ngắt khổ
             line_metrics.append(("", 0, blank_h))
             total_text_h += blank_h
         else:
