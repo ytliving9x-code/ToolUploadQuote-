@@ -322,7 +322,7 @@ def create_quote_overlay(
     # Thêm chiều cao cho chữ ký nếu có
     sig_font = None
     sig_h = 0
-    sig_spacing = 16
+    sig_spacing = 42  # Khoảng cách thoáng đãng, tách biệt tinh tế giữa nội dung quote và chữ ký
     if signature:
         sig_font = get_vietnamese_font(signature_font_size)
         sig_bbox = draw_dummy.textbbox((0, 0), signature, font=sig_font)
