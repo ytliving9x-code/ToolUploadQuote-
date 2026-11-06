@@ -598,6 +598,10 @@ if "quote_font_size" not in st.session_state:
     st.session_state.quote_font_size = 44
 if "show_safe_zone" not in st.session_state:
     st.session_state.show_safe_zone = False
+if "crop_mode" not in st.session_state:
+    st.session_state.crop_mode = "fill"
+if "crop_position" not in st.session_state:
+    st.session_state.crop_position = "center"
 
 
 # ==============================================================================
@@ -847,6 +851,8 @@ with col_input:
                             "text_align": st.session_state.text_align,
                             "font_size": st.session_state.quote_font_size,
                             "preserve_linebreaks": st.session_state.preserve_linebreaks,
+                            "crop_mode": st.session_state.crop_mode,
+                            "crop_position": st.session_state.crop_position,
                         }
 
                         render_any_media_quote(**render_args)
@@ -860,7 +866,54 @@ with col_input:
                 gc.collect()
 
     # ---------------- TUỲ CHỌN NÂNG CAO (MẶC ĐỊNH THU GỌN EXPANDED=FALSE ĐỂ TIẾT KIỆM KHÔNG GIAN MOBILE) ----------------
-    with st.expander("⚙️ Tùy Chỉnh Nâng Cao (Cỡ chữ, Font, Độ tối nền, Chống loá)", expanded=False):
+    with st.expander("⚙️ Tùy Chỉnh Nâng Cao (Cỡ chữ, Tỉ lệ 9:16 Crop, Font, Chống loá)", expanded=False):
+        # TÙY CHỌN CHUYỂN ĐỔI TỈ LỆ 9:16 CHO VIDEO/ẢNH NGANG 16:9
+        st.markdown("<b style='color: #38BDF8; font-size: 0.92rem;'>📐 Chuyển đổi Tỉ lệ Chuẩn 9:16 (cho Video/Ảnh 16:9 ngang):</b>", unsafe_allow_html=True)
+        col_crop1, col_crop2 = st.columns([1.1, 1.0])
+        with col_crop1:
+            crop_mode_map = {
+                "🎬 Tràn viền (Cắt chuẩn 9:16)": "fill",
+                "✨ Nền mờ nghệ thuật (CapCut Blur)": "blur_bars",
+            }
+            cur_crop_label = next((k for k, v in crop_mode_map.items() if v == st.session_state.crop_mode), "🎬 Tràn viền (Cắt chuẩn 9:16)")
+            sel_crop_label = st.selectbox(
+                "Kiểu chuyển đổi 9:16:",
+                options=list(crop_mode_map.keys()),
+                index=list(crop_mode_map.keys()).index(cur_crop_label),
+                key="sb_crop_mode_select",
+                help="Tràn viền: Phóng to phủ kín 1080x1920. Nền mờ: Giữ trọn 100% khung hình 16:9 ở giữa, nền mờ CapCut.",
+            )
+            chosen_crop_mode = crop_mode_map[sel_crop_label]
+            if chosen_crop_mode != st.session_state.crop_mode:
+                st.session_state.crop_mode = chosen_crop_mode
+                st.session_state.rendered_video = None
+                st.rerun()
+
+        with col_crop2:
+            if st.session_state.crop_mode == "fill":
+                pos_map = {
+                    "🎯 Cắt giữa (Center)": "center",
+                    "⬅️ Lệch trái (Left)": "left",
+                    "➡️ Lệch phải (Right)": "right",
+                }
+                cur_pos_label = next((k for k, v in pos_map.items() if v == st.session_state.crop_position), "🎯 Cắt giữa (Center)")
+                sel_pos_label = st.selectbox(
+                    "Vị trí cắt Crop:",
+                    options=list(pos_map.keys()),
+                    index=list(pos_map.keys()).index(cur_pos_label),
+                    key="sb_crop_pos_select",
+                    help="Chọn góc cắt để bắt đúng vị trí chủ thể trong video ngang.",
+                )
+                chosen_pos = pos_map[sel_pos_label]
+                if chosen_pos != st.session_state.crop_position:
+                    st.session_state.crop_position = chosen_pos
+                    st.session_state.rendered_video = None
+                    st.rerun()
+            else:
+                st.caption("💡 Chế độ Nền mờ sẽ giữ nguyên 100% video gốc ở giữa màn hình, không bị cắt xén.")
+
+        st.markdown("<hr style='border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 12px 0;'>", unsafe_allow_html=True)
+
         col_align, col_size = st.columns([1.1, 1.0])
         with col_align:
             st.markdown("<b style='color: #38BDF8; font-size: 0.9rem;'>🎯 Căn lề chữ (Alignment):</b>", unsafe_allow_html=True)
@@ -1011,9 +1064,40 @@ with col_preview:
             p_obj = Path(path_target)
             v_exts = {".mp4", ".mov", ".webm", ".avi", ".mkv"}
             if p_obj.suffix.lower() in v_exts:
-                f_path = extract_video_frame(p_obj, timestamp_sec=1.0)
+                f_path = extract_video_frame(
+                    p_obj,
+                    timestamp_sec=1.0,
+                    crop_mode=st.session_state.crop_mode,
+                    crop_position=st.session_state.crop_position,
+                )
                 return Image.open(f_path).convert("RGBA")
-            return Image.open(p_obj).convert("RGBA")
+            
+            # Xử lý ảnh tĩnh (hỗ trợ crop 9:16 không méo hình)
+            raw_img = Image.open(p_obj).convert("RGBA")
+            target_w, target_h = 1080, 1920
+            if raw_img.size == (target_w, target_h):
+                return raw_img
+            
+            if st.session_state.crop_mode == "blur_bars":
+                # Nền mờ CapCut cho ảnh
+                bg_fit = ImageOps.fit(raw_img, (target_w, target_h), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+                bg_blur = bg_fit.filter(ImageFilter.GaussianBlur(radius=25))
+                enhancer = ImageEnhance.Brightness(bg_blur)
+                bg_blur = enhancer.enhance(0.85)
+                
+                fg_w = target_w
+                fg_h = int(raw_img.height * (fg_w / raw_img.width))
+                fg_img = raw_img.resize((fg_w, fg_h), Image.Resampling.LANCZOS)
+                pos_y = (target_h - fg_h) // 2
+                bg_blur.paste(fg_img, (0, pos_y), fg_img if fg_img.mode == "RGBA" else None)
+                return bg_blur
+            else:
+                center_x = 0.5
+                if st.session_state.crop_position == "left":
+                    center_x = 0.0
+                elif st.session_state.crop_position == "right":
+                    center_x = 1.0
+                return ImageOps.fit(raw_img, (target_w, target_h), method=Image.Resampling.LANCZOS, centering=(center_x, 0.5))
 
         if quote_ready:
             try:

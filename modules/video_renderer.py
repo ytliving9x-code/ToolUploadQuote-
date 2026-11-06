@@ -31,9 +31,16 @@ except Exception:
 DEFAULT_FONT = Path("assets/fonts/BeVietnamPro-Bold.ttf")
 
 
-def extract_video_frame(video_path: Path | str, timestamp_sec: float = 1.0) -> Path:
+def extract_video_frame(
+    video_path: Path | str,
+    timestamp_sec: float = 1.0,
+    crop_mode: str = "fill",
+    crop_position: str = "center",
+) -> Path:
     """
-    Trích xuất 1 khung hình (1080x1920) từ video footage làm ảnh xem trước.
+    Trích xuất 1 khung hình (1080x1920) chuẩn 9:16 từ video footage làm ảnh xem trước:
+    - crop_mode="fill": Phóng to tràn viền 9:16 theo vị trí (center, left, right).
+    - crop_mode="blur_bars": Nền mờ nghệ thuật CapCut, video gốc 16:9 ở giữa.
     """
     v_path = Path(video_path)
     if not v_path.exists():
@@ -41,17 +48,42 @@ def extract_video_frame(video_path: Path | str, timestamp_sec: float = 1.0) -> P
 
     out_dir = Path("temp")
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_frame = out_dir / f"frame_{v_path.stem}_{int(timestamp_sec * 10)}.jpg"
+    out_frame = out_dir / f"frame_{v_path.stem}_{crop_mode}_{crop_position}_{int(timestamp_sec * 10)}.jpg"
 
-    cmd = [
-        FFMPEG_EXE, "-y",
-        "-ss", str(timestamp_sec),
-        "-i", str(v_path),
-        "-vframes", "1",
-        "-vf", "scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2",
-        "-q:v", "2",
-        str(out_frame),
-    ]
+    if crop_mode == "blur_bars":
+        vf_or_fc = (
+            "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,boxblur=25:5,eq=brightness=-0.12[bg];"
+            "[0:v]scale=1080:-2:flags=lanczos[fg];"
+            "[bg][fg]overlay=(W-w)/2:(H-h)/2"
+        )
+        cmd = [
+            FFMPEG_EXE, "-y",
+            "-ss", str(timestamp_sec),
+            "-i", str(v_path),
+            "-vframes", "1",
+            "-filter_complex", vf_or_fc,
+            "-q:v", "2",
+            str(out_frame),
+        ]
+    else:
+        if crop_position == "left":
+            crop_x = "0"
+        elif crop_position == "right":
+            crop_x = "in_w-1080"
+        else:
+            crop_x = "(in_w-1080)/2"
+        crop_y = "(in_h-1920)/2"
+        vf = f"scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,crop=1080:1920:{crop_x}:{crop_y}"
+        cmd = [
+            FFMPEG_EXE, "-y",
+            "-ss", str(timestamp_sec),
+            "-i", str(v_path),
+            "-vframes", "1",
+            "-vf", vf,
+            "-q:v", "2",
+            str(out_frame),
+        ]
+
     proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if proc.returncode != 0 or not out_frame.exists():
         logger.error(f"Lỗi trích xuất frame từ video {v_path}: {proc.stderr.decode('utf-8', errors='ignore')}")
@@ -458,6 +490,8 @@ def render_18s_video(
     preserve_linebreaks: bool = True,
     text_align: str = "center",
     font_size: int = 42,
+    crop_mode: str = "fill",
+    crop_position: str = "center",
     **kwargs: Any,
 ) -> Path:
     """
@@ -520,17 +554,38 @@ def render_18s_video(
     vignette_f = "vignette=PI/5.5," if cinematic_vignette else ""
     dark_grading_f = "eq=contrast=1.16:brightness=-0.12:saturation=0.92,colorbalance=rs=-0.03:gs=-0.01:bs=0.04:rh=0.04:gh=0.02:bh=-0.02,"
     dark_box = f"drawbox=x=0:y=0:w=iw:h=ih:color=black@{overlay_opacity:.2f}:t=fill," if overlay_opacity > 0 else ""
-    filter_complex = (
-        f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
-        f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,"
-        f"{motion_filter}"
-        f"{dark_grading_f}"
-        f"{vignette_f}"
-        f"{dark_box}"
-        f"fps=30[bg];"
-        f"[1:v]format=rgba[text];"
-        f"[bg][text]overlay=0:0:shortest=1[outv]"
-    )
+    if crop_mode == "blur_bars":
+        filter_complex = (
+            f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,boxblur=25:5,eq=brightness=-0.12[bg_blur];"
+            f"[0:v]scale=1080:-2:flags=lanczos[fg_img];"
+            f"[bg_blur][fg_img]overlay=(W-w)/2:(H-h)/2,"
+            f"{motion_filter}"
+            f"{dark_grading_f}"
+            f"{vignette_f}"
+            f"{dark_box}"
+            f"fps=30[bg];"
+            f"[1:v]format=rgba[text];"
+            f"[bg][text]overlay=0:0:shortest=1[outv]"
+        )
+    else:
+        if crop_position == "left":
+            crop_x = "0"
+        elif crop_position == "right":
+            crop_x = "in_w-1080"
+        else:
+            crop_x = "(in_w-1080)/2"
+        crop_y = "(in_h-1920)/2"
+        filter_complex = (
+            f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
+            f"crop=1080:1920:{crop_x}:{crop_y},"
+            f"{motion_filter}"
+            f"{dark_grading_f}"
+            f"{vignette_f}"
+            f"{dark_box}"
+            f"fps=30[bg];"
+            f"[1:v]format=rgba[text];"
+            f"[bg][text]overlay=0:0:shortest=1[outv]"
+        )
 
     cmd = [
         FFMPEG_EXE,
@@ -588,6 +643,8 @@ def render_video_from_footage(
     preserve_linebreaks: bool = True,
     text_align: str = "center",
     font_size: int = 42,
+    crop_mode: str = "fill",
+    crop_position: str = "center",
     **kwargs: Any,
 ) -> Path:
     """
@@ -639,14 +696,32 @@ def render_video_from_footage(
     # 3. Filter FFmpeg
     dark_box = f",drawbox=x=0:y=0:w=iw:h=ih:color=black@{overlay_opacity:.2f}:t=fill" if overlay_opacity > 0 else ""
 
-    filter_complex = (
-        f"[0:v]trim=0:{actual_duration},setpts=PTS-STARTPTS,"
-        f"scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
-        f"crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,fps=30"
-        f"{dark_box}[bg];"
-        f"[1:v]format=rgba[text];"
-        f"[bg][text]overlay=0:0:shortest=1[outv]"
-    )
+    if crop_mode == "blur_bars":
+        filter_complex = (
+            f"[0:v]trim=0:{actual_duration},setpts=PTS-STARTPTS[v_trim];"
+            f"[v_trim]split=2[v_bg][v_fg];"
+            f"[v_bg]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920:(in_w-1080)/2:(in_h-1920)/2,boxblur=25:5,eq=brightness=-0.12[bg_blur];"
+            f"[v_fg]scale=1080:-2:flags=lanczos[fg_vid];"
+            f"[bg_blur][fg_vid]overlay=(W-w)/2:(H-h)/2,fps=30{dark_box}[bg];"
+            f"[1:v]format=rgba[text];"
+            f"[bg][text]overlay=0:0:shortest=1[outv]"
+        )
+    else:
+        if crop_position == "left":
+            crop_x = "0"
+        elif crop_position == "right":
+            crop_x = "in_w-1080"
+        else:
+            crop_x = "(in_w-1080)/2"
+        crop_y = "(in_h-1920)/2"
+        filter_complex = (
+            f"[0:v]trim=0:{actual_duration},setpts=PTS-STARTPTS,"
+            f"scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
+            f"crop=1080:1920:{crop_x}:{crop_y},fps=30"
+            f"{dark_box}[bg];"
+            f"[1:v]format=rgba[text];"
+            f"[bg][text]overlay=0:0:shortest=1[outv]"
+        )
 
     cmd = [
         FFMPEG_EXE,
@@ -701,6 +776,8 @@ def render_any_media_quote(
     preserve_linebreaks: bool = True,
     text_align: str = "center",
     font_size: int = 42,
+    crop_mode: str = "fill",
+    crop_position: str = "center",
     **kwargs: Any,
 ) -> Path:
     """
@@ -724,6 +801,8 @@ def render_any_media_quote(
         "preserve_linebreaks": preserve_linebreaks,
         "text_align": text_align,
         "font_size": font_size,
+        "crop_mode": crop_mode,
+        "crop_position": crop_position,
     }
     if p.suffix.lower() in video_exts:
         return render_video_from_footage(footage_path=p, **common_args, **kwargs)
